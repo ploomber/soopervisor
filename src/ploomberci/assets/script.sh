@@ -16,7 +16,7 @@ conda activate ploomber-env
 # run pipeline
 ploomber build
 
-{% if box %}
+{% if config.box_upload %}
 # command to upload a folder to box...
 ploomberci 
 {% endif %}

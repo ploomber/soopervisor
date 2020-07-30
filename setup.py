@@ -46,7 +46,7 @@ def read(*names, **kwargs):
 
 # Minimum needed to execute this project, this subset should be enough
 # to run the pipeline in production
-REQUIRES = ['click', 'tqdm']
+REQUIRES = ['click', 'tqdm', 'pydantic']
 # Extra packages for running tests, install with: pip install ".[test]"
 REQUIRES_TEST = ['pytest', 'nox']
 # For developers (e.g. train a new model, run exploratory notebooks)
