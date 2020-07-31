@@ -1,9 +1,7 @@
-import subprocess
-from pathlib import Path
-from ploomberci import script
+from ploomberci.script.script import generate_script
+from ploomberci.script.ScriptConfig import ScriptConfig
 
 
-def test_simple_case(tmp_sample_project):
-    code = script.generate_script(project_root=tmp_sample_project)
-    Path('script.sh').write_text(code)
-    subprocess.run(['bash', 'script.sh'])
+def test_generate_default_script():
+    config = ScriptConfig()
+    assert generate_script(config=config)

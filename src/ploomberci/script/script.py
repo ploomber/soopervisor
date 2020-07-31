@@ -16,7 +16,7 @@ Use jinja to generate the script (it makes easy to embed logic)
 from jinja2 import Environment, PackageLoader
 
 
-def generate_script(project_root, config):
+def generate_script(config):
     """
     Generate a bash script (string) to run a pipeline in a clean environment
 
@@ -30,4 +30,4 @@ def generate_script(project_root, config):
     # TODO: run pip install if there is a setup.py file
     env = Environment(loader=PackageLoader('ploomberci', 'assets'))
     template = env.get_template('script.sh')
-    return template.render(project_root=project_root, config=config)
+    return template.render(**config.dict())

@@ -10,4 +10,4 @@ dependencies:
   - pip
   # if you need to install something using pip, list it here
   - pip:
-    - git+https://github.com/ploomber/ploomber@cli
+    - ploomber
