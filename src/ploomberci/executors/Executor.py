@@ -52,4 +52,7 @@ class Executor(abc.ABC):
 
     @abc.abstractmethod
     def execute(self):
+        # TODO: must automatically record standard output and error and save
+        # NOTE: maybe create a metadata/ folder at the end with the log,
+        # the script, optionally the conda env, system info, dag report
         pass
