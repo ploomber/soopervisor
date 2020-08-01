@@ -79,7 +79,7 @@ setup(
     # extensions), you also need to provide setup_requires, see setuptools
     # documentation for details
     setup_requires=[],
-    # Entry points are useful for providing a CLI interface to your pipeline:
-    # e.g. $ ploomberci run
-    entry_points={},
+    entry_points={
+        'console_scripts': ['ploomberci=ploomberci.cli:cli'],
+    },
 )

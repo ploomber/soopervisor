@@ -74,8 +74,4 @@ graph TD
 
 ## A few comments
 
-* Develop command line interface with click https://click.palletsprojects.com/en/7.x/
 * Use docker-py for connecting to docker containers https://github.com/docker/docker-py
-* Use subprocess to run a bash command that returns the current commit
-* You can use the glob module for this https://docs.python.org/3/library/glob.html
-* Use pytest for testing
