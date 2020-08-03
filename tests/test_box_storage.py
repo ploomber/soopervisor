@@ -2,7 +2,7 @@ import pytest
 from boxsdk.exception import BoxValueError, BoxAPIException
 from pathlib import Path
 
-from src.ploomberci.storage import box
+from ploomberci.storage import box
 
 
 def test_upload_files(monkeypatch):
@@ -60,7 +60,8 @@ def test_upload_directory(faker, monkeypatch):
     monkeypatch.setattr(box, "_create_folder", mock_create_folder)
     monkeypatch.setattr(box, "_upload_each_file", mock_upload_each_file)
 
-    assert box._upload_directory(path=Path("./"), parent_folder_id=str(faker.pyint()))
+    assert box._upload_directory(path=Path("./"),
+                                 parent_folder_id=str(faker.pyint()))
 
 
 def test_create_folder(faker, monkeypatch):
@@ -191,7 +192,10 @@ def test_upload_an_existing_file(faker, monkeypatch):
         class MockFolder:
             @staticmethod
             def upload(file):
-                raise BoxAPIException(status=409, context_info={"conflicts": {"id": "1234"}})
+                raise BoxAPIException(
+                    status=409, context_info={"conflicts": {
+                        "id": "1234"
+                    }})
 
         return MockFolder
 
@@ -255,10 +259,12 @@ def test_upload_large_file(faker, monkeypatch):
 
     monkeypatch.setattr(box.client, "folder", mock_folder)
 
-    result = box._upload_large_file(str(faker.pyint()), "README.md", faker.pyint())
+    result = box._upload_large_file(str(faker.pyint()), "README.md",
+                                    faker.pyint())
     assert result
 
 
 def test_upload_large_file_not_found(faker):
     with pytest.raises(FileNotFoundError):
-        assert box._upload_large_file(str(faker.pyint()), "file.txt", faker.pyint())
+        assert box._upload_large_file(str(faker.pyint()), "file.txt",
+                                      faker.pyint())
