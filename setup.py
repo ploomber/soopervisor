@@ -30,25 +30,23 @@ from setuptools import setup
 _version_re = re.compile(r'__version__\s+=\s+(.*)')
 
 with open('src/ploomberci/__init__.py', 'rb') as f:
-    VERSION = str(ast.literal_eval(_version_re.search(
-        f.read().decode('utf-8')).group(1)))
+    VERSION = str(
+        ast.literal_eval(
+            _version_re.search(f.read().decode('utf-8')).group(1)))
 
 
 def read(*names, **kwargs):
-    return io.open(
-        join(dirname(__file__), *names),
-        encoding=kwargs.get('encoding', 'utf8')
-    ).read()
+    return io.open(join(dirname(__file__), *names),
+                   encoding=kwargs.get('encoding', 'utf8')).read()
 
 
 # NOTE: keep these lists updated as you add more dependencies to your project
 # if you rather have any dependency installed via conda, add it here and in
 # environment.yml
 
-
 # Minimum needed to execute this project, this subset should be enough
 # to run the pipeline in production
-REQUIRES = ['click', 'tqdm']
+REQUIRES = ['click', 'tqdm', 'pydantic']
 # Extra packages for running tests, install with: pip install ".[test]"
 REQUIRES_TEST = ['pytest', 'nox']
 # For developers (e.g. train a new model, run exploratory notebooks)
@@ -68,8 +66,7 @@ setup(
     # Include any files in any package with these extensions
     # NOTE: for these files to be included, they have to be inside a proper
     # module (there has to be an __init__.py file)
-    package_data={"": ["*.txt", "*.rst", "*.sql", "*.ipynb"]},
-
+    package_data={"": ["*.txt", "*.rst", "*.sql", "*.ipynb", "*.sh"]},
     install_requires=REQUIRES,
     # Extra dependencies, only needed in specific cases
     extras_require={
