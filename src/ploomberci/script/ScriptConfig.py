@@ -57,7 +57,7 @@ class ScriptConfig(BaseModel):
         return str(Path(v).resolve())
 
     def _resolve_path(self, path):
-        if Path(self.product_root).is_absolute():
+        if Path(path).is_absolute():
             return str(Path(path).resolve())
         else:
             return str(Path(self.project_root, path).resolve())

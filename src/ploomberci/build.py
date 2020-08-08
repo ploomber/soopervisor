@@ -8,7 +8,7 @@ def check_project(config):
     """
     Verify project has the right structure before running the script
     """
-    environment_expected = config.get_path_to_environment()
+    environment_expected = config.path_to_environment
 
     if not Path(environment_expected).exists():
         raise FileNotFoundError(

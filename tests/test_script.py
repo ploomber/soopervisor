@@ -15,7 +15,7 @@ def test_generate_default_script():
 ])
 def test_resolve_product_root_path(project_root, product_root, expected):
     config = ScriptConfig(project_root=project_root, product_root=product_root)
-    assert config.get_product_root() == expected
+    assert config.product_root == expected
 
 
 @pytest.mark.parametrize('project_root, path_to_environment, expected', [
@@ -29,5 +29,5 @@ def test_resolve_path_to_environment(project_root, path_to_environment,
     expected_line = ('conda env create --file ' + expected +
                      ' --name ploomber-env --force')
 
-    assert config.get_path_to_environment() == expected
+    assert config.path_to_environment == expected
     assert expected_line in config.to_script()

@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 
+from ploomberci import git
+
 
 def _path_to_tests():
     return Path(__file__).absolute().parent
@@ -41,3 +43,12 @@ def tmp_sample_project():
 
     shutil.rmtree(str(tmp))
     os.chdir(old)
+
+
+def fake_get_git_hash(project_root):
+    return 'GIT-HASH'
+
+
+@pytest.fixture
+def mock_git_hash(monkeypatch):
+    monkeypatch.setattr(git, 'get_git_hash', fake_get_git_hash)

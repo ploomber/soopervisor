@@ -3,7 +3,7 @@ from ploomberci.script.ScriptConfig import ScriptConfig
 from ploomberci.executors.LocalExecutor import LocalExecutor
 
 
-def test_run_script(tmp_sample_project):
+def test_run_script(mock_git_hash, tmp_sample_project):
     config = ScriptConfig()
     script = generate_script(config=config)
     executor = LocalExecutor(project_root='.',
