@@ -14,8 +14,9 @@ def test_generate_default_script():
     ['/', '/path/to/output', '/path/to/output'],
 ])
 def test_resolve_product_root_path(project_root, product_root, expected):
-    config = ScriptConfig(project_root=project_root, product_root=product_root)
-    assert config.product_root == expected
+    config = ScriptConfig(
+        paths=dict(project=project_root, products=product_root))
+    assert config.paths.products == expected
 
 
 @pytest.mark.parametrize('project_root, path_to_environment, expected', [
@@ -24,10 +25,10 @@ def test_resolve_product_root_path(project_root, product_root, expected):
 ])
 def test_resolve_path_to_environment(project_root, path_to_environment,
                                      expected):
-    config = ScriptConfig(project_root=project_root,
-                          path_to_environment=path_to_environment)
+    config = ScriptConfig(
+        paths=dict(project=project_root, environment=path_to_environment))
     expected_line = ('conda env create --file ' + expected +
                      ' --name ploomber-env --force')
 
-    assert config.path_to_environment == expected
+    assert config.paths.environment == expected
     assert expected_line in config.to_script()

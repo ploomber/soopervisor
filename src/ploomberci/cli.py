@@ -13,14 +13,14 @@ def cli():
 
 
 @cli.command()
-@click.option('--clean-product-root',
+@click.option('--clean-products-path',
               is_flag=True,
               help='Remove all files from product_root before building')
-def build(clean_product_root):
+def build(clean_products_path):
     """
     Build project
     """
-    build_project(project_root='.', clean_product_root=clean_product_root)
+    build_project(project_root='.', clean_products_path=clean_products_path)
 
 
 @cli.command()

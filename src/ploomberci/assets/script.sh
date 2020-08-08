@@ -6,11 +6,11 @@ eval "$(conda shell.bash hook)"
 conda activate base
 
 # move to the project_root
-cd {{project_root}}
+cd {{paths.project}}
 
 # install the env, the user might name it differently so we force it to be
 # installed as "ploomber-env"
-conda env create --file {{path_to_environment}} --name ploomber-env --force
+conda env create --file {{paths.environment}} --name ploomber-env --force
 conda activate ploomber-env
 
 # verify ploomber is installed
@@ -33,7 +33,7 @@ fi
 # run pipeline
 ploomber build
 
-{% if box.enable %}
+{% if storage.enable %}
 # ploomber ci should also be installed in the project's env
 python -c "import ploomberci" || PLOOMBERCI_INSTALLED=$?
 if [ $PLOOMBERCI_INSTALLED -ne 0 ];
@@ -42,6 +42,6 @@ then
     pip install git+https://github.com/ploomber/ci-for-ds
 fi
 
-# command to upload a folder to box...
-ploomberci upload {{product_root}}
+# upload products
+ploomberci upload {{paths.products}}
 {% endif %}

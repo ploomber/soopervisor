@@ -8,14 +8,14 @@ from ploomberci.script.ScriptConfig import ScriptConfig
 def test_default_values(mock_git_hash, tmp_directory):
     config = ScriptConfig()
 
-    assert config.project_root == tmp_directory
-    assert config.product_root == str(Path(tmp_directory, 'output'))
-    assert config.path_to_environment == str(
+    assert config.paths.project == tmp_directory
+    assert config.paths.products == str(Path(tmp_directory, 'output'))
+    assert config.paths.environment == str(
         Path(tmp_directory, 'environment.yml'))
-    assert config.box.upload_path == 'projects/GIT-HASH'
+    assert config.storage.path == 'projects/GIT-HASH'
 
 
-def test_initialize_from_empty_project_root(mock_git_hash, tmp_directory):
+def test_initialize_from_empty_project(mock_git_hash, tmp_directory):
     config = ScriptConfig.from_path('.')
     assert config
 
@@ -27,10 +27,10 @@ def test_save_script(mock_git_hash, tmp_directory):
 
 
 @pytest.mark.parametrize('create_directory', [False, True])
-def test_clean_product_root(mock_git_hash, create_directory, tmp_directory):
+def test_clean_products(mock_git_hash, create_directory, tmp_directory):
     config = ScriptConfig.from_path('.')
 
     if create_directory:
-        Path(config.product_root).mkdir()
+        Path(config.paths.products).mkdir()
 
-    config.clean_product_root()
+    config.clean_products()

@@ -1,8 +1,28 @@
+"""
+Schema
+------
+
+paths:
+    # path to project directory
+    project: .
+    # path to products directory (if relative, it is to paths.project)
+    products: output/
+    # path conda environment file (if relative, it is to paths.project)
+    environment: environment.yml
+
+storage:
+    # storage provider, only "box" is supported for now
+    provider: box
+    # path where the files will be uploaded, defaults to project/{{git}},
+    # where {{git}} will be replaced by the current git hash
+    path: projects/{{git}}
+
+"""
 import shutil
 from pathlib import Path
 from typing import Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Field
 from jinja2 import Template
 import yaml
 
@@ -10,66 +30,73 @@ from ploomberci.script.script import generate_script
 from ploomberci import git
 
 
-class BoxConfig(BaseModel):
-    # whether to upload to box
+class StorageConfig(BaseModel):
+    provider: Optional[str] = 'box'
+    path: Optional[str] = 'projects/{{git}}'
     enable: Optional[bool] = False
-    # path to box credentials
-    # TODO: how to supply credentials if using github actions (env variable?)
     credentials: Optional[str]
-    # path to box folder to upload files to
-    upload_path: Optional[str] = 'projects/{{git}}'
 
-    def __init__(self, *, project_root, **data) -> None:
+    def __init__(self, *, project, **data) -> None:
         super().__init__(**data)
-        self.upload_path = Template(
-            self.upload_path).render(git=git.get_git_hash(project_root))
+        self.path = Template(self.path).render(git=git.get_git_hash(project))
+
+    @validator('provider', always=True)
+    def project_must_be_absolute(cls, v):
+        if v != 'box':
+            raise ValueError('Only "box" is supported')
+        return v
 
 
-class ScriptConfig(BaseModel):
-    # create env again only if environment.yml has changed
-    cache_env: Optional[bool] = True
-
-    project_root: Optional[str] = '.'
-    product_root: Optional[str] = 'output'
-
-    path_to_environment: Optional[str] = 'environment.yml'
-
-    # command for running the pipeline
-    # TODO: integrate this into script.sh
-    command: Optional[str] = 'ploomber build'
-
-    box: BoxConfig = None
+class Paths(BaseModel):
+    project: Optional[str] = '.'
+    products: Optional[str] = 'output'
+    environment: Optional[str] = 'environment.yml'
 
     def __init__(self, **data) -> None:
-        if 'box' in data:
-            box = data.pop('box')
-        else:
-            box = {}
-
         super().__init__(**data)
-        self.product_root = self._resolve_path(self.product_root)
-        self.path_to_environment = self._resolve_path(self.path_to_environment)
+        self.products = self._resolve_path(self.products)
+        self.environment = self._resolve_path(self.environment)
 
-        self.box = BoxConfig(project_root=self.product_root, **box)
-
-    @validator('project_root', always=True)
-    def project_root_must_be_absolute(cls, v):
+    @validator('project', always=True)
+    def project_must_be_absolute(cls, v):
         return str(Path(v).resolve())
 
     def _resolve_path(self, path):
         if Path(path).is_absolute():
             return str(Path(path).resolve())
         else:
-            return str(Path(self.project_root, path).resolve())
+            return str(Path(self.project, path).resolve())
+
+
+class ScriptConfig(BaseModel):
+    paths: Optional[Paths] = Field(default_factory=Paths)
+
+    # create env again only if environment.yml has changed
+    cache_env: Optional[bool] = True
+
+    # command for running the pipeline
+    # TODO: integrate this into script.sh
+    command: Optional[str] = 'ploomber build'
+
+    storage: StorageConfig = None
+
+    def __init__(self, **data) -> None:
+        if 'storage' in data:
+            storage = data.pop('storage')
+        else:
+            storage = {}
+
+        super().__init__(**data)
+        self.storage = StorageConfig(project=self.paths.products, **storage)
 
     @classmethod
-    def from_path(cls, project_root):
+    def from_path(cls, project):
         """
         Initializes a ScriptConfig from a directory. Looks for a
-        project_root/ploomberci.yaml file, if it doesn't exist, it just
+        project/ploomberci.yaml file, if it doesn't exist, it just
         initializes with default values
         """
-        path = Path(project_root, 'ploomberci.yaml')
+        path = Path(project, 'ploomberci.yaml')
 
         if path.exists():
             with open(str(path)) as f:
@@ -87,13 +114,13 @@ class ScriptConfig(BaseModel):
 
     def save_script(self):
         """
-        Return script (str) and save it at project_root/script.sh
+        Return script (str) and save it at project/script.sh
         """
         script = self.to_script()
-        Path(self.project_root, 'script.sh').write_text(script)
+        Path(self.paths.project, 'script.sh').write_text(script)
         return script
 
-    def clean_product_root(self):
-        if Path(self.product_root).exists():
-            shutil.rmtree(self.product_root)
-            Path(self.product_root).mkdir()
+    def clean_products(self):
+        if Path(self.paths.products).exists():
+            shutil.rmtree(self.paths.products)
+            Path(self.paths.products).mkdir()
