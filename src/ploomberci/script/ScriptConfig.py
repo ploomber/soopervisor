@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 from typing import Optional
 
@@ -61,3 +62,7 @@ class ScriptConfig(BaseModel):
         script = generate_script(config=self)
         Path(self.project_root, 'script.sh').write_text(script)
         return script
+
+    def clean_product_root(self):
+        shutil.rmtree(self.product_root)
+        Path(self.product_root).mkdir()

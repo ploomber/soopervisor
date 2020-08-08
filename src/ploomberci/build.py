@@ -18,7 +18,7 @@ def check_project(project_root):
                                 'your pipeline')
 
 
-def build_project(project_root):
+def build_project(project_root, clean_product_root):
     """
     Build a project using settings from a ploomberci.yaml file
     """
@@ -29,6 +29,10 @@ def build_project(project_root):
     config = ScriptConfig.from_path(project_root)
     # FIXME: should config or executor take care of saving?
     script = config.save_script()
+
+    if clean_product_root:
+        print('Cleaning product root folder...')
+        config.clean_product_root()
 
     print('Generated script:\n', script)
 
