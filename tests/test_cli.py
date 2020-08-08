@@ -1,3 +1,4 @@
+import pytest
 from click.testing import CliRunner
 
 from ploomberci.cli import cli
@@ -8,8 +9,10 @@ def null_execute(self):
     pass
 
 
-def test_build(monkeypatch, tmp_sample_project, mock_git_hash):
+@pytest.mark.parametrize('args',
+                         [['build'], ['build', '--clean-products-path']])
+def test_build(args, monkeypatch, tmp_sample_project, mock_git_hash):
     monkeypatch.setattr(LocalExecutor, 'execute', null_execute)
     runner = CliRunner()
-    result = runner.invoke(cli, ['build'])
+    result = runner.invoke(cli, args)
     assert result.exit_code == 0
