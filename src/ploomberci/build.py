@@ -4,16 +4,18 @@ from ploomberci.script.ScriptConfig import ScriptConfig
 from ploomberci.executors.LocalExecutor import LocalExecutor
 
 
-def check_project(project_root):
+def check_project(config):
     """
     Verify project has the right structure before running the script
     """
+    environment_expected = config.get_path_to_environment()
 
-    if not Path(project_root, 'environment.yml').exists():
-        raise FileNotFoundError('An "environment.yml" is required to declare '
-                                'dependencies')
+    if not Path(environment_expected).exists():
+        raise FileNotFoundError(
+            'An environment file was expected at: {}'.format(
+                environment_expected))
 
-    if not Path(project_root, 'pipeline.yaml').exists():
+    if not Path(config.project_root, 'pipeline.yaml').exists():
         raise FileNotFoundError('A "pipeline.yaml" is required to declare '
                                 'your pipeline')
 
@@ -24,9 +26,10 @@ def build_project(project_root, clean_product_root):
     """
     print('Building project')
 
-    check_project(project_root)
-
     config = ScriptConfig.from_path(project_root)
+
+    check_project(config)
+
     # FIXME: should config or executor take care of saving?
     script = config.save_script()
 
