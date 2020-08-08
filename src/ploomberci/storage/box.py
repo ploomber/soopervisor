@@ -1,5 +1,6 @@
 """Module for uploading data to box
 """
+import os
 import hashlib
 import logging
 from pathlib import Path
@@ -21,17 +22,25 @@ class BoxUploader:
     >>> uploader = BoxUploader('~/.auth/box.yaml')
     >>> uploader.upload_files(['some_file.png'])
     """
-    def __init__(self, path_to_credentials):
-        with open(str(Path(path_to_credentials).expanduser())) as f:
-            d = yaml.safe_load(f)
-
+    def __init__(self, client_id, primary_access_token):
         auth = OAuth2(
-            client_id=d['client_id'],
+            client_id=client_id,
             client_secret='',
-            access_token=d['primary_access_token'],
+            access_token=primary_access_token,
         )
 
         self.client = Client(auth)
+
+    @classmethod
+    def from_yaml(cls, path_to_credentials):
+        with open(str(Path(path_to_credentials).expanduser())) as f:
+            d = yaml.safe_load(f)
+
+        return cls(d['client_id'], d['primary_access_token'])
+
+    @classmethod
+    def from_environ(cls):
+        return cls(os.environ['client_id'], os.environ['primary_access_token'])
 
     def upload_files(self, paths: List[str], replace: bool = False):
         """

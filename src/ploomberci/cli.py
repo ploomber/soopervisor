@@ -1,18 +1,34 @@
 import click
 
-from ploomberci import build
+import ploomberci
 
 
-@click.command()
+@click.group()
+def cli(clean_product_root):
+    """
+    CLI
+    """
+    pass
+
+
+@cli.command()
 @click.option('--clean-product-root',
               is_flag=True,
               help='Remove all files from product_root before building')
-def cli(clean_product_root):
+def build(clean_product_root):
     """
-    Execute project
+    Build project
     """
-    build.build_project(project_root='.',
-                        clean_product_root=clean_product_root)
+    ploomberci.build.build_project(project_root='.',
+                                   clean_product_root=clean_product_root)
+
+
+@cli.command()
+def upload():
+    """
+    Upload files
+    """
+    pass
 
 
 if __name__ == '__main__':
