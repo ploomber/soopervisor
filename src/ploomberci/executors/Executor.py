@@ -5,8 +5,6 @@ import os
 from pathlib import Path
 import abc
 
-from ploomberci.check import check_project
-
 
 def handle_product_root(product_root):
     """
@@ -40,7 +38,6 @@ class Executor(abc.ABC):
         The the script to run
     """
     def __init__(self, project_root, product_root, script):
-        check_project(project_root)
         handle_product_root(product_root)
 
         if not Path(product_root).is_absolute():

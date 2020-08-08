@@ -2,6 +2,9 @@ from pathlib import Path
 from typing import Optional
 
 from pydantic import BaseModel, validator
+import yaml
+
+from ploomberci.script.script import generate_script
 
 
 class BoxConfig(BaseModel):
@@ -30,3 +33,31 @@ class ScriptConfig(BaseModel):
     @validator('project_root', always=True)
     def project_root_must_be_absolute(cls, v):
         return str(Path(v).resolve())
+
+    @classmethod
+    def from_path(cls, project_root):
+        """
+        Initializes a ScriptConfig from a directory. Looks for a
+        project_root/ploomberci.yaml file, if it doesn't exist, it just
+        initializes with default values
+        """
+        path = Path(project_root, 'ploomberci.yaml')
+
+        if path.exists():
+            with open(str(path)) as f:
+                d = yaml.safe_load(f)
+
+            config = cls(**d)
+
+        else:
+            config = cls()
+
+        return config
+
+    def save_script(self):
+        """
+        Return script (str) and save it at project_root/script.sh
+        """
+        script = generate_script(config=self)
+        Path(self.project_root, 'script.sh').write_text(script)
+        return script

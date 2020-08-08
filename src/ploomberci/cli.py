@@ -1,9 +1,14 @@
 import click
 
+from ploomberci import build
+
 
 @click.command()
 def cli():
-    pass
+    """
+    Execute project
+    """
+    build.build_project('.')
 
 
 if __name__ == '__main__':

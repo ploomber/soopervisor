@@ -6,12 +6,15 @@ from pathlib import Path
 
 import pytest
 
+
 def _path_to_tests():
     return Path(__file__).absolute().parent
+
 
 @pytest.fixture
 def faker():
     return Faker()
+
 
 @pytest.fixture()
 def tmp_directory():
