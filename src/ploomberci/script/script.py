@@ -30,4 +30,9 @@ def generate_script(config):
     # TODO: run pip install if there is a setup.py file
     env = Environment(loader=PackageLoader('ploomberci', 'assets'))
     template = env.get_template('script.sh')
-    return template.render(**config.dict())
+    d = config.dict()
+    # FIXME: we need this until we resolve the resolution logic - see
+    # note in the method implementation
+    d['path_to_environment'] = config.get_path_to_environment()
+    d['product_root'] = config.get_product_root()
+    return template.render(**d)

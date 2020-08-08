@@ -25,6 +25,8 @@ class ScriptConfig(BaseModel):
     project_root: Optional[str] = '.'
     product_root: Optional[str] = 'output'
 
+    path_to_environment: Optional[str] = 'environment.yml'
+
     # command for running the pipeline
     # TODO: integrate this into script.sh
     command: Optional[str] = 'ploomber build'
@@ -34,6 +36,30 @@ class ScriptConfig(BaseModel):
     @validator('project_root', always=True)
     def project_root_must_be_absolute(cls, v):
         return str(Path(v).resolve())
+
+    # FIXME: this should happen when calling config.product_root to avoid
+    # accidentally getting the unresolved value, but haven't found a way to do
+    # so
+    def get_product_root(self):
+        """
+        Resolved relative to project_root if passed a relative path, otherwise
+        keep it the way it is
+        """
+        return self._resolve_path(self.product_root)
+
+    # FIXME: same thing as get_product_root
+    def get_path_to_environment(self):
+        """
+        Resolved relative to project_root if passed a relative path, otherwise
+        keep it the way it is
+        """
+        return self._resolve_path(self.path_to_environment)
+
+    def _resolve_path(self, path):
+        if Path(self.product_root).is_absolute():
+            return str(Path(path).resolve())
+        else:
+            return str(Path(self.project_root, path).resolve())
 
     @classmethod
     def from_path(cls, project_root):
@@ -55,11 +81,14 @@ class ScriptConfig(BaseModel):
 
         return config
 
+    def to_script(self):
+        return generate_script(config=self)
+
     def save_script(self):
         """
         Return script (str) and save it at project_root/script.sh
         """
-        script = generate_script(config=self)
+        script = self.to_script()
         Path(self.project_root, 'script.sh').write_text(script)
         return script
 

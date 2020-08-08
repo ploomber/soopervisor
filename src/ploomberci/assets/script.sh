@@ -10,7 +10,7 @@ cd {{project_root}}
 
 # install the env, the user might name it differently so we force it to be
 # installed as "ploomber-env"
-conda env create --file environment.yml --name ploomber-env --force
+conda env create --file {{path_to_environment}} --name ploomber-env --force
 conda activate ploomber-env
 
 # run pipeline
