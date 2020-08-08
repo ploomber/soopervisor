@@ -23,8 +23,9 @@ then
 fi
 
 
+
 if [ -f "setup.py" ]; then
-    echo "Installing from setup.py..."
+    echo "Found setup.py, installing package..."
     pip install .
 fi
 
@@ -33,6 +34,14 @@ fi
 ploomber build
 
 {% if box.enable %}
+# ploomber ci should also be installed in the project's env
+python -c "import ploomberci" || PLOOMBERCI_INSTALLED=$?
+if [ $PLOOMBERCI_INSTALLED -ne 0 ];
+then
+    echo "ploomberci is not installed, consider adding it to your environment.yml file. Installing..."
+    pip install git+https://github.com/ploomber/ci-for-ds
+fi
+
 # command to upload a folder to box...
-ploomberci 
+ploomberci upload {{product_root}}
 {% endif %}

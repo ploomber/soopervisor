@@ -60,7 +60,7 @@ class BoxUploader:
             if path.exists():
                 if path.is_dir():
                     self._upload_directory(path=path,
-                                           root_folder_id=root_folder.id,
+                                           parent_folder_id=root_folder.id,
                                            replace_folder=replace)
                 elif path.is_file():
                     self._upload_each_file(folder_id=root_folder.id,
