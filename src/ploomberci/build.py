@@ -18,13 +18,13 @@ def check_project(config):
                                 'your pipeline')
 
 
-def build_project(project, clean_products_path):
+def build_project(project_root, clean_products_path):
     """
     Build a project using settings from a ploomberci.yaml file
     """
     print('Building project')
 
-    config = ScriptConfig.from_path(project)
+    config = ScriptConfig.from_path(project_root)
 
     check_project(config)
 
