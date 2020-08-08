@@ -22,7 +22,7 @@ def tmp_directory():
     tmp = tempfile.mkdtemp()
     os.chdir(str(tmp))
 
-    yield tmp
+    yield str(Path(tmp).resolve())
 
     shutil.rmtree(str(tmp))
     os.chdir(old)

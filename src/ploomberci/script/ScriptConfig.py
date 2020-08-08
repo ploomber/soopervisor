@@ -3,9 +3,11 @@ from pathlib import Path
 from typing import Optional
 
 from pydantic import BaseModel, validator
+from jinja2 import Template
 import yaml
 
 from ploomberci.script.script import generate_script
+from ploomberci import git
 
 
 class BoxConfig(BaseModel):
@@ -15,7 +17,12 @@ class BoxConfig(BaseModel):
     # TODO: how to supply credentials if using github actions (env variable?)
     credentials: Optional[str]
     # path to box folder to upload files to
-    upload_path: Optional[str]
+    upload_path: Optional[str] = 'projects/{{git}}'
+
+    def __init__(self, *, project_root, **data) -> None:
+        super().__init__(**data)
+        self.upload_path = Template(
+            self.upload_path).render(git=git.get_git_hash(project_root))
 
 
 class ScriptConfig(BaseModel):
@@ -31,29 +38,23 @@ class ScriptConfig(BaseModel):
     # TODO: integrate this into script.sh
     command: Optional[str] = 'ploomber build'
 
-    box: Optional[BoxConfig] = BoxConfig()
+    box: BoxConfig = None
+
+    def __init__(self, **data) -> None:
+        if 'box' in data:
+            box = data.pop('box')
+        else:
+            box = {}
+
+        super().__init__(**data)
+        self.product_root = self._resolve_path(self.product_root)
+        self.path_to_environment = self._resolve_path(self.path_to_environment)
+
+        self.box = BoxConfig(project_root=self.product_root, **box)
 
     @validator('project_root', always=True)
     def project_root_must_be_absolute(cls, v):
         return str(Path(v).resolve())
-
-    # FIXME: this should happen when calling config.product_root to avoid
-    # accidentally getting the unresolved value, but haven't found a way to do
-    # so
-    def get_product_root(self):
-        """
-        Resolved relative to project_root if passed a relative path, otherwise
-        keep it the way it is
-        """
-        return self._resolve_path(self.product_root)
-
-    # FIXME: same thing as get_product_root
-    def get_path_to_environment(self):
-        """
-        Resolved relative to project_root if passed a relative path, otherwise
-        keep it the way it is
-        """
-        return self._resolve_path(self.path_to_environment)
 
     def _resolve_path(self, path):
         if Path(self.product_root).is_absolute():
