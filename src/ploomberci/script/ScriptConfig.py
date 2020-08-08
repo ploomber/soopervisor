@@ -93,5 +93,6 @@ class ScriptConfig(BaseModel):
         return script
 
     def clean_product_root(self):
-        shutil.rmtree(self.product_root)
-        Path(self.product_root).mkdir()
+        if Path(self.product_root).exists():
+            shutil.rmtree(self.product_root)
+            Path(self.product_root).mkdir()
