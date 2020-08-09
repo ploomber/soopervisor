@@ -27,7 +27,7 @@ def generate_script(config):
     config : ScriptConfig
         Script settings
     """
-    env = Environment(loader=PackageLoader('ploomberci', 'assets'))
+    env = Environment(loader=PackageLoader('soopervisor', 'assets'))
     template = env.get_template('script.sh')
     d = config.dict()
     return template.render(**d)

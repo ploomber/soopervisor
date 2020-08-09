@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from ploomberci.script.ScriptConfig import ScriptConfig
-from ploomberci.executors.LocalExecutor import LocalExecutor
+from soopervisor.script.ScriptConfig import ScriptConfig
+from soopervisor.executors.LocalExecutor import LocalExecutor
 
 
 def check_project(config):
@@ -20,7 +20,7 @@ def check_project(config):
 
 def build_project(project_root, clean_products_path):
     """
-    Build a project using settings from a ploomberci.yaml file
+    Build a project using settings from a soopervisor.yaml file
     """
     print('Building project')
 

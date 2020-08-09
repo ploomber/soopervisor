@@ -2,7 +2,7 @@
 
 Developing the actual CI service with Jenkins X is going to take a while. But we can protoype the workflow to get quick feedback using Github Actions.
 
-For lack of a better name, I'm calling this tool "ploomberci" temporarily.
+For lack of a better name, I'm calling this tool "soopervisor" temporarily.
 
 ## Objective
 
@@ -32,7 +32,7 @@ To facilitate development, we'll first develop a local tool that will perform th
 ### API
 
 ```
-ploomberci /path/to/repo/ --dropbox/--gdrive/{/local/path}
+soopervisor /path/to/repo/ --dropbox/--gdrive/{/local/path}
 ```
 
 ### Architecture ideas

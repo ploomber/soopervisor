@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from ploomberci.script.ScriptConfig import ScriptConfig
+from soopervisor.script.ScriptConfig import ScriptConfig
 
 
 def test_default_values(mock_git_hash, tmp_directory):

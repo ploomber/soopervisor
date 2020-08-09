@@ -1,6 +1,6 @@
 from pathlib import Path
 import subprocess
-from ploomberci.executors.Executor import Executor
+from soopervisor.executors.Executor import Executor
 
 
 class LocalExecutor(Executor):

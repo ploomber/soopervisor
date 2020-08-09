@@ -1,7 +1,7 @@
 import pytest
 
-from ploomberci.script.script import generate_script
-from ploomberci.script.ScriptConfig import ScriptConfig
+from soopervisor.script.script import generate_script
+from soopervisor.script.ScriptConfig import ScriptConfig
 
 
 def test_generate_default_script():

@@ -1,8 +1,8 @@
 import pytest
 from click.testing import CliRunner
 
-from ploomberci.cli import cli
-from ploomberci.executors.LocalExecutor import LocalExecutor
+from soopervisor.cli import cli
+from soopervisor.executors.LocalExecutor import LocalExecutor
 
 
 def null_execute(self):

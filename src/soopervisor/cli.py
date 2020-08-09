@@ -1,7 +1,7 @@
 import click
 
-from ploomberci.build import build_project
-from ploomberci.storage.box import BoxUploader
+from soopervisor.build import build_project
+from soopervisor.storage.box import BoxUploader
 
 
 @click.group()

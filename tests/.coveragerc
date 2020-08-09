@@ -9,4 +9,4 @@ precision = 2
 [run]
 omit =
     tests/**/*
-    src/ploomberci/cli.py
+    src/soopervisor/cli.py

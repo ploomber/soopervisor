@@ -1,7 +1,7 @@
 import os
 
-from ploomberci import build
-from ploomberci.executors.LocalExecutor import LocalExecutor
+from soopervisor import build
+from soopervisor.executors.LocalExecutor import LocalExecutor
 
 
 def null_execute(self):

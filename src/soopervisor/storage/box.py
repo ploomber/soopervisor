@@ -18,7 +18,7 @@ class BoxUploader:
 
     Examples
     --------
-    >>> from ploomberci.storage.box import BoxUploader
+    >>> from soopervisor.storage.box import BoxUploader
     >>> uploader = BoxUploader('~/.auth/box.yaml')
     >>> uploader.upload_files(['some_file.png'])
     """

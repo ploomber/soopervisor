@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ploomberci import git
+from soopervisor import git
 
 
 def _path_to_tests():

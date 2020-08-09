@@ -35,13 +35,13 @@ ploomber build
 
 {% if storage.enable %}
 # ploomber ci should also be installed in the project's env
-python -c "import ploomberci" || PLOOMBERCI_INSTALLED=$?
-if [ $PLOOMBERCI_INSTALLED -ne 0 ];
+python -c "import soopervisor" || soopervisor_INSTALLED=$?
+if [ $soopervisor_INSTALLED -ne 0 ];
 then
-    echo "ploomberci is not installed, consider adding it to your environment.yml file. Installing..."
+    echo "soopervisor is not installed, consider adding it to your environment.yml file. Installing..."
     pip install git+https://github.com/ploomber/ci-for-ds
 fi
 
 # upload products
-ploomberci upload {{paths.products}}
+soopervisor upload {{paths.products}}
 {% endif %}

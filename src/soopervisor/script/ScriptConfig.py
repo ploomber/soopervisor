@@ -26,8 +26,8 @@ from pydantic import BaseModel, validator, Field
 from jinja2 import Template
 import yaml
 
-from ploomberci.script.script import generate_script
-from ploomberci import git
+from soopervisor.script.script import generate_script
+from soopervisor import git
 
 
 class StorageConfig(BaseModel):
@@ -93,10 +93,10 @@ class ScriptConfig(BaseModel):
     def from_path(cls, project):
         """
         Initializes a ScriptConfig from a directory. Looks for a
-        project/ploomberci.yaml file, if it doesn't exist, it just
+        project/soopervisor.yaml file, if it doesn't exist, it just
         initializes with default values
         """
-        path = Path(project, 'ploomberci.yaml')
+        path = Path(project, 'soopervisor.yaml')
 
         if path.exists():
             with open(str(path)) as f:

@@ -2,7 +2,7 @@ import pytest
 from boxsdk.exception import BoxValueError, BoxAPIException
 from pathlib import Path
 
-from ploomberci.storage import box
+from soopervisor.storage import box
 
 
 def test_upload_files(monkeypatch):
