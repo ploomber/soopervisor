@@ -1,5 +1,0 @@
-GitPython
-ipython
-click
-peewee
-docker
