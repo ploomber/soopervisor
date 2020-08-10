@@ -27,17 +27,38 @@ REQUIRES = ['click', 'tqdm', 'pydantic', 'boxsdk', 'Jinja2', 'pyyaml']
 REQUIRES_TEST = ['pytest', 'Faker']
 REQUIRES_DOC = []
 
+DESCRIPTION = ''
+
 setup(
     name='soopervisor',
     version=VERSION,
+    description=DESCRIPTION,
+    long_description='%s\n%s' %
+    (re.compile('^.. start-badges.*^.. end-badges', re.M | re.S).sub(
+        '', read('README.md')),
+     re.sub(':[a-z]+:`~?(.*?)`', r'``\1``', read('CHANGELOG.md'))),
+    author='',
+    author_email='',
+    url='https://github.com/ploomber/soopervisor',
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],
-
-    # Include any files in any package with these extensions
-    # NOTE: for these files to be included, they have to be inside a proper
-    # module (there has to be an __init__.py file)
     package_data={"": ["*.txt", "*.rst", "*.sql", "*.ipynb", "*.sh"]},
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: Apache Software License',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: Unix',
+        'Operating System :: POSIX',
+        'Operating System :: Microsoft :: Windows',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+    ],
     install_requires=REQUIRES,
     extras_require={
         'dev': REQUIRES_TEST + REQUIRES_DOC,
