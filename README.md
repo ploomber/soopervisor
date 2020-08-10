@@ -15,7 +15,7 @@ pip install soopervisor
 
 For its simplest usage, `soopervisor` expects a project with a `pipeline.yaml`
 file, outputs saved in an `output/` directory and dependencies declared
-in an [`environment.yml](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-file-manually) file
+in an [`environment.yml`](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-file-manually) file
 
 To execute a project:
 
@@ -34,8 +34,11 @@ An optional ``soopervisor.yaml`` file allows you to customize the build process.
 
 ## Using Soopervisor for Continuous Integration
 
+[WIP]
 
 ## Github action
+
+[WIP]
 
 ## Development
 
