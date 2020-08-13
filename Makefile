@@ -5,6 +5,6 @@ tests:
 		--cov-config=./tests/.coveragerc \
 		--cov-report term \
 		--cov-report html:coverage \
-		--rootdir=. ./tests;
+		--rootdir=. $${TEST};
 
 .PHONY: tests

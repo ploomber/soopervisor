@@ -1,155 +1,96 @@
 import pytest
 from boxsdk.exception import BoxValueError, BoxAPIException
 from pathlib import Path
+from tqdm import tqdm
 
-from ploomberci.storage import box
-
-
-def test_upload_files(monkeypatch):
-    class RootFolder:
-        def __init__(self):
-            self.id = "0"
-
-    def mock_root_folder():
-        class MockRootFolder:
-            @staticmethod
-            def get():
-                return RootFolder()
-
-        return MockRootFolder()
-
-    def mock_upload_directory(*args, **kwargs):
-        pass
-
-    def mock_upload_each_file(*args, **kwargs):
-        pass
-
-    monkeypatch.setattr(box.client, "root_folder", mock_root_folder)
-    monkeypatch.setattr(box, "_upload_directory", mock_upload_directory)
-    monkeypatch.setattr(box, "_upload_each_file", mock_upload_each_file)
-
-    assert box.upload_files(["./", "./README.md"])
+from ploomberci.storage.box import BoxUploader, CHUNKED_UPLOAD_MINIMUM
 
 
-def test_upload_files_wrong_paths(monkeypatch):
-    class RootFolder:
-        def __init__(self):
-            self.id = "0"
+PATH_CREDENTIALS="/path/to/credentials"
 
-    def mock_root_folder():
-        class MockRootFolder:
-            @staticmethod
-            def get():
-                return RootFolder()
+def test_upload_files(tmpdir):
+    tmp_dir = tmpdir.mkdir("tmp_ploomber_folder")
+    file1 = tmp_dir.mkdir("subdir1").join("file1.txt")
+    file1.write("lorem ipsum")
+    file2 = tmp_dir.mkdir("subdir2").join("file2.txt")
+    file2.write("lorem ipsum")
 
-        return MockRootFolder()
+    box = BoxUploader(PATH_CREDENTIALS)
+    root_folder = box.get_root_folder()
+    tmp_directory_tests = box._create_folder(parent_folder_id=root_folder.id, folder_name="tmp_directory_tests")
 
-    monkeypatch.setattr(box.client, "root_folder", mock_root_folder)
+    assert box.upload_files([tmp_dir.strpath], replace=True, root_folder=tmp_directory_tests)
+    assert box._delete_folder(folder_id=tmp_directory_tests.id)
 
+
+def test_upload_files_wrong_paths():
+    box = BoxUploader(PATH_CREDENTIALS)
     with pytest.raises(FileNotFoundError):
         assert box.upload_files(["wrong/path"])
 
 
-def test_upload_directory(faker, monkeypatch):
-    def mock_create_folder(*args, **kwargs):
-        return str(faker.pyint())
+def test_upload_directory(tmpdir):
+    tmp_dir = tmpdir.mkdir("tmp_ploomber_folder")
 
-    def mock_upload_each_file(*args, **kwargs):
-        pass
+    file1 = tmp_dir.mkdir("subdir1").join("file1.txt")
+    file1.write("lorem ipsum")
+    file2 = tmp_dir.mkdir("subdir2").join("file2.txt")
+    file2.write("lorem ipsum")
 
-    monkeypatch.setattr(box, "_create_folder", mock_create_folder)
-    monkeypatch.setattr(box, "_upload_each_file", mock_upload_each_file)
+    box = BoxUploader(PATH_CREDENTIALS)
+    root_folder = box.get_root_folder()
+    tmp_directory_tests = box._create_folder(parent_folder_id=root_folder.id, folder_name="tmp_directory_tests")
 
-    assert box._upload_directory(path=Path("./"),
-                                 parent_folder_id=str(faker.pyint()))
+    progress_bar = tqdm(total=file1.size() + file2.size())
 
+    response = box._upload_directory(path=Path(tmp_dir.strpath),
+                                 parent_folder_id=tmp_directory_tests.id,
+                                 progress_bar=progress_bar,
+                                 replace_folder=True)
 
-def test_create_folder(faker, monkeypatch):
-    class Subfolder:
-        def __init__(self):
-            self.id = str(faker.pyint())
-
-    def mock_folder(folder_id):
-        class MockFolder:
-            @staticmethod
-            def create_subfolder(folder_name):
-                return Subfolder()
-
-        return MockFolder()
-
-    monkeypatch.setattr(box.client, "folder", mock_folder)
-
-    assert box._create_folder(str(faker.pyint()), "path/to/folder")
+    assert box._delete_folder(folder_id=tmp_directory_tests.id)
 
 
-def test_create_a_duplicated_folder(faker, monkeypatch):
-    def mock_folder(folder_id):
-        class MockFolder:
-            @staticmethod
-            def create_subfolder(folder_name):
-                raise BoxAPIException(status=409)
-
-        return MockFolder()
-
-    monkeypatch.setattr(box.client, "folder", mock_folder)
+def test_create_folder():
+    box = BoxUploader(PATH_CREDENTIALS)
+    root_folder = box.get_root_folder()
+    assert box._create_folder(root_folder.id, "tmp_folder")
 
     with pytest.raises(FileExistsError):
-        assert box._create_folder(str(faker.pyint()), "path/to/folder")
+        assert box._create_folder(root_folder.id, "tmp_folder")
+
+    folder = box._create_folder(parent_folder_id=root_folder.id, folder_name="tmp_folder", replace_folder=True)
+
+    assert box._delete_folder(folder.id)
 
 
-def test_delete_folder(faker, monkeypatch):
-    def mock_folder(folder_id):
-        class MockFolder:
-            @staticmethod
-            def delete():
-                return True
-
-        return MockFolder()
-
-    monkeypatch.setattr(box.client, "folder", mock_folder)
-    assert box._delete_folder(str(faker.pyint()))
-
-
-def test_delete_wrong_folder(faker, monkeypatch):
-    def mock_delete_folder(folder_id):
-        class MockFolder:
-            @staticmethod
-            def delete():
-                raise BoxValueError()
-
-        return MockFolder()
-
-    monkeypatch.setattr(box.client, "folder", mock_delete_folder)
+def test_delete_folder():
+    box = BoxUploader(PATH_CREDENTIALS)
+    root_folder = box.get_root_folder()
+    folder = box._create_folder(root_folder.id, "tmp_folder")
+    assert box._delete_folder(folder.id)
 
     with pytest.raises(ValueError):
-        assert box._delete_folder(str(faker.pyint()))
+        assert box._delete_folder(folder.id)
 
 
-def test_upload_each_file_normal_size(faker, monkeypatch):
+def test_upload_each_file_normal_size(tmp_path):
+    file = tmp_path / "tmp_ploomber_file.txt"
+    file.write_text("lorem ipsum")
+
+    box = BoxUploader(PATH_CREDENTIALS)
+    root_folder = box.get_root_folder()
+
+    file_box = box._upload_each_file(folder_id=root_folder.id, file=Path(file.absolute()))
+    assert file_box
+
+    assert box._delete_file(file_box.id)
+
+
+def test_upload_each_file_large_size(tmp_path, faker, monkeypatch):
     class Stat:
         def __init__(self):
-            self.st_size = 20
-
-    def mock_file():
-        class MockStat:
-            @staticmethod
-            def stat():
-                return Stat()
-
-        return MockStat()
-
-    def mock_upload_file(*args, **kwargs):
-        return True
-
-    monkeypatch.setattr(box, "_upload_file", mock_upload_file)
-
-    assert box._upload_each_file(str(faker.pyint()), mock_file())
-
-
-def test_upload_each_file_large_size(faker, monkeypatch):
-    class Stat:
-        def __init__(self):
-            self.st_size = box.CHUNKED_UPLOAD_MINIMUM + 1
+            self.st_size = CHUNKED_UPLOAD_MINIMUM + 1
 
     def mock_file():
         class MockStat:
@@ -165,72 +106,41 @@ def test_upload_each_file_large_size(faker, monkeypatch):
     def mock_upload_large_file(*args, **kwargs):
         return True
 
+    box = BoxUploader(PATH_CREDENTIALS)
     monkeypatch.setattr(box, "_upload_large_file", mock_upload_large_file)
 
-    assert box._upload_each_file(str(faker.pyint()), mock_file())
+    assert box._upload_each_file(folder_id=box.get_root_folder().id, file=mock_file())
 
 
-def test_upload_file(faker, monkeypatch):
-    def mock_folder(folder_id):
-        class MockFolder:
-            @staticmethod
-            def upload(file):
-                class File:
-                    def __init__(self):
-                        self.name = "file.ext"
+def test_upload_file(tmp_path):
+    file = tmp_path / "tmp_ploomber_file.txt"
+    file.write_text("lorem ipsum")
 
-                return File()
-
-        return MockFolder
-
-    monkeypatch.setattr(box.client, "folder", mock_folder)
-    assert box._upload_file(str(faker.pyint()), "path/to/file.ext")
-
-
-def test_upload_an_existing_file(faker, monkeypatch):
-    def mock_folder(folder_id):
-        class MockFolder:
-            @staticmethod
-            def upload(file):
-                raise BoxAPIException(
-                    status=409, context_info={"conflicts": {
-                        "id": "1234"
-                    }})
-
-        return MockFolder
-
-    monkeypatch.setattr(box.client, "folder", mock_folder)
+    box = BoxUploader(PATH_CREDENTIALS)
+    root_folder = box.get_root_folder()
+    file_box = box._upload_file(folder_id=root_folder.id, file=file.absolute())
+    assert file_box
 
     with pytest.raises(FileExistsError):
-        assert box._upload_file(str(faker.pyint()), "path/to/file.ext")
+        box._upload_file(folder_id=root_folder.id, file=file.absolute())
+
+    file_box = box._upload_file(folder_id=root_folder.id, file=file.absolute(), replace_file=True)
+    assert file_box
+
+    # Remove the file from Box account used by the test
+    assert box._delete_file(file_box.id)
 
 
-def test_delete_file(faker, monkeypatch):
-    def mock_file(file_id):
-        class MockFile:
-            @staticmethod
-            def delete():
-                return True
-
-        return MockFile()
-
-    monkeypatch.setattr(box.client, "file", mock_file)
-    assert box._delete_file(str(faker.pyint()))
-
-
-def test_delete_wrong_file(faker, monkeypatch):
-    def mock_delete_file(file_id):
-        class MockFile:
-            @staticmethod
-            def delete():
-                raise BoxValueError()
-
-        return MockFile()
-
-    monkeypatch.setattr(box.client, "file", mock_delete_file)
+def test_delete_file(tmp_path):
+    file = tmp_path / "tmp_ploomber_file.txt"
+    file.write_text("lorem ipsum")
+    box = BoxUploader(PATH_CREDENTIALS)
+    root_folder = box.get_root_folder()
+    file_box = box._upload_file(folder_id=root_folder.id, file=file.absolute())
+    assert box._delete_file(file_box.id)
 
     with pytest.raises(ValueError):
-        assert box._delete_file(str(faker.pyint()))
+        box._delete_file(file_box.id)
 
 
 def test_upload_large_file(faker, monkeypatch):
@@ -257,14 +167,16 @@ def test_upload_large_file(faker, monkeypatch):
 
         return MockFolder()
 
+    box = BoxUploader(PATH_CREDENTIALS)
     monkeypatch.setattr(box.client, "folder", mock_folder)
 
-    result = box._upload_large_file(str(faker.pyint()), "README.md",
+    result = box._upload_large_file(str(faker.pyint()), Path("README.md"),
                                     faker.pyint())
     assert result
 
 
 def test_upload_large_file_not_found(faker):
+    box = BoxUploader(PATH_CREDENTIALS)
     with pytest.raises(FileNotFoundError):
-        assert box._upload_large_file(str(faker.pyint()), "file.txt",
-                                      faker.pyint())
+        assert box._upload_large_file(folder_id=str(faker.pyint()), file=Path("file.txt"),
+                                      file_size=faker.pyint())
