@@ -42,7 +42,7 @@ class BoxUploader:
 
     @classmethod
     def from_environ(cls):
-        return cls(os.environ['client_id'], os.environ['primary_access_token'])
+        return cls(os.environ['CLIENT_ID'], os.environ['PRIMARY_ACCESS_TOKEN'])
 
     def get_root_folder(self):
         return self.__root_folder

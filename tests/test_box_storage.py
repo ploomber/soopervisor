@@ -6,8 +6,6 @@ from tqdm import tqdm
 from soopervisor.storage.box import BoxUploader, CHUNKED_UPLOAD_MINIMUM
 
 
-PATH_CREDENTIALS="~/.box/credentials.yaml"
-
 def test_upload_files(tmpdir):
     tmp_dir = tmpdir.mkdir("tmp_ploomber_folder")
     file1 = tmp_dir.mkdir("subdir1").join("file1.txt")
@@ -15,16 +13,19 @@ def test_upload_files(tmpdir):
     file2 = tmp_dir.mkdir("subdir2").join("file2.txt")
     file2.write("lorem ipsum")
 
-    box = BoxUploader.from_yaml(PATH_CREDENTIALS)
+    box = BoxUploader.from_environ()
     root_folder = box.get_root_folder()
-    tmp_directory_tests = box._create_folder(parent_folder_id=root_folder.id, folder_name="tmp_directory_tests")
+    tmp_directory_tests = box._create_folder(parent_folder_id=root_folder.id,
+                                             folder_name="tmp_directory_tests")
 
-    assert box.upload_files([tmp_dir.strpath], replace=True, root_folder=tmp_directory_tests)
+    assert box.upload_files([tmp_dir.strpath],
+                            replace=True,
+                            root_folder=tmp_directory_tests)
     assert box._delete_folder(folder_id=tmp_directory_tests.id)
 
 
 def test_upload_files_wrong_paths():
-    box = BoxUploader.from_yaml(PATH_CREDENTIALS)
+    box = BoxUploader.from_environ()
     with pytest.raises(FileNotFoundError):
         assert box.upload_files(["wrong/path"])
 
@@ -37,35 +38,38 @@ def test_upload_directory(tmpdir):
     file2 = tmp_dir.mkdir("subdir2").join("file2.txt")
     file2.write("lorem ipsum")
 
-    box = BoxUploader.from_yaml(PATH_CREDENTIALS)
+    box = BoxUploader.from_environ()
     root_folder = box.get_root_folder()
-    tmp_directory_tests = box._create_folder(parent_folder_id=root_folder.id, folder_name="tmp_directory_tests")
+    tmp_directory_tests = box._create_folder(parent_folder_id=root_folder.id,
+                                             folder_name="tmp_directory_tests")
 
     progress_bar = tqdm(total=file1.size() + file2.size())
 
     response = box._upload_directory(path=Path(tmp_dir.strpath),
-                                 parent_folder_id=tmp_directory_tests.id,
-                                 progress_bar=progress_bar,
-                                 replace_folder=True)
+                                     parent_folder_id=tmp_directory_tests.id,
+                                     progress_bar=progress_bar,
+                                     replace_folder=True)
 
     assert box._delete_folder(folder_id=tmp_directory_tests.id)
 
 
 def test_create_folder():
-    box = BoxUploader.from_yaml(PATH_CREDENTIALS)
+    box = BoxUploader.from_environ()
     root_folder = box.get_root_folder()
     assert box._create_folder(root_folder.id, "tmp_folder")
 
     with pytest.raises(FileExistsError):
         assert box._create_folder(root_folder.id, "tmp_folder")
 
-    folder = box._create_folder(parent_folder_id=root_folder.id, folder_name="tmp_folder", replace_folder=True)
+    folder = box._create_folder(parent_folder_id=root_folder.id,
+                                folder_name="tmp_folder",
+                                replace_folder=True)
 
     assert box._delete_folder(folder.id)
 
 
 def test_delete_folder():
-    box = BoxUploader.from_yaml(PATH_CREDENTIALS)
+    box = BoxUploader.from_environ()
     root_folder = box.get_root_folder()
     folder = box._create_folder(root_folder.id, "tmp_folder")
     assert box._delete_folder(folder.id)
@@ -78,10 +82,11 @@ def test_upload_each_file_normal_size(tmp_path):
     file = tmp_path / "tmp_ploomber_file.txt"
     file.write_text("lorem ipsum")
 
-    box = BoxUploader.from_yaml(PATH_CREDENTIALS)
+    box = BoxUploader.from_environ()
     root_folder = box.get_root_folder()
 
-    file_box = box._upload_each_file(folder_id=root_folder.id, file=Path(file.absolute()))
+    file_box = box._upload_each_file(folder_id=root_folder.id,
+                                     file=Path(file.absolute()))
     assert file_box
 
     assert box._delete_file(file_box.id)
@@ -106,17 +111,18 @@ def test_upload_each_file_large_size(tmp_path, faker, monkeypatch):
     def mock_upload_large_file(*args, **kwargs):
         return True
 
-    box = BoxUploader.from_yaml(PATH_CREDENTIALS)
+    box = BoxUploader.from_environ()
     monkeypatch.setattr(box, "_upload_large_file", mock_upload_large_file)
 
-    assert box._upload_each_file(folder_id=box.get_root_folder().id, file=mock_file())
+    assert box._upload_each_file(folder_id=box.get_root_folder().id,
+                                 file=mock_file())
 
 
 def test_upload_file(tmp_path):
     file = tmp_path / "tmp_ploomber_file.txt"
     file.write_text("lorem ipsum")
 
-    box = BoxUploader.from_yaml(PATH_CREDENTIALS)
+    box = BoxUploader.from_environ()
     root_folder = box.get_root_folder()
     file_box = box._upload_file(folder_id=root_folder.id, file=file.absolute())
     assert file_box
@@ -124,7 +130,9 @@ def test_upload_file(tmp_path):
     with pytest.raises(FileExistsError):
         box._upload_file(folder_id=root_folder.id, file=file.absolute())
 
-    file_box = box._upload_file(folder_id=root_folder.id, file=file.absolute(), replace_file=True)
+    file_box = box._upload_file(folder_id=root_folder.id,
+                                file=file.absolute(),
+                                replace_file=True)
     assert file_box
 
     # Remove the file from Box account used by the test
@@ -134,7 +142,7 @@ def test_upload_file(tmp_path):
 def test_delete_file(tmp_path):
     file = tmp_path / "tmp_ploomber_file.txt"
     file.write_text("lorem ipsum")
-    box = BoxUploader.from_yaml(PATH_CREDENTIALS)
+    box = BoxUploader.from_environ()
     root_folder = box.get_root_folder()
     file_box = box._upload_file(folder_id=root_folder.id, file=file.absolute())
     assert box._delete_file(file_box.id)
@@ -167,19 +175,21 @@ def test_upload_large_file(faker, monkeypatch, tmp_path):
 
         return MockFolder()
 
-    box = BoxUploader.from_yaml(PATH_CREDENTIALS)
+    box = BoxUploader.from_environ()
     monkeypatch.setattr(box.client, "folder", mock_folder)
 
     file = tmp_path / "tmp_ploomber_file.txt"
     file.write_text("lorem ipsum")
 
-    result = box._upload_large_file(folder_id=str(faker.pyint()), file=file,
+    result = box._upload_large_file(folder_id=str(faker.pyint()),
+                                    file=file,
                                     file_size=faker.pyint())
     assert result
 
 
 def test_upload_large_file_not_found(faker):
-    box = BoxUploader.from_yaml(PATH_CREDENTIALS)
+    box = BoxUploader.from_environ()
     with pytest.raises(FileNotFoundError):
-        assert box._upload_large_file(folder_id=str(faker.pyint()), file=Path("file.txt"),
+        assert box._upload_large_file(folder_id=str(faker.pyint()),
+                                      file=Path("file.txt"),
                                       file_size=faker.pyint())
