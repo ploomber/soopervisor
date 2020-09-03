@@ -16,7 +16,7 @@ conda activate ploomber-env
 # verify ploomber is installed
 python -c "import ploomber" || PLOOMBER_INSTALLED=$?
 
-if [ $PLOOMBER_INSTALLED -ne 0 ];
+if [[ $PLOOMBER_INSTALLED -ne 0 ]];
 then
     echo "ploomber is not installed, consider adding it to your environment.yml file. Installing..."
     pip install ploomber
@@ -36,7 +36,7 @@ ploomber build
 {% if storage.enable %}
 # ploomber ci should also be installed in the project's env
 python -c "import soopervisor" || soopervisor_INSTALLED=$?
-if [ $soopervisor_INSTALLED -ne 0 ];
+if [[ $soopervisor_INSTALLED -ne 0 ]];
 then
     echo "soopervisor is not installed, consider adding it to your environment.yml file. Installing..."
     pip install git+https://github.com/ploomber/ci-for-ds
