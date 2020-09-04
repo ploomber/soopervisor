@@ -35,7 +35,7 @@ class Executor(abc.ABC):
         relative, it is interpreted as relative to project_root
 
     script : str
-        The the script to run
+        The script to run
     """
     def __init__(self, project_root, product_root, script):
         handle_product_root(product_root)
