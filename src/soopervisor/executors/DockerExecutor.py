@@ -35,9 +35,9 @@ class DockerExecutor(Executor):
     def execute(self):
         path_to_script = Path(self.project_root, 'script.sh')
         path_to_script.write_text(self.script)
+        project_root = self.project_root.replace(" ", "\ ")
         self.client.containers.run(self.image,
             name=self.name,
             volumes=self.volumes,
-            detach=True,
-            command=f"bash {self.project_root}/script.sh",
+            command=f"bash {project_root}/script.sh",
         )
