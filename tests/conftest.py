@@ -31,10 +31,11 @@ def tmp_directory():
 
 
 @pytest.fixture()
-def tmp_sample_project():
+def tmp_sample_project(tmp_path):
+    relative_path_project = "assets/sample_project"
     old = os.getcwd()
-    tmp = Path(tempfile.mkdtemp(), 'sample_project')
-    sample_project = _path_to_tests() / 'assets' / 'sample_project'
+    tmp = Path(tmp_path, relative_path_project)
+    sample_project = _path_to_tests() / relative_path_project
     shutil.copytree(str(sample_project), str(tmp))
 
     os.chdir(str(tmp))

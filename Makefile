@@ -1,3 +1,5 @@
+export TEST?=./tests
+
 tests:
 	@python -B -m pytest -l -W ignore::DeprecationWarning \
 		--color=yes \
