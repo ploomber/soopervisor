@@ -5,7 +5,6 @@ tests:
 		--color=yes \
 		--cov=src \
 		--cov-config=./tests/.coveragerc \
-		--cov-report term \
 		--cov-report html:coverage \
 		--rootdir=. $${TEST};
 
