@@ -25,6 +25,7 @@ def read(*names, **kwargs):
 
 REQUIRES = ['click', 'tqdm', 'pydantic', 'boxsdk', 'Jinja2', 'pyyaml']
 REQUIRES_TEST = ['pytest', 'Faker']
+REQURES_OPTIONAL = ['docker']
 REQUIRES_DOC = []
 
 DESCRIPTION = ''
@@ -62,6 +63,8 @@ setup(
     install_requires=REQUIRES,
     extras_require={
         'dev': REQUIRES_TEST + REQUIRES_DOC,
+        'opt': REQURES_OPTIONAL,
+        'all': REQUIRES_TEST + REQUIRES_DOC + REQURES_OPTIONAL
     },
     setup_requires=[],
     entry_points={
