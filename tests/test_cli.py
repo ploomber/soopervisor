@@ -11,7 +11,7 @@ def null_execute(self):
 
 @pytest.mark.parametrize('args',
                          [['build'], ['build', '--clean-products-path']])
-def test_build(args, monkeypatch, tmp_sample_project, mock_git_hash):
+def test_build(args, monkeypatch, tmp_sample_project, git_hash):
     monkeypatch.setattr(LocalExecutor, 'execute', null_execute)
     runner = CliRunner()
     result = runner.invoke(cli, args)

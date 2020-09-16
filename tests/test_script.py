@@ -4,7 +4,7 @@ from soopervisor.script.script import generate_script
 from soopervisor.script.ScriptConfig import ScriptConfig
 
 
-def test_generate_default_script():
+def test_generate_default_script(git_hash):
     config = ScriptConfig()
     assert generate_script(config=config)
 
@@ -13,7 +13,7 @@ def test_generate_default_script():
     ['/', 'output', '/output'],
     ['/', '/path/to/output', '/path/to/output'],
 ])
-def test_resolve_product_root_path(project_root, product_root, expected):
+def test_resolve_product_root_path(git_hash, project_root, product_root, expected):
     config = ScriptConfig(
         paths=dict(project=project_root, products=product_root))
     assert config.paths.products == expected
@@ -23,7 +23,7 @@ def test_resolve_product_root_path(project_root, product_root, expected):
     ['/', 'environment.yml', '/environment.yml'],
     ['/', '/path/to/environment.yml', '/path/to/environment.yml'],
 ])
-def test_resolve_path_to_environment(project_root, path_to_environment,
+def test_resolve_path_to_environment(git_hash, project_root, path_to_environment,
                                      expected):
     config = ScriptConfig(
         paths=dict(project=project_root, environment=path_to_environment))

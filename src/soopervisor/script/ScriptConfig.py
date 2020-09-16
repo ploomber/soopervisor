@@ -27,7 +27,7 @@ from jinja2 import Template
 import yaml
 
 from soopervisor.script.script import generate_script
-from soopervisor import git
+from soopervisor.git_handler import GitRepo
 
 
 class StorageConfig(BaseModel):
@@ -38,7 +38,7 @@ class StorageConfig(BaseModel):
 
     def __init__(self, *, project, **data) -> None:
         super().__init__(**data)
-        self.path = Template(self.path).render(git=git.get_git_hash(project))
+        self.path = Template(self.path).render(git=GitRepo(project).get_git_hash())
 
     @validator('provider', always=True)
     def project_must_be_absolute(cls, v):

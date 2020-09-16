@@ -5,7 +5,7 @@ import pytest
 from soopervisor.script.ScriptConfig import ScriptConfig
 
 
-def test_default_values(mock_git_hash, tmp_directory):
+def test_default_values(git_hash, tmp_directory):
     config = ScriptConfig()
 
     assert config.paths.project == tmp_directory
@@ -15,19 +15,19 @@ def test_default_values(mock_git_hash, tmp_directory):
     assert config.storage.path == 'projects/GIT-HASH'
 
 
-def test_initialize_from_empty_project(mock_git_hash, tmp_directory):
+def test_initialize_from_empty_project(git_hash, tmp_directory):
     config = ScriptConfig.from_path('.')
     assert config
 
 
-def test_save_script(mock_git_hash, tmp_directory):
+def test_save_script(git_hash, tmp_directory):
     config = ScriptConfig.from_path('.')
     config.save_script()
     assert Path('script.sh').exists()
 
 
 @pytest.mark.parametrize('create_directory', [False, True])
-def test_clean_products(mock_git_hash, create_directory, tmp_directory):
+def test_clean_products(git_hash, create_directory, tmp_directory):
     config = ScriptConfig.from_path('.')
 
     if create_directory:

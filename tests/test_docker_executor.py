@@ -5,7 +5,7 @@ from soopervisor.script.ScriptConfig import ScriptConfig
 from soopervisor.executors.DockerExecutor import DockerExecutor
 
 
-def test_run_script(mock_git_hash, tmp_sample_project, tmpdir):
+def test_run_script(git_hash, tmp_sample_project, tmpdir):
     paths = dict(project=str(tmp_sample_project))
     product_path = tmpdir / "output"
 

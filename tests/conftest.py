@@ -6,7 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from soopervisor import git
+from git import Repo
+from soopervisor.git_handler import GitRepo
 
 
 def _path_to_tests():
@@ -42,14 +43,19 @@ def tmp_sample_project(tmp_path):
 
     yield tmp
 
-    shutil.rmtree(str(tmp))
     os.chdir(old)
 
 
-def fake_get_git_hash(project_root):
+@pytest.fixture
+def hash():
     return 'GIT-HASH'
 
 
 @pytest.fixture
-def mock_git_hash(monkeypatch):
-    monkeypatch.setattr(git, 'get_git_hash', fake_get_git_hash)
+def bare_git_repo(monkeypatch):
+    monkeypatch.setattr(GitRepo, "__init__", lambda *args: None)
+
+
+@pytest.fixture
+def git_hash(bare_git_repo, hash, monkeypatch):
+    monkeypatch.setattr(GitRepo, "get_git_hash", lambda *args: hash)
