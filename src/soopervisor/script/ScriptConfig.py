@@ -5,17 +5,11 @@ Schema
 paths:
     # path to project directory
     project: .
-    # path to products directory (if relative, it is to paths.project)
+    # path to products directory (if relative, it is to paths.project),
+    # any generated file in this folder is considered a pipeline product
     products: output/
     # path conda environment file (if relative, it is to paths.project)
     environment: environment.yml
-
-storage:
-    # storage provider, only "box" is supported for now
-    provider: box
-    # path where the files will be uploaded, defaults to project/{{git}},
-    # where {{git}} will be replaced by the current git hash
-    path: projects/{{git}}
 
 """
 import shutil
@@ -31,6 +25,17 @@ from soopervisor.git_handler import GitRepo
 
 
 class StorageConfig(BaseModel):
+    """
+    This section configures there to copy pipeline products after execution
+
+    provider: str
+        'box' for uploading files to box or 'local' to just copy files
+        to a local directory
+
+    path: str
+        Path where the files will be moved, defaults to project/{{git}},
+        where {{git}} will be replaced by the current git hash
+    """
     provider: Optional[str] = 'box'
     path: Optional[str] = 'projects/{{git}}'
     enable: Optional[bool] = False
@@ -38,7 +43,8 @@ class StorageConfig(BaseModel):
 
     def __init__(self, *, project, **data) -> None:
         super().__init__(**data)
-        self.path = Template(self.path).render(git=GitRepo(project).get_git_hash())
+        self.path = Template(
+            self.path).render(git=GitRepo(project).get_git_hash())
 
     @validator('provider', always=True)
     def project_must_be_absolute(cls, v):
@@ -69,15 +75,21 @@ class Paths(BaseModel):
 
 
 class ScriptConfig(BaseModel):
+    """
+    Root section fo rthe confiuration file
+
+    paths : dict
+        Section to configure important project paths
+
+    cache_env : bool
+        Create env again only if environment.yml has changed
+    """
+
     paths: Optional[Paths] = Field(default_factory=Paths)
-
-    # create env again only if environment.yml has changed
     cache_env: Optional[bool] = True
-
     # command for running the pipeline
     # TODO: integrate this into script.sh
     command: Optional[str] = 'ploomber build'
-
     storage: StorageConfig = None
 
     def __init__(self, **data) -> None:
