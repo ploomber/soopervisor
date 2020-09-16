@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 
-from git import Repo
 from soopervisor.git_handler import GitRepo
 
 
