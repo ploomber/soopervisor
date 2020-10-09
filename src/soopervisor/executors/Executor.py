@@ -6,7 +6,7 @@ from pathlib import Path
 import abc
 
 
-def _check_products_root(product_root):
+def _check_products_root(product_root, allow_incremental):
     """
     Make sure the product_root folder exists and it's empty.
     Creates a history record based on each hash from the product_root git repo.
@@ -18,7 +18,7 @@ def _check_products_root(product_root):
 
     has_files = bool(os.listdir(str(product_root)))
 
-    if has_files:
+    if has_files and not allow_incremental:
         raise ValueError(
             f'product_root must be an empty folder ({product_root})')
 
@@ -36,7 +36,7 @@ class Executor(abc.ABC):
         self.product_root = script_config.paths.products
         self.script_config = script_config
 
-        _check_products_root(self.product_root)
+        _check_products_root(self.product_root, self.script_config)
 
     @abc.abstractmethod
     def execute(self):

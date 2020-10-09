@@ -95,6 +95,10 @@ class ScriptConfig(BaseModel):
         Create env again only if environment.yml has changed
 
     executor : str
+        Which executor to use "local" or "docker"
+
+    allow_incremental : bool
+        If True, allows execution on non-empty product folders
     """
 
     paths: Optional[Paths] = Field(default_factory=Paths)
@@ -104,6 +108,7 @@ class ScriptConfig(BaseModel):
     command: Optional[str] = 'ploomber build'
     storage: StorageConfig = None
     executor: Optional[str] = 'local'
+    allow_incremental: Optional[bool] = True
 
     def __init__(self, **data) -> None:
         if 'storage' in data:
@@ -150,3 +155,7 @@ class ScriptConfig(BaseModel):
         if Path(self.paths.products).exists():
             shutil.rmtree(self.paths.products)
             Path(self.paths.products).mkdir()
+
+    @property
+    def project_name(self):
+        return Path(self.paths.project).name

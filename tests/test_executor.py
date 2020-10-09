@@ -9,7 +9,7 @@ def test_check_products_root(create, tmp_path):
     if create:
         some_directory.mkdir(parents=True)
 
-    _check_products_root(some_directory)
+    _check_products_root(some_directory, allow_incremental=False)
 
     assert some_directory.exists() and some_directory.is_dir()
 
@@ -21,4 +21,4 @@ def test_check_products_root_with_existing_files(tmp_path):
     (some_directory / 'file.txt').touch()
 
     with pytest.raises(ValueError):
-        _check_products_root(some_directory)
+        _check_products_root(some_directory, allow_incremental=False)
