@@ -39,16 +39,47 @@ def test_initialize_with_config_file(git_hash, tmp_directory):
 
 
 def test_save_script(git_hash, tmp_directory):
-    config = ScriptConfig.from_path('.')
+    config = ScriptConfig()
     config.save_script()
     assert Path('script.sh').exists()
 
 
+def test_to_script(git_hash, tmp_directory):
+    config = ScriptConfig()
+    assert config.to_script()
+
+
 @pytest.mark.parametrize('create_directory', [False, True])
 def test_clean_products(git_hash, create_directory, tmp_directory):
-    config = ScriptConfig.from_path('.')
+    config = ScriptConfig()
 
     if create_directory:
         Path(config.paths.products).mkdir()
 
     config.clean_products()
+
+
+@pytest.mark.parametrize('project_root, product_root, expected', [
+    ['/', 'output', '/output'],
+    ['/', '/path/to/output', '/path/to/output'],
+])
+def test_converts_product_root_to_absolute(git_hash, project_root,
+                                           product_root, expected):
+    config = ScriptConfig(
+        paths=dict(project=project_root, products=product_root))
+    assert config.paths.products == expected
+
+
+@pytest.mark.parametrize('project_root, path_to_environment, expected', [
+    ['/', 'environment.yml', '/environment.yml'],
+    ['/', '/path/to/environment.yml', '/path/to/environment.yml'],
+])
+def test_convers_path_to_env_to_absolute(git_hash, project_root,
+                                         path_to_environment, expected):
+    config = ScriptConfig(
+        paths=dict(project=project_root, environment=path_to_environment))
+    expected_line = ('conda env create --file ' + expected +
+                     ' --name ploomber-env --force')
+
+    assert config.paths.environment == expected
+    assert expected_line in config.to_script()
