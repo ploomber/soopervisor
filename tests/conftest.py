@@ -46,15 +46,5 @@ def tmp_sample_project(tmp_path):
 
 
 @pytest.fixture
-def hash():
-    return 'GIT-HASH'
-
-
-@pytest.fixture
-def bare_git_repo(monkeypatch):
-    monkeypatch.setattr(GitRepo, "__init__", lambda *args: None)
-
-
-@pytest.fixture
-def git_hash(bare_git_repo, hash, monkeypatch):
-    monkeypatch.setattr(GitRepo, "get_git_hash", lambda *args: hash)
+def git_hash(monkeypatch):
+    monkeypatch.setattr(GitRepo, "get_git_hash", lambda *args: 'GIT-HASH')
