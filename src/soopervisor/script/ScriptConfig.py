@@ -157,5 +157,5 @@ class ScriptConfig(BaseModel):
             Path(self.paths.products).mkdir()
 
     @property
-    def project_name(self):
-        return Path(self.paths.project).name
+    def environment_prefix(self):
+        return Path(self.paths.project, '.soopervisor', 'env')

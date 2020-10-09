@@ -23,9 +23,9 @@ def build_project(project_root, clean_products_path, dry_run):
     """
     Build a project using settings from a soopervisor.yaml file
     """
-    print('Building project')
-
     config = ScriptConfig.from_path(project_root)
+
+    print(f'Env prefix {config.environment_prefix}')
     print(config.paths)
 
     print(f'Output will be stored at: {config.storage.path}')
@@ -47,6 +47,7 @@ def build_project(project_root, clean_products_path, dry_run):
 
     if dry_run:
         print('Dry run, skipping execution...')
+        print(f'Script:\n{config.to_script()}')
     else:
         executor.execute()
         print('Successful build!')

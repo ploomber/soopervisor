@@ -29,14 +29,16 @@ def generate_script(config):
     """
     env = Environment(loader=PackageLoader('soopervisor', 'assets'))
     template = env.get_template('script.sh')
-    d = __scape_spaces_on_paths(config.dict())
+    # config = __scape_spaces_on_paths(config)
 
-    return template.render(**d)
+    return template.render(config=config)
 
 
 def __scape_spaces_on_paths(config):
-    config["paths"]["environment"] = config["paths"]["environment"].replace(" ", "\ ")
-    config["paths"]["products"] = config["paths"]["products"].replace(" ", "\ ")
+    config["paths"]["environment"] = config["paths"]["environment"].replace(
+        " ", "\ ")
+    config["paths"]["products"] = config["paths"]["products"].replace(
+        " ", "\ ")
     config["paths"]["project"] = config["paths"]["project"].replace(" ", "\ ")
 
     return config
