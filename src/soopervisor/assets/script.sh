@@ -12,11 +12,15 @@ ENV_EXISTS=$(conda env list | grep "{{config.environment_prefix}}" | wc -l)
 if [[ $ENV_EXISTS -ne 0 ]];
 then
     echo "Environment exists, activating it..."
+else
+    echo "Environment does not exist, creating it..."
+    conda env create --file {{config.paths.environment}} --prefix {{config.environment_prefix}}
 fi
 {% else %}
 conda env create --file {{config.paths.environment}} --force --prefix {{config.environment_prefix}}
 {% endif %}
 
+echo 'Activating environtment...'
 conda activate {{config.environment_prefix}}
 
 # verify ploomber is installed
