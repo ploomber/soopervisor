@@ -129,8 +129,9 @@ class ScriptConfig(BaseModel):
         Return script (str) and save it at project/script.sh
         """
         script = self.to_script()
-        Path(self.paths.project, 'script.sh').write_text(script)
-        return script
+        path_to_script = Path(self.paths.project, 'script.sh')
+        path_to_script.write_text(script)
+        return path_to_script
 
     def clean_products(self):
         if Path(self.paths.products).exists():

@@ -34,7 +34,7 @@ class Executor(abc.ABC):
     def __init__(self, script_config):
         self.project_root = script_config.paths.project
         self.product_root = script_config.paths.products
-        self.script = script_config.to_script()
+        self.script_config = script_config
 
         _check_products_root(self.product_root)
 

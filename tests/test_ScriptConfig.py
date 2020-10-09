@@ -41,7 +41,7 @@ def test_initialize_with_config_file(git_hash, tmp_directory):
 def test_save_script(git_hash, tmp_directory):
     config = ScriptConfig()
     config.save_script()
-    assert Path('script.sh').exists()
+    assert Path(config.paths.project, 'script.sh').exists()
 
 
 def test_to_script(git_hash, tmp_directory):
