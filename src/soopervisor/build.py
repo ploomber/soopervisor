@@ -26,6 +26,8 @@ def build_project(project_root, clean_products_path, dry_run):
     print('Building project')
 
     config = ScriptConfig.from_path(project_root)
+    print(config.paths)
+
     print(f'Output will be stored at: {config.storage.path}')
 
     check_project(config)

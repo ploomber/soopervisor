@@ -77,6 +77,12 @@ class Paths(BaseModel):
         else:
             return str(Path(self.project, path).resolve())
 
+    def __str__(self):
+        return ('Paths:'
+                f'\n  * Project root: {self.project}'
+                f'\n  * Products: {self.products}'
+                f'\n  * Environment: {self.environment}')
+
 
 class ScriptConfig(BaseModel):
     """
