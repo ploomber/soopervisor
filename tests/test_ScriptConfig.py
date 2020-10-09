@@ -1,3 +1,4 @@
+import yaml
 from pathlib import Path
 
 import pytest
@@ -12,12 +13,29 @@ def test_default_values(git_hash, tmp_directory):
     assert config.paths.products == str(Path(tmp_directory, 'output'))
     assert config.paths.environment == str(
         Path(tmp_directory, 'environment.yml'))
-    assert config.storage.path == 'projects/GIT-HASH'
+    assert config.storage.path == 'runs/GIT-HASH'
 
 
 def test_initialize_from_empty_project(git_hash, tmp_directory):
+    # must initialize with default values
+    assert ScriptConfig.from_path('.') == ScriptConfig()
+
+
+def test_initialize_with_config_file(git_hash, tmp_directory):
+    d = {
+        'paths': {
+            'products': 'some/directory/'
+        },
+        'storage': {
+            'path': 'dir-name/{{git}}'
+        }
+    }
+    Path(tmp_directory, 'soopervisor.yaml').write_text(yaml.dump(d))
+
     config = ScriptConfig.from_path('.')
-    assert config
+
+    assert Path(config.paths.products) == Path('some/directory/').resolve()
+    assert config.storage.path == 'dir-name/GIT-HASH'
 
 
 def test_save_script(git_hash, tmp_directory):

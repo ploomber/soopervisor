@@ -19,14 +19,12 @@ def faker():
 
 
 @pytest.fixture()
-def tmp_directory():
+def tmp_directory(tmp_path):
     old = os.getcwd()
-    tmp = tempfile.mkdtemp()
-    os.chdir(str(tmp))
+    os.chdir(str(tmp_path))
 
-    yield str(Path(tmp).resolve())
+    yield str(Path(tmp_path).resolve())
 
-    shutil.rmtree(str(tmp))
     os.chdir(old)
 
 

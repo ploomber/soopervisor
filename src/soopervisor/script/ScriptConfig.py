@@ -33,11 +33,11 @@ class StorageConfig(BaseModel):
         to a local directory
 
     path: str
-        Path where the files will be moved, defaults to project/{{git}},
+        Path where the files will be moved, defaults to runs/{{git}},
         where {{git}} will be replaced by the current git hash
     """
     provider: Optional[str] = 'box'
-    path: Optional[str] = 'projects/{{git}}'
+    path: Optional[str] = 'runs/{{git}}'
     enable: Optional[bool] = False
     credentials: Optional[str]
 
