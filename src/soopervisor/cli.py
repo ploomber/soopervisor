@@ -14,6 +14,7 @@ def cli():
 
 @cli.command()
 @click.option('--clean-products-path',
+              '-c',
               is_flag=True,
               help='Remove all files from product_root before building')
 def build(clean_products_path):

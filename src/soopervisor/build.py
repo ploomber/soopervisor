@@ -28,20 +28,13 @@ def build_project(project_root, clean_products_path):
 
     check_project(config)
 
-    # FIXME: should config or executor take care of saving?
-    script = config.save_script()
-
     if clean_products_path:
         print('Cleaning product root folder...')
         config.clean_products()
 
-    print('Generated script:\n', script)
-
     print('Running script...')
 
-    executor = LocalExecutor(project_root=config.paths.project,
-                             product_root=config.paths.products,
-                             script=script)
+    executor = LocalExecutor(script_config=config)
     executor.execute()
 
     print('Successful build!')

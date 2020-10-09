@@ -125,13 +125,12 @@ class ScriptConfig(BaseModel):
         return generate_script(config=self)
 
     def save_script(self):
-        """
-        Return script (str) and save it at project/script.sh
+        """Save script to the project's root directory, returns script location
         """
         script = self.to_script()
         path_to_script = Path(self.paths.project, 'script.sh')
         path_to_script.write_text(script)
-        return path_to_script
+        return str(path_to_script)
 
     def clean_products(self):
         if Path(self.paths.products).exists():
