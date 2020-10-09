@@ -1,11 +1,10 @@
 import docker
-from pathlib import Path
 from soopervisor.executors.Executor import Executor
 
 
 class DockerExecutor(Executor):
-    def __init__(self, project_root, product_root, script):
-        super().__init__(project_root, product_root, script)
+    def __init__(self, script_config):
+        super().__init__(script_config)
         self.client = docker.from_env()
         self.image = "continuumio/miniconda3"
         self.name = "ploomber"
@@ -15,7 +14,7 @@ class DockerExecutor(Executor):
                 "mode": "rw",
             },
             self.product_root: {
-                "bind": f"{self.project_root}/output",
+                "bind": self.product_root,
                 "mode": "rw",
             },
         }
@@ -33,9 +32,10 @@ class DockerExecutor(Executor):
             print("Environment ready to run pipeline")
 
     def execute(self):
-        path_to_script = Path(self.project_root, 'script.sh')
-        path_to_script.write_text(self.script)
+        self.script_config.save_script()
+
         project_root = self.project_root.replace(" ", "\ ")
+
         self.client.containers.run(
             self.image,
             name=self.name,

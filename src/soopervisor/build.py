@@ -2,6 +2,7 @@ from pathlib import Path
 
 from soopervisor.script.ScriptConfig import ScriptConfig
 from soopervisor.executors.LocalExecutor import LocalExecutor
+from soopervisor.executors.DockerExecutor import DockerExecutor
 
 
 def check_project(config):
@@ -32,9 +33,14 @@ def build_project(project_root, clean_products_path):
         print('Cleaning product root folder...')
         config.clean_products()
 
-    print('Running script...')
+    if config.executor == 'local':
+        executor = LocalExecutor(script_config=config)
+    elif config.executor == 'docker':
+        executor = DockerExecutor(script_config=config)
+    else:
+        raise ValueError('Unknown executor "{}"'.format(config.executor))
 
-    executor = LocalExecutor(script_config=config)
+    print('Running script with executor: {}'.format(repr(executor)))
     executor.execute()
 
     print('Successful build!')

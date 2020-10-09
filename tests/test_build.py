@@ -1,3 +1,4 @@
+from pathlib import Path
 import os
 
 from soopervisor import build
@@ -8,9 +9,8 @@ def test_build(git_hash, tmp_sample_project):
     build.build_project('.', clean_products_path=False)
 
 
-def test_clean_products_path(git_hash, hash, monkeypatch, tmp_sample_project):
+def test_clean_products_path(git_hash, monkeypatch, tmp_sample_project):
     monkeypatch.setattr(LocalExecutor, 'execute', lambda *args: None)
     build.build_project('.', clean_products_path=True)
 
-    output_dir = f"output/{hash}"
-    assert not len(os.listdir(output_dir))
+    assert not len(os.listdir('output')) and Path('output').is_dir()

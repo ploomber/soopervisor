@@ -44,3 +44,6 @@ class Executor(abc.ABC):
         # NOTE: maybe create a metadata/ folder at the end with the log,
         # the script, optionally the conda env, system info, dag report
         pass
+
+    def __repr__(self):
+        return type(self).__name__

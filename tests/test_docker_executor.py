@@ -1,25 +1,15 @@
+from pathlib import Path
 import os
-
-from soopervisor.script.script import generate_script
 from soopervisor.script.ScriptConfig import ScriptConfig
 from soopervisor.executors.DockerExecutor import DockerExecutor
 
 
-def test_run_script(git_hash, tmp_sample_project, tmpdir):
-    paths = dict(project=str(tmp_sample_project))
-    product_path = tmpdir / "output"
+def test_run_script(git_hash, tmp_sample_project):
+    product_path = Path(tmp_sample_project, 'output')
 
-    config = ScriptConfig(paths=paths)
-    script = generate_script(config=config)
+    config = ScriptConfig(paths=dict(project=str(tmp_sample_project)))
 
-
-    docker_params = {
-        "project_root": str(tmp_sample_project),
-        "product_root": str(product_path),
-        "script": script,
-    }
-
-    docker_exec = DockerExecutor(**docker_params)
+    docker_exec = DockerExecutor(config)
 
     docker_exec.execute()
 

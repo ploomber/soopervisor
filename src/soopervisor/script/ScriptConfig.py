@@ -83,6 +83,8 @@ class ScriptConfig(BaseModel):
 
     cache_env : bool
         Create env again only if environment.yml has changed
+
+    executor : str
     """
 
     paths: Optional[Paths] = Field(default_factory=Paths)
@@ -91,6 +93,7 @@ class ScriptConfig(BaseModel):
     # TODO: integrate this into script.sh
     command: Optional[str] = 'ploomber build'
     storage: StorageConfig = None
+    executor: Optional[str] = 'local'
 
     def __init__(self, **data) -> None:
         if 'storage' in data:

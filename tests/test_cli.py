@@ -9,8 +9,10 @@ def null_execute(self):
     pass
 
 
-@pytest.mark.parametrize('args',
-                         [['build'], ['build', '--clean-products-path']])
+@pytest.mark.parametrize('args', [
+    ['build'],
+    ['build', '--clean-products-path'],
+])
 def test_build(args, monkeypatch, tmp_sample_project, git_hash):
     monkeypatch.setattr(LocalExecutor, 'execute', null_execute)
     runner = CliRunner()
