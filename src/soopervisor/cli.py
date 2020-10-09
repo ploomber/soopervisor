@@ -17,11 +17,17 @@ def cli():
               '-c',
               is_flag=True,
               help='Remove all files from product_root before building')
-def build(clean_products_path):
+@click.option('--dry-run',
+              '-d',
+              is_flag=True,
+              help='Prepare execution without actually doing it')
+def build(clean_products_path, dry_run):
     """
     Build project
     """
-    build_project(project_root='.', clean_products_path=clean_products_path)
+    build_project(project_root='.',
+                  clean_products_path=clean_products_path,
+                  dry_run=dry_run)
 
 
 @cli.command()

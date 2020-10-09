@@ -12,17 +12,11 @@ def _run_command(cmd):
 def get_git_hash(project_root):
     """Get git has in the project root
     """
-    return _run_command('git rev-parse --short HEAD')
+    return _run_command('git describe --always --dirty')
 
 
 def get_previous_git_hash(project_root):
     """Get git hash from the previous commit
-    """
-    pass
-
-
-def is_dirty(project_root):
-    """Returns True if there are uncommitted changes
     """
     pass
 
@@ -37,5 +31,5 @@ class GitRepo:
     def __init__(self, path):
         self.path = path
 
-    def get_git_hash(self, length=8):
+    def get_git_hash(self):
         return get_git_hash(self.path)

@@ -22,6 +22,7 @@ import yaml
 
 from soopervisor.script.script import generate_script
 from soopervisor.git_handler import GitRepo
+from soopervisor.storage.LocalStorage import LocalStorage
 
 
 class StorageConfig(BaseModel):
@@ -47,10 +48,13 @@ class StorageConfig(BaseModel):
             self.path).render(git=GitRepo(project).get_git_hash())
 
     @validator('provider', always=True)
-    def project_must_be_absolute(cls, v):
+    def validate_provider(cls, v):
         if v != 'box':
             raise ValueError('Only "box" is supported')
         return v
+
+    def check(self):
+        LocalStorage(self.path)
 
 
 class Paths(BaseModel):
@@ -103,6 +107,7 @@ class ScriptConfig(BaseModel):
 
         super().__init__(**data)
         self.storage = StorageConfig(project=self.paths.products, **storage)
+        self.storage.check()
 
     @classmethod
     def from_path(cls, project):

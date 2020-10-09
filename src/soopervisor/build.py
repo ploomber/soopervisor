@@ -19,13 +19,14 @@ def check_project(config):
                                 'your pipeline')
 
 
-def build_project(project_root, clean_products_path):
+def build_project(project_root, clean_products_path, dry_run):
     """
     Build a project using settings from a soopervisor.yaml file
     """
     print('Building project')
 
     config = ScriptConfig.from_path(project_root)
+    print(f'Output will be stored at: {config.storage.path}')
 
     check_project(config)
 
@@ -41,6 +42,9 @@ def build_project(project_root, clean_products_path):
         raise ValueError('Unknown executor "{}"'.format(config.executor))
 
     print('Running script with executor: {}'.format(repr(executor)))
-    executor.execute()
 
-    print('Successful build!')
+    if dry_run:
+        print('Dry run, skipping execution...')
+    else:
+        executor.execute()
+        print('Successful build!')
