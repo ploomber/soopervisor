@@ -78,8 +78,7 @@ def test_convers_path_to_env_to_absolute(git_hash, project_root,
                                          path_to_environment, expected):
     config = ScriptConfig(
         paths=dict(project=project_root, environment=path_to_environment))
-    expected_line = ('conda env create --file ' + expected +
-                     ' --name ploomber-env --force')
+    expected_line = (f'conda env create --file {expected}')
 
     assert config.paths.environment == expected
     assert expected_line in config.to_script()
