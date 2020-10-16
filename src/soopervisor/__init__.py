@@ -1,2 +1,2 @@
 # Semantic versioning: https://semver.org/
-__version__ = '0.2dev'
+__version__ = '0.2'
