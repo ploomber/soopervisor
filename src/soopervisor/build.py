@@ -14,9 +14,10 @@ def check_project(config):
             'An environment file was expected at: {}'.format(
                 config.paths.environment))
 
-    if not Path(config.paths.project, 'pipeline.yaml').exists():
+    if not Path(config.paths.project,
+                'pipeline.yaml').exists() and not config.args:
         raise FileNotFoundError('A "pipeline.yaml" is required to declare '
-                                'your pipeline')
+                                'run the pipeline')
 
 
 def build_project(project_root, clean_products_path, dry_run):

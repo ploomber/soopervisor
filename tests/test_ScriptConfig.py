@@ -44,9 +44,13 @@ def test_save_script(git_hash, tmp_directory):
     assert Path(config.paths.project, 'script.sh').exists()
 
 
-def test_to_script(git_hash, tmp_directory):
-    config = ScriptConfig()
-    assert config.to_script()
+@pytest.mark.parametrize('args', [
+    '',
+    '--entry-point .',
+])
+def test_ploomber_command_args_in_script(args, git_hash, tmp_directory):
+    config = ScriptConfig(args=args)
+    assert 'ploomber build ' + args in config.to_script()
 
 
 @pytest.mark.parametrize('create_directory', [False, True])

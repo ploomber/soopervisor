@@ -103,9 +103,7 @@ class ScriptConfig(BaseModel):
 
     paths: Optional[Paths] = Field(default_factory=Paths)
     cache_env: Optional[bool] = True
-    # command for running the pipeline
-    # TODO: integrate this into script.sh
-    command: Optional[str] = 'ploomber build'
+    args: Optional[str] = ''
     storage: StorageConfig = None
     executor: Optional[str] = 'local'
     allow_incremental: Optional[bool] = True

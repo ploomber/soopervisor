@@ -41,7 +41,7 @@ fi
 
 
 # run pipeline
-ploomber build
+ploomber build {{config.args}}
 
 {% if config.storage.enable %}
 # ploomber ci should also be installed in the project's env
