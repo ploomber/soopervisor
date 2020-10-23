@@ -11,7 +11,7 @@ def setup(c):
     c.run('conda create --name soopervisor python=3.8 --yes')
     c.run('eval "$(conda shell.bash hook)" '
           '&& conda activate soopervisor '
-          '&& pip install --editable .[all]')
+          '&& pip install --editable .[dev]')
     print('Done! Activate your environment with:\nconda activate soopervisor')
 
 
