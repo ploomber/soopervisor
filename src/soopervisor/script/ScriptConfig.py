@@ -58,18 +58,28 @@ class StorageConfig(BaseModel):
 
 
 class Paths(BaseModel):
+    class Config:
+        fields = {'environment': '_environment', 'products': '_products'}
+        validate_assignment = True
+
     project: Optional[str] = '.'
-    products: Optional[str] = 'output'
-    environment: Optional[str] = 'environment.yml'
+    _products: Optional[str] = 'output'
+    _environment: Optional[str] = 'environment.yml'
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
-        self.products = self._resolve_path(self.products)
-        self.environment = self._resolve_path(self.environment)
 
     @validator('project', always=True)
     def project_must_be_absolute(cls, v):
         return str(Path(v).resolve())
+
+    @property
+    def environment(self):
+        return self._resolve_path(self._environment)
+
+    @property
+    def products(self):
+        return self._resolve_path(self._products)
 
     def _resolve_path(self, path):
         if Path(path).is_absolute():

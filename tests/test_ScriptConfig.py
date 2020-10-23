@@ -16,6 +16,15 @@ def test_default_values(git_hash, tmp_directory):
     assert config.storage.path == 'runs/GIT-HASH'
 
 
+def test_on_update(git_hash, tmp_directory):
+    config = ScriptConfig()
+    config.paths.project = 'new_project_root'
+    new_root = Path(tmp_directory, 'new_project_root')
+    assert config.paths.project == str(new_root)
+    assert config.paths.environment == str(Path(new_root, 'environment.yml'))
+    assert config.paths.products == str(Path(new_root, 'output'))
+
+
 def test_initialize_from_empty_project(git_hash, tmp_directory):
     # must initialize with default values
     assert ScriptConfig.from_path('.') == ScriptConfig()
