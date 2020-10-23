@@ -1,23 +1,9 @@
 from pathlib import Path
 
 from soopervisor.script.ScriptConfig import ScriptConfig
+from soopervisor import validate
 from soopervisor.executors.LocalExecutor import LocalExecutor
 from soopervisor.executors.DockerExecutor import DockerExecutor
-
-
-def check_project(config):
-    """
-    Verify project has the right structure before running the script
-    """
-    if not Path(config.paths.environment).exists():
-        raise FileNotFoundError(
-            'An environment file was expected at: {}'.format(
-                config.paths.environment))
-
-    if not Path(config.paths.project,
-                'pipeline.yaml').exists() and not config.args:
-        raise FileNotFoundError('A "pipeline.yaml" is required to declare '
-                                'run the pipeline')
 
 
 def build_project(project_root, clean_products_path, dry_run):
@@ -31,7 +17,7 @@ def build_project(project_root, clean_products_path, dry_run):
 
     print(f'Output will be stored at: {config.storage.path}')
 
-    check_project(config)
+    validate.project(config)
 
     if clean_products_path:
         print('Cleaning product root folder...')

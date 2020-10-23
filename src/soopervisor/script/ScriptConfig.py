@@ -31,40 +31,50 @@ class StorageConfig(BaseModel):
 
     provider: str
         'box' for uploading files to box or 'local' to just copy files
-        to a local directory
+        to a local directory. None to disable
 
     path: str
         Path where the files will be moved, defaults to runs/{{git}},
         where {{git}} will be replaced by the current git hash
     """
-    provider: Optional[str] = 'box'
+    paths: Optional[str]
+
+    provider: Optional[str] = None
     path: Optional[str] = 'runs/{{git}}'
-    enable: Optional[bool] = False
     credentials: Optional[str]
 
-    def __init__(self, *, project, **data) -> None:
+    def __init__(self, *, paths, **data) -> None:
         super().__init__(**data)
-        self.path = Template(
-            self.path).render(git=GitRepo(project).get_git_hash())
+        self.paths = paths
 
     @validator('provider', always=True)
     def validate_provider(cls, v):
-        if v != 'box':
-            raise ValueError('Only "box" is supported')
+        valid = {'box', 'local', None}
+        if v not in valid:
+            raise ValueError(f'Provider must be one of: {valid}')
         return v
 
     def check(self):
         LocalStorage(self.path)
 
+    def dict(self, *args, **kwargs):
+        d = super().dict(*args, **kwargs)
+
+        # only expand if storage is enabled
+        if d['provider']:
+            d['path'] = Template(d['path']).render(
+                git=GitRepo(self.paths.project).get_git_hash())
+
+        return d
+
 
 class Paths(BaseModel):
     class Config:
-        fields = {'environment': '_environment', 'products': '_products'}
         validate_assignment = True
 
     project: Optional[str] = '.'
-    _products: Optional[str] = 'output'
-    _environment: Optional[str] = 'environment.yml'
+    products: Optional[str] = 'output'
+    environment: Optional[str] = 'environment.yml'
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -73,13 +83,11 @@ class Paths(BaseModel):
     def project_must_be_absolute(cls, v):
         return str(Path(v).resolve())
 
-    @property
-    def environment(self):
-        return self._resolve_path(self._environment)
-
-    @property
-    def products(self):
-        return self._resolve_path(self._products)
+    def dict(self, *args, **kwargs):
+        d = super().dict(*args, **kwargs)
+        d['environment'] = self._resolve_path(d['environment'])
+        d['products'] = self._resolve_path(d['products'])
+        return d
 
     def _resolve_path(self, path):
         if Path(path).is_absolute():
@@ -98,6 +106,8 @@ class ScriptConfig(BaseModel):
     """
     Root section fo rthe confiuration file
 
+    Parameters
+    ----------
     paths : dict
         Section to configure important project paths
 
@@ -110,13 +120,15 @@ class ScriptConfig(BaseModel):
     allow_incremental : bool
         If True, allows execution on non-empty product folders
     """
-
+    # FIXME: defaults should favor convenience (less chance of errors)
+    # vs speed. set cache_env to false
     paths: Optional[Paths] = Field(default_factory=Paths)
     cache_env: Optional[bool] = True
     args: Optional[str] = ''
     storage: StorageConfig = None
     executor: Optional[str] = 'local'
     allow_incremental: Optional[bool] = True
+    environment_prefix: Optional[str] = None
 
     def __init__(self, **data) -> None:
         if 'storage' in data:
@@ -125,7 +137,7 @@ class ScriptConfig(BaseModel):
             storage = {}
 
         super().__init__(**data)
-        self.storage = StorageConfig(project=self.paths.products, **storage)
+        self.storage = StorageConfig(paths=self.paths, **storage)
         self.storage.check()
 
     @classmethod
@@ -149,7 +161,27 @@ class ScriptConfig(BaseModel):
         return config
 
     def to_script(self):
-        return generate_script(config=self)
+        return generate_script(config=self.dict())
+
+    def dict(self, *args, **kwargs):
+        d = super().dict(*args, **kwargs)
+        if d['environment_prefix'] is not None:
+            d['environment_prefix'] = self._resolve_path(
+                d['environment_prefix'])
+            d['environment_name'] = d['environment_prefix']
+        else:
+            with open(d['paths']['environment']) as f:
+                env_spec = yaml.safe_load(f)
+
+            d['environment_name'] = env_spec['name']
+
+        return d
+
+    def _resolve_path(self, path):
+        if Path(path).is_absolute():
+            return str(Path(path).resolve())
+        else:
+            return str(Path(self.paths.project, path).resolve())
 
     def save_script(self):
         """Save script to the project's root directory, returns script location
@@ -163,7 +195,3 @@ class ScriptConfig(BaseModel):
         if Path(self.paths.products).exists():
             shutil.rmtree(self.paths.products)
             Path(self.paths.products).mkdir()
-
-    @property
-    def environment_prefix(self):
-        return Path(self.paths.project, '.soopervisor', 'env')

@@ -4,6 +4,7 @@ import shutil
 from pathlib import Path
 
 import pytest
+import yaml
 
 from soopervisor.git_handler import GitRepo
 
@@ -21,6 +22,9 @@ def faker():
 def tmp_directory(tmp_path):
     old = os.getcwd()
     os.chdir(str(tmp_path))
+
+    # tests require a valid environment.yml
+    Path('environment.yml').write_text(yaml.dump({'name': 'some-env'}))
 
     yield str(Path(tmp_path).resolve())
 

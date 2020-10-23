@@ -62,7 +62,7 @@ setup(
     ],
     install_requires=REQUIRES,
     extras_require={
-        'dev': EXTRAS_OPT + EXTRAS_DEV,
+        'all': EXTRAS_OPT + EXTRAS_DEV,
         'opt': EXTRAS_OPT
     },
     setup_requires=[],

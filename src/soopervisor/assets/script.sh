@@ -8,20 +8,20 @@ conda activate base
 cd {{config.paths.project}}
 
 {% if config.cache_env %}
-ENV_EXISTS=$(conda env list | grep "{{config.environment_prefix}}" | wc -l)
+ENV_EXISTS=$(conda env list | grep "{{config.environment_name}}" | wc -l)
 if [[ $ENV_EXISTS -ne 0 ]];
 then
     echo "Environment exists, activating it..."
 else
     echo "Environment does not exist, creating it..."
-    conda env create --file {{config.paths.environment}} --prefix {{config.environment_prefix}}
+    conda env create --file {{config.paths.environment}} {{ '' if not config.environment_prefix else '--prefix ' + config.environment_prefix }} 
 fi
 {% else %}
-conda env create --file {{config.paths.environment}} --force --prefix {{config.environment_prefix}}
+conda env create --file {{config.paths.environment}} --force {{ '' if not config.environment_prefix else '--prefix ' + config.environment_prefix }}
 {% endif %}
 
 echo 'Activating environtment...'
-conda activate {{config.environment_prefix}}
+conda activate {{config.environment_name}}
 
 # verify ploomber is installed
 python -c "import ploomber" || PLOOMBER_INSTALLED=$?
@@ -43,7 +43,7 @@ fi
 # run pipeline
 ploomber build {{config.args}}
 
-{% if config.storage.enable %}
+{% if config.storage.provider %}
 # ploomber ci should also be installed in the project's env
 python -c "import soopervisor" || soopervisor_INSTALLED=$?
 if [[ $soopervisor_INSTALLED -ne 0 ]];

@@ -13,7 +13,7 @@ Notes:
 
 Use jinja to generate the script (it makes easy to embed logic)
 """
-from jinja2 import Environment, PackageLoader
+from jinja2 import Environment, PackageLoader, StrictUndefined
 
 
 def generate_script(config):
@@ -27,7 +27,8 @@ def generate_script(config):
     config : ScriptConfig
         Script settings
     """
-    env = Environment(loader=PackageLoader('soopervisor', 'assets'))
+    env = Environment(loader=PackageLoader('soopervisor', 'assets'),
+                      undefined=StrictUndefined)
     template = env.get_template('script.sh')
     # config = __scape_spaces_on_paths(config)
 
