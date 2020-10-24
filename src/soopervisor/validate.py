@@ -26,8 +26,7 @@ def project(config_dict):
                                 str(pipeline_yaml))
 
     try:
-        # read from abs path
-        dag = DAGSpec('pipeline.yaml').to_dag()
+        dag = DAGSpec(pipeline_yaml).to_dag()
         dag.render()
     except Exception as e:
         raise RuntimeError(
@@ -51,8 +50,8 @@ def airflow_pre(config_dict, dag):
         raise FileNotFoundError('Expected an "env.airflow.yaml", but got a '
                                 'directory at: ' + str(env_airflow_yaml))
 
-    # TODO: read from abs path
-    dag_airflow = DAGSpec('pipeline.yaml', env='env.airflow.yaml').to_dag()
+    dag_airflow = DAGSpec(project_root / 'pipeline.yaml',
+                          env=env_airflow_yaml).to_dag()
     dag_airflow.render()
 
     # if factory function, check it's decorated to load from env.yaml (?)

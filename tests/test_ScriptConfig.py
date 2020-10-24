@@ -1,11 +1,12 @@
-import yaml
+import os
 from pathlib import Path
 from io import StringIO
 from unittest.mock import Mock
 
+import yaml
 import pytest
-
 from pydantic import ValidationError
+
 from soopervisor.script import ScriptConfig as script_config_module
 from soopervisor.script.ScriptConfig import ScriptConfig, StorageConfig, Paths
 
@@ -51,6 +52,16 @@ def test_on_update(git_hash, tmp_empty):
 def test_initialize_from_empty_project(git_hash):
     # must initialize with default values
     assert ScriptConfig.from_path('.') == ScriptConfig()
+
+
+def test_initialize_from_custom_path(tmp_sample_project_in_subdir):
+    sub_dir = Path('subdir')
+
+    # initialize with a custom path
+    config = ScriptConfig.from_path('subdir')
+
+    # project path should be located in the custom path
+    assert config.paths.project == str(sub_dir.resolve())
 
 
 def test_initialize_with_config_file(git_hash, tmp_empty):

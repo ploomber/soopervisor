@@ -115,7 +115,7 @@ class Paths(BaseModel):
 
 class ScriptConfig(BaseModel):
     """
-    Root section fo rthe confiuration file
+    Root section for the configuration file
 
     Parameters
     ----------
@@ -159,7 +159,13 @@ class ScriptConfig(BaseModel):
         """
         Initializes a ScriptConfig from a directory. Looks for a
         project/soopervisor.yaml file, if it doesn't exist, it just
-        initializes with default values
+        initializes with default values, except by paths.project, which is set
+        to ``project``
+
+        Parameters
+        ----------
+        project : str or pathlib.Path
+            The project's location
         """
         path = Path(project, 'soopervisor.yaml')
 
@@ -170,7 +176,7 @@ class ScriptConfig(BaseModel):
             config = cls(**d)
 
         else:
-            config = cls()
+            config = cls(paths=dict(project=str(project)))
 
         return config
 
@@ -198,6 +204,10 @@ class ScriptConfig(BaseModel):
                 d['environment_name'] = None
 
         return d
+
+    def validate(self):
+        d = self.dict()
+        validate_module.project(d)
 
     def export(self, validate=True, return_dag=False):
         d = self.dict()
@@ -229,3 +239,15 @@ class ScriptConfig(BaseModel):
         if Path(self.paths.products).exists():
             shutil.rmtree(self.paths.products)
             Path(self.paths.products).mkdir()
+
+
+class AirflowConfig(ScriptConfig):
+    """
+    Configuration for exporting Ploomber (Soopervisor-compliant) projects to
+    Airflow. Same schema as ScriptConfig, but it adds a few validation rules
+    specific to Airflow
+    """
+    def validate(self):
+        d = self.dict()
+        dag = validate_module.project(d)
+        validate_module.airflow_pre(d, dag)

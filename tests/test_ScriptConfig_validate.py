@@ -99,6 +99,12 @@ def test_no_error_if_products_outside_project_root(products,
     validate.airflow_pre(d, dag)
 
 
+def test_no_error_when_validating_from_a_parent_folder(
+        tmp_sample_project_in_subdir):
+    d, dag = ScriptConfig.from_path('subdir').export(return_dag=True)
+    validate.airflow_pre(d, dag)
+
+
 def test_error_if_pipeline_has_python_callables(tmp_callables):
     d, dag = ScriptConfig.from_path('.').export(return_dag=True)
 

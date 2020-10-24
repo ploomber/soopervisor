@@ -40,6 +40,21 @@ def tmp_sample_project(tmp_path):
     os.chdir(old)
 
 
+@pytest.fixture()
+def tmp_sample_project_in_subdir(tmp_sample_project):
+    """
+    Sample as tmp_sample_project but moves all contents to a subdirectory
+    """
+    files = os.listdir()
+    sub_dir = Path('subdir')
+    sub_dir.mkdir()
+
+    for f in files:
+        Path(f).rename(sub_dir / f)
+
+    yield tmp_sample_project
+
+
 @pytest.fixture
 def tmp_callables(tmp_path):
     """Pipeline with PythonCallable tasks
