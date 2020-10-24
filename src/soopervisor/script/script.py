@@ -16,7 +16,7 @@ Use jinja to generate the script (it makes easy to embed logic)
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
 
-def generate_script(config):
+def generate_script(config, command):
     """
     Generate a bash script (string) to run a pipeline in a clean environment
 
@@ -32,7 +32,14 @@ def generate_script(config):
     template = env.get_template('script.sh')
     # config = __scape_spaces_on_paths(config)
 
-    return template.render(config=config)
+    args = config['args']
+
+    if args and command:
+        raise ValueError(f'args should be empty (got "{args}") if passing a '
+                         'custom command, pass any extra ags directly in '
+                         'the command argument')
+
+    return template.render(config=config, command=command)
 
 
 def __scape_spaces_on_paths(config):

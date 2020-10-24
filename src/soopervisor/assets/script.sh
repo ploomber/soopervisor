@@ -40,8 +40,12 @@ if [ -f "setup.py" ]; then
 fi
 
 
+{% if command %}
+{{command}}
+{% else %}
 # run pipeline
 ploomber build {{config.args}}
+{% endif %}
 
 {% if config.storage.provider %}
 # ploomber ci should also be installed in the project's env

@@ -5,8 +5,21 @@ from unittest.mock import Mock
 
 import pytest
 
+from pydantic import ValidationError
 from soopervisor.script import ScriptConfig as script_config_module
-from soopervisor.script.ScriptConfig import ScriptConfig, Paths
+from soopervisor.script.ScriptConfig import ScriptConfig, StorageConfig, Paths
+
+
+@pytest.mark.parametrize('class_', [ScriptConfig, StorageConfig, Paths])
+def test_models_fail_when_passing_extra_args(class_):
+    kwargs = dict(extra=1)
+
+    # special case, StorageConfig needs a paths arg
+    if class_ is StorageConfig:
+        kwargs['paths'] = None
+
+    with pytest.raises(ValidationError):
+        class_(**kwargs)
 
 
 def test_default_values(git_hash, session_sample_project):
@@ -84,6 +97,21 @@ def test_ploomber_command_args_in_script(args, git_hash,
                                          session_sample_project):
     config = ScriptConfig(args=args)
     assert 'ploomber build ' + args in config.to_script()
+
+
+def test_custom_command(session_sample_project):
+    config = ScriptConfig()
+    assert 'some custom command' in config.to_script(
+        command='some custom command')
+
+
+def test_error_if_custom_command_and_args(session_sample_project):
+    config = ScriptConfig(args='some args')
+
+    with pytest.raises(ValueError) as excinfo:
+        config.to_script(command='some custom command')
+
+    assert 'args should be empty (got "some args")' in str(excinfo.value)
 
 
 @pytest.mark.parametrize('create_directory', [False, True])

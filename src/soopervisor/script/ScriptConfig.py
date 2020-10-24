@@ -44,6 +44,9 @@ class StorageConfig(BaseModel):
     path: Optional[str] = 'runs/{{git}}'
     credentials: Optional[str]
 
+    class Config:
+        extra = 'forbid'
+
     def __init__(self, *, paths, **data) -> None:
         super().__init__(**data)
         self.paths = paths
@@ -72,6 +75,7 @@ class StorageConfig(BaseModel):
 class Paths(BaseModel):
     class Config:
         validate_assignment = True
+        extra = 'forbid'
 
     project: Optional[str] = '.'
     # this only used by storage, maybe move to Storage then.
@@ -137,6 +141,9 @@ class ScriptConfig(BaseModel):
     allow_incremental: Optional[bool] = True
     environment_prefix: Optional[str] = None
 
+    class Config:
+        extra = 'forbid'
+
     def __init__(self, **data) -> None:
         if 'storage' in data:
             storage = data.pop('storage')
@@ -167,8 +174,9 @@ class ScriptConfig(BaseModel):
 
         return config
 
-    def to_script(self, validate=True):
-        return generate_script(config=self.export(validate=validate))
+    def to_script(self, validate=True, command=None):
+        return generate_script(config=self.export(validate=validate),
+                               command=command)
 
     def dict(self, *args, **kwargs):
         d = super().dict(*args, **kwargs)
@@ -196,8 +204,10 @@ class ScriptConfig(BaseModel):
 
         if validate:
             dag = validate_module.project(d)
+        else:
+            dag = None
 
-        return d if not return_dag else d, dag
+        return d if not return_dag else (d, dag)
 
     def _resolve_path(self, path):
         if Path(path).is_absolute():
