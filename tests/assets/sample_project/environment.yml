@@ -1,4 +1,4 @@
-name: sample_project
+name: sample-project-env
 
 dependencies:
   # change the version here if you need to

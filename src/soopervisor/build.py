@@ -1,7 +1,4 @@
-from pathlib import Path
-
 from soopervisor.script.ScriptConfig import ScriptConfig
-from soopervisor import validate
 from soopervisor.executors.LocalExecutor import LocalExecutor
 from soopervisor.executors.DockerExecutor import DockerExecutor
 
@@ -16,8 +13,6 @@ def build_project(project_root, clean_products_path, dry_run):
     print(config.paths)
 
     print(f'Output will be stored at: {config.storage.path}')
-
-    validate.project(config)
 
     if clean_products_path:
         print('Cleaning product root folder...')

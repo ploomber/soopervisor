@@ -4,7 +4,6 @@ import shutil
 from pathlib import Path
 
 import pytest
-import yaml
 
 from soopervisor.git_handler import GitRepo
 
@@ -19,15 +18,10 @@ def faker():
 
 
 @pytest.fixture()
-def tmp_directory(tmp_path):
+def tmp_empty(tmp_path):
     old = os.getcwd()
     os.chdir(str(tmp_path))
-
-    # tests require a valid environment.yml
-    Path('environment.yml').write_text(yaml.dump({'name': 'some-env'}))
-
     yield str(Path(tmp_path).resolve())
-
     os.chdir(old)
 
 
@@ -42,6 +36,27 @@ def tmp_sample_project(tmp_path):
     os.chdir(str(tmp))
 
     yield tmp
+
+    os.chdir(old)
+
+
+@pytest.fixture(scope='session')
+def session_sample_project(tmp_path_factory):
+    """
+    Similar to tmp_directory but tasks should not modify content, since
+    it's a session-wide fixture
+    """
+    sample_project = str(_path_to_tests() / 'assets' / 'sample_project')
+    tmp_dir = tmp_path_factory.mktemp('session-wide-tmp-directory')
+    tmp_target = str(tmp_dir / 'sample_project')
+
+    shutil.copytree(sample_project, tmp_target)
+    old = os.getcwd()
+    os.chdir(tmp_target)
+
+    yield tmp_target
+
+    # TODO: check files were not modified
 
     os.chdir(old)
 

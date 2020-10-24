@@ -10,7 +10,7 @@ from soopervisor.executors.LocalExecutor import LocalExecutor
 
 
 def test_run_script(git_hash, monkeypatch, tmp_sample_project):
-    script_config = ScriptConfig(paths={'project': 'my-project'})
+    script_config = ScriptConfig(paths={'project': str(tmp_sample_project)})
     executor = LocalExecutor(script_config)
 
     mock_subprocess = Mock()
@@ -22,7 +22,7 @@ def test_run_script(git_hash, monkeypatch, tmp_sample_project):
         executor.execute()
 
     # must execute from the project's root
-    expected_location = Path(tmp_sample_project, 'my-project', 'script.sh')
+    expected_location = Path(tmp_sample_project, 'script.sh')
 
     # deletes upon execution
     assert not expected_location.exists()

@@ -19,4 +19,4 @@ def setup(c):
 def test_no_docker(c):
     """Run all tests except the ones that use Docker
     """
-    c.run('pytest tests --ignore tests/test_docker_executor.py')
+    c.run('pytest tests --ignore tests/test_docker_executor.py', pty=True)

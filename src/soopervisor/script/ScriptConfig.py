@@ -23,6 +23,7 @@ import yaml
 from soopervisor.script.script import generate_script
 from soopervisor.git_handler import GitRepo
 from soopervisor.storage.LocalStorage import LocalStorage
+from soopervisor import validate as validate_module
 
 
 class StorageConfig(BaseModel):
@@ -73,6 +74,12 @@ class Paths(BaseModel):
         validate_assignment = True
 
     project: Optional[str] = '.'
+    # this only used by storage, maybe move to Storage then.
+    # although we need it for airflow when running in docker/kubernetes
+    # because we need to make sure all products will be generated in a
+    # single folder so we know what to mount - we have to think this,
+    # cause there is some overlap but in the end, exporting is a different
+    # operation than product storage
     products: Optional[str] = 'output'
     environment: Optional[str] = 'environment.yml'
 
@@ -160,20 +167,35 @@ class ScriptConfig(BaseModel):
 
         return config
 
-    def to_script(self):
-        return generate_script(config=self.dict())
+    def to_script(self, validate=True):
+        return generate_script(config=self.export(validate=validate))
 
     def dict(self, *args, **kwargs):
         d = super().dict(*args, **kwargs)
+
         if d['environment_prefix'] is not None:
             d['environment_prefix'] = self._resolve_path(
                 d['environment_prefix'])
             d['environment_name'] = d['environment_prefix']
         else:
-            with open(d['paths']['environment']) as f:
-                env_spec = yaml.safe_load(f)
+            if Path(d['paths']['environment']).exists():
+                with open(d['paths']['environment']) as f:
+                    env_spec = yaml.safe_load(f)
 
-            d['environment_name'] = env_spec['name']
+                try:
+                    d['environment_name'] = env_spec['name']
+                except Exception:
+                    d['environment_name'] = None
+            else:
+                d['environment_name'] = None
+
+        return d
+
+    def export(self, validate=True):
+        d = self.dict()
+
+        if validate:
+            validate_module.project(d)
 
         return d
 
@@ -184,9 +206,11 @@ class ScriptConfig(BaseModel):
             return str(Path(self.paths.project, path).resolve())
 
     def save_script(self):
-        """Save script to the project's root directory, returns script location
         """
-        script = self.to_script()
+        Generate, validate and save script to the project's root directory,
+        returns script location
+        """
+        script = self.to_script(validate=True)
         path_to_script = Path(self.paths.project, 'script.sh')
         path_to_script.write_text(script)
         return str(path_to_script)
