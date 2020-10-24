@@ -1,11 +1,15 @@
-# Documentation: https://ploomber.readthedocs.io/en/stable/spec.html
+meta:
+  extract_product: False
 
 tasks:
   - source: raw.py
     name: raw
+    product: {'nb': '{{path.products}}/data.ipynb', 'data': '{{path.products}}/data.csv'}
 
   - source: clean.py
     name: clean
+    product: {'nb': '{{path.products}}/clean.ipynb', 'data': '{{path.products}}/clean.csv'}
 
   - source: plot.py
     name: plot
+    product: {'nb': '{{path.products}}/plot.ipynb'}

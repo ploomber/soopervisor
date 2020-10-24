@@ -191,13 +191,13 @@ class ScriptConfig(BaseModel):
 
         return d
 
-    def export(self, validate=True):
+    def export(self, validate=True, return_dag=False):
         d = self.dict()
 
         if validate:
-            validate_module.project(d)
+            dag = validate_module.project(d)
 
-        return d
+        return d if not return_dag else d, dag
 
     def _resolve_path(self, path):
         if Path(path).is_absolute():

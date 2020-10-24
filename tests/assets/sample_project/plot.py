@@ -5,7 +5,7 @@ import pandas as pd
 
 # + tags=["parameters"]
 upstream = ['clean']
-product = {'nb': 'output/plot.ipynb'}
+product = None
 # -
 
 # +

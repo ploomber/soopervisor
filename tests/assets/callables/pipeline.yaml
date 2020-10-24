@@ -1,0 +1,20 @@
+meta:
+  extract_upstream: True
+  extract_product: False
+
+tasks:
+    # tasks.get, features and join are python functions
+  - source: tasks.get
+    product: "{{path.products}}/get.parquet"
+
+  - source: tasks.features
+    product: "{{path.products}}/features.parquet"
+
+  - source: tasks.join
+    product: "{{path.products}}/join.parquet"
+
+    # fit.py is a script executed as a notebook
+  - source: fit.py
+    product:
+        nb: "{{path.products}}/nb.ipynb"
+        model: "{{path.products}}/model.pickle"

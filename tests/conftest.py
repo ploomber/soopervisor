@@ -40,6 +40,23 @@ def tmp_sample_project(tmp_path):
     os.chdir(old)
 
 
+@pytest.fixture
+def tmp_callables(tmp_path):
+    """Pipeline with PythonCallable tasks
+    """
+    relative_path = "assets/callables"
+    old = os.getcwd()
+    tmp = Path(tmp_path, relative_path)
+    sample_project = _path_to_tests() / relative_path
+    shutil.copytree(str(sample_project), str(tmp))
+
+    os.chdir(str(tmp))
+
+    yield tmp
+
+    os.chdir(old)
+
+
 @pytest.fixture(scope='session')
 def session_sample_project(tmp_path_factory):
     """
