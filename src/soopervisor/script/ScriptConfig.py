@@ -141,6 +141,15 @@ class ScriptConfig(BaseModel):
     allow_incremental: Optional[bool] = True
     environment_prefix: Optional[str] = None
 
+    # TODO: add a lazy_import option? there are cases when we want to
+    # instantiate the dag and render without actually executing it,
+    # for rendering, we don't have to import all dotted paths (although this
+    # limits our ability to do render-time checks), the benefit is that
+    # we could export dags in environments that do not necessarily have
+    # all dependencies installed, but just limit themselves to do a few checks
+    # this is a must when loading the dag in the airflow host but could be
+    # optional when exporting
+
     class Config:
         extra = 'forbid'
 
@@ -247,6 +256,11 @@ class AirflowConfig(ScriptConfig):
     Airflow. Same schema as ScriptConfig, but it adds a few validation rules
     specific to Airflow
     """
+
+    # NOTE: another validation we can implement would be to create the
+    # environment.yml and then make sure we can instantiate the dag, this would
+    # allow to verify missing dependencies before exporting rather than when
+    # trying to run it in the airflow host
     def validate(self):
         d = self.dict()
         dag = validate_module.project(d)
