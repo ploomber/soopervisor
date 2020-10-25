@@ -103,13 +103,3 @@ def test_no_error_when_validating_from_a_parent_folder(
         tmp_sample_project_in_subdir):
     d, dag = ScriptConfig.from_path('subdir').export(return_dag=True)
     validate.airflow_pre(d, dag)
-
-
-def test_error_if_pipeline_has_python_callables(tmp_callables):
-    d, dag = ScriptConfig.from_path('.').export(return_dag=True)
-
-    with pytest.raises(ValueError) as excinfo:
-        validate.airflow_pre(d, dag)
-
-    assert ('The initialized DAG is invalid. It contains at  least one '
-            'PythonCallable task' in str(excinfo.value))
