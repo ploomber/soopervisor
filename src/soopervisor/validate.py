@@ -3,7 +3,6 @@ from itertools import chain
 
 from ploomber.spec import DAGSpec
 from ploomber.products import MetaProduct
-from ploomber.tasks import PythonCallable
 
 
 def project(config_dict):
@@ -16,6 +15,10 @@ def project(config_dict):
             'Expected a conda "environment.yml" at: {}'.format(
                 config_dict['paths']['environment']))
 
+    # TODO: warn if the environment file does not have pinned versions
+    # TODO: warn if the setup.py dependencies (if any), does not have pinned
+    # versions
+
     if config_dict['environment_name'] is None:
         raise ValueError('Failed to extract the environment name from the '
                          'conda "environment.yaml"')
@@ -26,7 +29,8 @@ def project(config_dict):
                                 str(pipeline_yaml))
 
     try:
-        dag = DAGSpec(pipeline_yaml).to_dag()
+        # NOTE: should lazy_import be an option from config?
+        dag = DAGSpec(pipeline_yaml, lazy_import=True).to_dag()
         dag.render()
     except Exception as e:
         raise RuntimeError(
@@ -50,8 +54,10 @@ def airflow_pre(config_dict, dag):
         raise FileNotFoundError('Expected an "env.airflow.yaml", but got a '
                                 'directory at: ' + str(env_airflow_yaml))
 
+    # NOTE: should lazy_import be an option from config?
     dag_airflow = DAGSpec(project_root / 'pipeline.yaml',
-                          env=env_airflow_yaml).to_dag()
+                          env=env_airflow_yaml,
+                          lazy_import=True).to_dag()
     dag_airflow.render()
 
     # if factory function, check it's decorated to load from env.yaml (?)
@@ -98,25 +104,6 @@ def airflow_pre(config_dict, dag):
 
     # maybe instantiate with env.yaml and env.airflow.yaml to make sure
     # products don't clash?
-
-    # check dag has no PythonCallable tasks - we will support this when
-    # ploomber has an public api to export functions to notebooks. It is
-    # technically possible to use them but this would require the Airflow
-    # host to have all dependencies that those functions use,
-    # because instantiating the Ploomber DAG requires importing them.
-    # Requiring certain packages to be installed in Airflow can cause a lot
-    # of trouble. There is a potential solution for this, see Ploomber issue
-    # #275
-    has_callables = any(
-        isinstance(dag_airflow[t], PythonCallable)
-        for t in dag_airflow._iter())
-
-    if has_callables:
-        raise ValueError(
-            'The initialized DAG is invalid. It contains at  '
-            'least one PythonCallable task, whcih are currently not supported '
-            'when exporting to Airflow. Convert them to scripts and use '
-            'NotebookRunner instead')
 
     # check all products are prefixed with products root - this implies
     # that files should be absolute paths otherwise it's ambiguous -
