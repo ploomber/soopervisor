@@ -1,16 +1,5 @@
 """
-Schema
-------
-
-paths:
-    # path to project directory
-    project: .
-    # path to products directory (if relative, it is to paths.project),
-    # any generated file in this folder is considered a pipeline product
-    products: output/
-    # path conda environment file (if relative, it is to paths.project)
-    environment: environment.yml
-
+Schema for the (optional) soopervisor.yaml configuration file
 """
 import shutil
 from pathlib import Path
@@ -27,22 +16,28 @@ from soopervisor import validate as validate_module
 
 
 class StorageConfig(BaseModel):
-    """
-    This section configures there to copy pipeline products after execution
+    """Store pipeline products after execution
 
-    provider: str
+    Parameters
+    ----------
+    provider : str, default=None
         'box' for uploading files to box or 'local' to just copy files
         to a local directory. None to disable
 
-    path: str
+    path : str, default='runs/{{git}}'
         Path where the files will be moved, defaults to runs/{{git}},
         where {{git}} will be replaced by the current git hash
-    """
-    paths: Optional[str]
 
+    credentials : str, default=None
+        Credentials for the storage provider, only required if provider
+        is not 'local'
+    """
     provider: Optional[str] = None
     path: Optional[str] = 'runs/{{git}}'
-    credentials: Optional[str]
+    credentials: Optional[str] = None
+
+    # this is not a field, but a reference to the paths section
+    paths: Optional[str]
 
     class Config:
         extra = 'forbid'
@@ -73,6 +68,24 @@ class StorageConfig(BaseModel):
 
 
 class Paths(BaseModel):
+    """Project's paths
+
+    Parameters
+    ----------
+    project : str, default='.'
+        Project's root
+
+    products : str, default='output'
+        Project product's root. Anything inside this folder is considered
+        a  product upon pipeline execution. If relative, it is so to the
+        project's root, not to the current working directory. Every file on
+        this folder will be uploaded if "storage" is configured.
+
+    environment : str, default='environment.yml'
+        Path to conda environment YAML spec. A virtual environment is created
+        using this file before executing the pipeline. If relative, it is so to
+        the project's root, not to the current working directory.
+    """
     class Config:
         validate_assignment = True
         extra = 'forbid'
@@ -114,32 +127,48 @@ class Paths(BaseModel):
 
 
 class ScriptConfig(BaseModel):
-    """
-    Root section for the configuration file
+    """Coonfiguration schema to execute Ploomber pipelines
 
     Parameters
     ----------
     paths : dict
-        Section to configure important project paths
+        Section to configure project paths, see Paths for schema
 
-    cache_env : bool
-        Create env again only if environment.yml has changed
+    storage : dict
+        Section to configure product's upload after execution, see
+        StorageConfig for schema
 
-    executor : str
-        Which executor to use "local" or "docker"
+    cache_env : bool, default=False
+        If True, re-use conda virtual environment if it exists, otherwise, it
+        creates it every time the pipeline runs
 
-    allow_incremental : bool
-        If True, allows execution on non-empty product folders
+    executor : {'local', 'docker'}, default='local'
+        If 'local', the pipeline executes in a subprocess, if 'docker', it is
+        executed using a Docker container (for this to work, Docker must be
+        already configured and ready to use)
+
+    environment_prefix : str, default=None
+        If None, the conda virtual environment is created in the standard
+        location (usually ~/miniconda/envs/{env-name}), otherwise it is created
+        is a custom location. If relative, it is so to project's root, not to
+        the current working directory.
+
+    allow_incremental : bool, default=True
+        Allow pipeline execution with non-empty product folders
+
+    args : str, default=''
+        Extra arguments to pass to the "ploomber build" command
     """
-    # FIXME: defaults should favor convenience (less chance of errors)
-    # vs speed. set cache_env to false
+    # sub sections
     paths: Optional[Paths] = Field(default_factory=Paths)
-    cache_env: Optional[bool] = True
-    args: Optional[str] = ''
     storage: StorageConfig = None
+
+    # TODO: Create env again only if environment.yml has changed
+    cache_env: Optional[bool] = False
     executor: Optional[str] = 'local'
-    allow_incremental: Optional[bool] = True
     environment_prefix: Optional[str] = None
+    allow_incremental: Optional[bool] = True
+    args: Optional[str] = ''
 
     # TODO: add a lazy_import option? there are cases when we want to
     # instantiate the dag and render without actually executing it,
@@ -251,11 +280,31 @@ class ScriptConfig(BaseModel):
 
 
 class AirflowConfig(ScriptConfig):
+    """Configuration for exporting Ploomber projects to Airflow.
+
+    It has the same schema as ScriptConfig, with a few restrictions, to make
+    deployment simpler and changes a few default values that make more sense
+    for an Airflow deployment.
+
+    Notes
+    -----
+    * There must be an {project-root}/env.airflow.yaml file. Which is renamed
+    to env.yaml when exporting the DAG
+    * Pipeline product's cannot be located inside the project's root, because
+    this folder will become a subfolder of AIRFLOW_HOME/dags and Airflow will
+    continuously scan this folder for new dags
+
+    (all these checks are peformed automatically when exporting)
     """
-    Configuration for exporting Ploomber (Soopervisor-compliant) projects to
-    Airflow. Same schema as ScriptConfig, but it adds a few validation rules
-    specific to Airflow
-    """
+
+    # TODO: Airflow-exclusive parameters, which operator to use (bash,
+    # docker, kubernetespod). Maybe template? jinja template where ploomber's
+    # code will be generated, in case there is some customization to do for
+    # default parameters
+
+    # TODO: some default values should change. for example, look by default
+    # for an environment.lock.yml (explain why) and do not set a default
+    # to products. lazy_import=True, allow_incremental=False
 
     # NOTE: another validation we can implement would be to create the
     # environment.yml and then make sure we can instantiate the dag, this would
