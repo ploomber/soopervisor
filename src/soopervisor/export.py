@@ -1,14 +1,63 @@
 """
 Export a Ploomber DAG to Airflow
 """
+import os
+import shutil
+from pathlib import Path
+
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
+from jinja2 import Environment, PackageLoader, StrictUndefined
 
 from ploomber.spec import DAGSpec
-from soopervisor.script.ScriptConfig import ScriptConfig
+from soopervisor.script.ScriptConfig import AirflowConfig, ScriptConfig
 
 
-def spec_to_airflow(project_root):
+def to_airflow(project_root):
+    env = Environment(loader=PackageLoader('soopervisor', 'assets'),
+                      undefined=StrictUndefined)
+    template = env.get_template('airflow.py')
+
+    project_root = Path(project_root).resolve()
+
+    # validate the project passses soopervisor checks
+    config = AirflowConfig.from_path(project_root)
+    config.validate()
+
+    # use airflow-home to know where to save the Airflow dag definition
+    airflow_home = os.environ.get('AIRFLOW_HOME', '~/airflow')
+    airflow_home = str(Path(airflow_home).expanduser())
+
+    print('Processing project: ', project_root)
+
+    # copy project-root to airflow-home (create a folder with the same name)
+    # TODO: what to exclude?
+    project_name = Path(project_root).name
+    project_root_airflow = Path(airflow_home, 'ploomber', project_name)
+
+    out = template.render(project_root=project_root_airflow,
+                          project_name=project_name)
+
+    if project_root_airflow.exists():
+        print('Removing existing project')
+        shutil.rmtree(project_root_airflow)
+
+    shutil.copytree(project_root, dst=project_root_airflow)
+
+    # delete env.yaml and rename env.airflow.yaml
+    env_yaml = Path(project_root_airflow / 'env.yaml')
+    env_yaml.unlink()
+    Path(project_root_airflow / 'env.airflow.yaml').rename(env_yaml)
+
+    # generate script that exposes the DAG airflow
+    path_out = Path(airflow_home, 'dags', project_name + '.py')
+    path_out.write_text(out)
+
+    print('Copied project source code to: ', project_root_airflow)
+    print('Saved Airflow DAG definition to: ', path_out)
+
+
+def spec_to_airflow(project_root, project_name, airflow_default_args):
     script_cfg = ScriptConfig.from_path(project_root)
     # Replace the project root to reflect the new location - or maybe just
     # write a soopervisor.yaml, then we can we rid of this line
@@ -17,12 +66,12 @@ def spec_to_airflow(project_root):
     # TODO: use lazy_import from script_cfg
     dag = DAGSpec(f'{project_root}/pipeline.yaml', lazy_import=True).to_dag()
 
-    return _dag_to_airflow(dag)
+    return _dag_to_airflow(dag, project_name, script_cfg, airflow_default_args)
 
 
-def _dag_to_airflow(dag, script_cfg, airflow_default_args):
+def _dag_to_airflow(dag, dag_name, script_cfg, airflow_default_args):
     dag_airflow = DAG(
-        dag.name.replace(' ', '-'),
+        dag_name,
         default_args=airflow_default_args,
         description='Ploomber dag',
         schedule_interval=None,
