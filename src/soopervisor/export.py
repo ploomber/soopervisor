@@ -14,6 +14,8 @@ from soopervisor.script.ScriptConfig import AirflowConfig, ScriptConfig
 
 
 def to_airflow(project_root):
+    """Convert a Soopervisor project to an Airflow one
+    """
     env = Environment(loader=PackageLoader('soopervisor', 'assets'),
                       undefined=StrictUndefined)
     template = env.get_template('airflow.py')
@@ -58,6 +60,13 @@ def to_airflow(project_root):
 
 
 def spec_to_airflow(project_root, project_name, airflow_default_args):
+    """Initialize a Soopervisor project DAG and convert it to Airflow
+
+    Notes
+    -----
+    This function is called by the DAG definition parsed by Airflow in
+    {AIRFLOW_HOME}/dags
+    """
     script_cfg = ScriptConfig.from_path(project_root)
     # Replace the project root to reflect the new location - or maybe just
     # write a soopervisor.yaml, then we can we rid of this line
@@ -70,6 +79,13 @@ def spec_to_airflow(project_root, project_name, airflow_default_args):
 
 
 def _dag_to_airflow(dag, dag_name, script_cfg, airflow_default_args):
+    """Convert a Ploomber DAG to an Airflow DAG
+
+    Notes
+    -----
+    This function is called by the DAG definition parsed by Airflow in
+    {AIRFLOW_HOME}/dags
+    """
     dag_airflow = DAG(
         dag_name,
         default_args=airflow_default_args,

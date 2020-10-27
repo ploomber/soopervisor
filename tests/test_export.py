@@ -26,7 +26,7 @@ def test_export_airflow(monkeypatch, tmp_empty):
     export.to_airflow('projects/ml-intermediate')
 
     pweb = subprocess.Popen(['airflow', 'webserver', '-p', '8086'])
-    # p = subprocess.Popen(['airflow', 'scheduler'])
+    p = subprocess.Popen(['airflow', 'scheduler'])
 
     import time
     time.sleep(30)
@@ -38,7 +38,8 @@ def test_export_airflow(monkeypatch, tmp_empty):
     # unpause
     subprocess.run(['airflow', 'trigger_dag', 'ml-intermediate'], check=True)
 
-    # p.kill()
+    p.kill()
+    p.communicate()
+
     pweb.kill()
-    # p.wait()
-    pweb.wait()
+    pweb.communicate()
