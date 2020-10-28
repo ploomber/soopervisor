@@ -3,7 +3,6 @@ from pathlib import Path
 import subprocess
 
 import pytest
-from airflow.utils.dates import days_ago
 
 from soopervisor import export
 
@@ -18,7 +17,7 @@ def test_export_airflow(monkeypatch, tmp_empty):
     Path(airflow_home, 'dags').mkdir()
 
     subprocess.run([
-        'git', 'clone', '--branch', 'dev',
+        'git', 'clone', '--branch', 'dev', '--depth', '1',
         'https://github.com/ploomber/projects'
     ],
                    check=True)

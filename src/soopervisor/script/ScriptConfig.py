@@ -73,7 +73,7 @@ class Paths(BaseModel):
     Parameters
     ----------
     project : str, default='.'
-        Project's root
+        Project's root folder
 
     products : str, default='output'
         Project product's root. Anything inside this folder is considered
@@ -131,13 +131,6 @@ class ScriptConfig(BaseModel):
 
     Parameters
     ----------
-    paths : dict
-        Section to configure project paths, see Paths for schema
-
-    storage : dict
-        Section to configure product's upload after execution, see
-        StorageConfig for schema
-
     cache_env : bool, default=False
         If True, re-use conda virtual environment if it exists, otherwise, it
         creates it every time the pipeline runs
@@ -149,26 +142,33 @@ class ScriptConfig(BaseModel):
 
     environment_prefix : str, default=None
         If None, the conda virtual environment is created in the standard
-        location (usually ~/miniconda/envs/{env-name}), otherwise it is created
-        is a custom location. If relative, it is so to project's root, not to
-        the current working directory.
+        location (usually ``~/miniconda/envs/{env-name}``), otherwise it is
+        created is a custom location. If relative, it is so to project's root,
+        not to the current working directory.
 
     allow_incremental : bool, default=True
         Allow pipeline execution with non-empty product folders
 
     args : str, default=''
         Extra arguments to pass to the "ploomber build" command
-    """
-    # sub sections
-    paths: Optional[Paths] = Field(default_factory=Paths)
-    storage: StorageConfig = None
 
+    paths : dict
+        Section to configure project paths, see Paths for schema
+
+    storage : dict
+        Section to configure product's upload after execution, see
+        StorageConfig for schema
+    """
     # TODO: Create env again only if environment.yml has changed
     cache_env: Optional[bool] = False
     executor: Optional[str] = 'local'
     environment_prefix: Optional[str] = None
     allow_incremental: Optional[bool] = True
     args: Optional[str] = ''
+
+    # sub sections
+    paths: Optional[Paths] = Field(default_factory=Paths)
+    storage: StorageConfig = None
 
     # TODO: add a lazy_import option? there are cases when we want to
     # instantiate the dag and render without actually executing it,
@@ -280,23 +280,6 @@ class ScriptConfig(BaseModel):
 
 
 class AirflowConfig(ScriptConfig):
-    """Configuration for exporting Ploomber projects to Airflow.
-
-    It has the same schema as ScriptConfig, with a few restrictions, to make
-    deployment simpler and changes a few default values that make more sense
-    for an Airflow deployment.
-
-    Notes
-    -----
-    * There must be an {project-root}/env.airflow.yaml file. Which is renamed
-    to env.yaml when exporting the DAG
-    * Pipeline product's cannot be located inside the project's root, because
-    this folder will become a subfolder of AIRFLOW_HOME/dags and Airflow will
-    continuously scan this folder for new dags
-
-    (all these checks are peformed automatically when exporting)
-    """
-
     # TODO: Airflow-exclusive parameters, which operator to use (bash,
     # docker, kubernetespod). Maybe template? jinja template where ploomber's
     # code will be generated, in case there is some customization to do for
