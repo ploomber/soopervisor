@@ -1,15 +1,18 @@
 .. include:: ../README.rst
 
 
-Contents
-========
+User Guide
+==========
 
 .. toctree::
    :maxdepth: 2
 
-   intro
    local
+   ci
+   cron
+   settings
    airflow
+   dev
 
 
 Indices and tables

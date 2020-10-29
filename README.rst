@@ -1,41 +1,59 @@
 Soopervisor
 ===========
 
-
 .. image:: https://github.com/ploomber/ci-for-ds/workflows/CI/badge.svg
    :target: https://github.com/ploomber/ci-for-ds/workflows/CI/badge.svg
    :alt: CI badge
 
 
-Soopervisor is a command line utility to execute and export
-`Ploomber <github.com/ploomber/ploomber>`_-compatible projects.
+Soopervisor introduces the concept of a *Ploomber project*, which is a standard
+way of running `Ploomber <github.com/ploomber/ploomber>`_ pipelines.
 
-Main features
--------------
 
-* Export a Ploomber project to Airflow
-* Execute pipeline locally (in a subprocess or docker container) and keep execution history
-* Execute a pipeline in a Continuous Integration server
+Use cases
+=========
+
+There are currently four use cases for Soopervisor:
+
+1. Running a pipeline locally
+2. Running a pipeline in a continuous integration service
+3. Scheduling a pipeline using cron
+4. Exporting to Apache Airflow
+
+
+How it works
+============
+
+When running a pipeline, Soopervisor expects the following file layout:
+
+1. ``environment.yml``: `Conda environment specification <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually>`_
+2. ``pipeline.yaml``: Ploomber pipeline specification
+
+The parent folder to all these files is defined as the project's root folder.
+
+If your project follows these two conventions, you'll be able to use Soopervisor
+to run your project locally, continuous integration service or Apache Airflow.
+
+
+Project validation
+==================
+
+Before building/exporting your project, Soopervisor first checks that the
+project has the right structure, if it finds any issues, it reports them so you
+can fix them before you attempt to run the pipeline.
+
+If all checks pass, it generates a bash script to install the conda environment
+and then run the pipeline.
+
+How the script is used to actually execute the pipeline depends on your
+configuration settings, the simplest case is to just run it locally, but you
+can also tell Soopervisor to run the pipeline inside a Docker container or
+to just generate the appropriate structure for Airflow to execute the pipeline.
+
 
 Installation
-------------
+============
 
 .. code-block:: sh
 
    pip install soopervisor
-
-
-Development
------------
-
-Once you cloned the repo:
-
-.. code-block::
-
-   pip install --editable ".[dev]"
-
-To run tests:
-
-.. code-block::
-
-   pytest

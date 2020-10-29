@@ -16,12 +16,38 @@ To execute your pipeline, just run:
 
 Unlike ``ploomber build``, ``soopervisor build`` creates the environment first,
 and then executes the pipeline (using ``ploomber build``). This ensures
-dependency installation is part of the reproducibility process.
+dependency installation is part of the execution process.
 
 Once the pipeline finishes execution, it will grab all generated output and
 copy it to a ``runs/{{git}}`` folder, where ``{{git}}`` is replaced by the
-current git hash (Soopervisor assumes you are using git).
+current git hash (Soopervisor assumes you are using git). If you are not
+using git or don't want to organize runs by the git hash, you can change
+the configuration by using a ``soopervisor.yaml`` file:
 
+.. code-block:: yaml
+
+   # soopervisor.yaml
+   storage:
+      path: '/where/to/copy/output/'
+
+
+Note the difference between the pipeline output and runs storage. Soopervisor
+still expects output from your pipeline in the ``output/`` folder and will
+copy the contents of such folder to ``/where/to/save/output/`` when the pipeline
+finishes execution.
+
+If your pipeline saves output to a different folder, you can change the
+following setting:
+
+.. code-block:: yaml
+
+   # soopervisor.yaml
+   paths:
+      products: '/where/pipeline/saves/output/'
+
+
+**Note:** Relative paths in ``soopervisor.yaml`` are so to the project's root
+folder *not* to the current active directory.
 
 Executing inside a Docker container
 -----------------------------------
@@ -30,51 +56,16 @@ Alternatively, you can run your pipeline inside a Docker container by changing
 one setting. Create a ``soopervisor.yaml`` in your project's root folder
 with:
 
+
 .. code-block:: yaml
 
    # soopervisor.yaml
    executor: 'docker'
 
 
+**Note:** for this to work, Docker should be properly configured in the host.
+
 Uploading products to Box
 -------------------------
 
 [Work in progress]
-
-
-Using Soopervisor for Continuous Integration
---------------------------------------------
-
-Since Soopervisor takes care of installing the environemnt and running the
-pipeline, you can use it to automate pipeline execution on every push.
-
-We actually use Soopervisor to test `Ploomber's examples <https://github.com/ploomber/projects/blob/master/.github/workflows/ci.yml>`_,
-if you take a look at the file in the link you'll notice that testing the examples takes just two lines of code:
-
-.. code-block:: sh
-
-   pip install soopervisor
-   soopervisor build
-
-
-Customization
--------------
-
-If you want to customize Soopervisor's behavior, here's the complete schema for
-the ``soopervisor.yaml`` file:
-
-Root section
-************
-
-.. autoclass:: soopervisor.script.ScriptConfig.ScriptConfig
-
-
-``paths`` section
-*****************
-
-.. autoclass:: soopervisor.script.ScriptConfig.Paths
-
-``storage`` section
-*******************
-
-.. autoclass:: soopervisor.script.ScriptConfig.StorageConfig
