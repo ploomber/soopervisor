@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: dag-diamond-
+
+spec:
+  entrypoint: diamond
+
+  volumes:
+  - name: workdir
+    persistentVolumeClaim:
+      claimName: nfs
+
+  templates:
+  - name: run_task
+    inputs:
+      parameters:
+      - name: task_name
+    container:
+      image: continuumio/miniconda3
+      command: [bash]
+      source: |
+        cd /mnt/vol/
+        pip install git+https://github.com/ploomber/soopervisor@dev-edu
+        python -m soopervisor.script.ScriptConfig "ploomber task {{inputs.parameters.task_name}}" > script.sh
+        bash script.sh
+      volumeMounts:
+        - name: workdir
+          mountPath: /mnt/vol
+
+  - name: diamond
+    dag:
+      tasks: null

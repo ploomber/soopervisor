@@ -2,6 +2,7 @@ import click
 
 from soopervisor.build import build_project
 from soopervisor.storage.box import BoxUploader
+from soopervisor import export as export_module
 
 
 @click.group()
@@ -38,6 +39,15 @@ def upload(directory, help='Directory to upload'):
     """
     uploader = BoxUploader.from_environ()
     uploader.upload_files([directory])
+
+
+@cli.command()
+def export():
+    """
+    Export to argo
+    """
+    print('Writing argo workflow to argo.yaml...')
+    export_module.to_argo(project_root='.')
 
 
 if __name__ == '__main__':

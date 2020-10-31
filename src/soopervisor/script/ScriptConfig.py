@@ -7,6 +7,7 @@ from typing import Optional
 
 from pydantic import BaseModel, validator, Field
 from jinja2 import Template
+import click
 import yaml
 
 from soopervisor.script.script import generate_script
@@ -297,3 +298,15 @@ class AirflowConfig(ScriptConfig):
         d = self.dict()
         dag = validate_module.project(d)
         validate_module.airflow_pre(d, dag)
+
+
+@click.command()
+@click.argument('command')
+def _make_script(command):
+    script = ScriptConfig.from_path('.').to_script(validate=True,
+                                                   command=command)
+    print(script)
+
+
+if __name__ == "__main__":
+    _make_script()

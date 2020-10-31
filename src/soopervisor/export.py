@@ -1,16 +1,57 @@
 """
-Export a Ploomber DAG to Airflow
+Export a Ploomber DAG to Argo/Airflow
 """
 import os
 import shutil
 from pathlib import Path
+try:
+    import importlib.resources as pkg_resources
+except ImportError:
+    # Try backported to PY<37 `importlib_resources`.
+    import importlib_resources as pkg_resources
 
+import yaml
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
 from ploomber.spec import DAGSpec
 from soopervisor.script.ScriptConfig import AirflowConfig, ScriptConfig
+from soopervisor import assets
+
+
+def _make_argo_task(name, dependencies):
+    task = {
+        'name': name,
+        'dependencies': dependencies,
+        'template': 'run_task',
+        'arguments': {
+            'parameters': [{
+                'name': 'task_name',
+                'value': 'name',
+            }]
+        }
+    }
+    return task
+
+
+def to_argo(project_root):
+    # TODO: use lazy_import from script_cfg
+    dag = DAGSpec(f'{project_root}/pipeline.yaml', lazy_import=True).to_dag()
+
+    d = yaml.safe_load(pkg_resources.read_text(assets, 'argo-workflow.yaml'))
+
+    tasks_specs = []
+
+    for task_name in dag:
+        task = dag[task_name]
+        spec = _make_argo_task(task_name, list(task.upstream))
+        tasks_specs.append(spec)
+
+    d['spec']['templates'][1]['dag']['tasks'] = tasks_specs
+
+    with open(f'{project_root}/argo.yaml', 'w') as f:
+        yaml.dump(d, f)
 
 
 def to_airflow(project_root):
