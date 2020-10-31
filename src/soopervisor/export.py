@@ -24,11 +24,11 @@ def _make_argo_task(name, dependencies):
     task = {
         'name': name,
         'dependencies': dependencies,
-        'template': 'run_task',
+        'template': 'run-task',
         'arguments': {
             'parameters': [{
                 'name': 'task_name',
-                'value': 'name',
+                'value': name,
             }]
         }
     }
@@ -48,6 +48,9 @@ def to_argo(project_root):
         spec = _make_argo_task(task_name, list(task.upstream))
         tasks_specs.append(spec)
 
+    project_name = Path(project_root).resolve().name
+
+    d['metadata']['generateName'] = f'{project_name}-'
     d['spec']['templates'][1]['dag']['tasks'] = tasks_specs
 
     with open(f'{project_root}/argo.yaml', 'w') as f:

@@ -300,9 +300,31 @@ class AirflowConfig(ScriptConfig):
         validate_module.airflow_pre(d, dag)
 
 
+class ArgoConfig(ScriptConfig):
+    """Configuration for exporting to Argo
+    """
+    # there are a few extra parameters to be defined:
+    # what persistent colume claim to mount and where
+    # is there a way to mount only a specific path?
+    # e.g. if the nfs drive has
+    # /export/ploomber/{project-name}/{source, output, runs}
+    # we could mount /export/ploomber/{project-name}/source to /mnt/vol/source
+    # and /export/ploomber/{project-name}/output to /mnt/vol/output
+
+    # TODO: support for secrets https://argoproj.github.io/argo/examples/#secrets
+
+    # NOTE: the storage option is useful here, add support for uploading to
+    # google cloud storage
+
+    # to get the nfs pod's name
+    # kubectl get pods -l role=nfs-server -o jsonpath="{.items[0].metadata.name}"
+    pass
+
+
 @click.command()
 @click.argument('command')
 def _make_script(command):
+    # TODO: this should use ArgoConfig
     script = ScriptConfig.from_path('.').to_script(validate=True,
                                                    command=command)
     print(script)
