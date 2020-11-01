@@ -128,18 +128,22 @@ Submit a sample workflow to make sure it's working:
     gcloud compute disks create --size=10GB --zone=us-east1-b gce-nfs-disk
 
     # configure the nfs server
+    curl -O https://raw.githubusercontent.com/ploomber/soopervisor/master/doc/assets/01-nfs-server.yaml
     kubectl apply -f 01-nfs-server.yaml
 
     # create service
+    curl -O https://raw.githubusercontent.com/ploomber/soopervisor/master/doc/assets/02-nfs-service.yaml
     kubectl apply -f 02-nfs-service.yaml
 
     # check service
     kubectl get svc nfs-server
 
     # create persistent volume claim
+    curl -O https://raw.githubusercontent.com/ploomber/soopervisor/master/doc/assets/03-nfs-pv-pvc.yaml
     kubectl apply -f 03-nfs-pv-pvc.yaml
 
     # run sample workflow (uses nfs and creates an empty file on it)
+    curl -O https://raw.githubusercontent.com/ploomber/soopervisor/master/doc/assets/dag.yaml
     argo submit -n argo --watch dag.yaml
 
 Container see the contents of the shared drive ``/export/`` directory at
