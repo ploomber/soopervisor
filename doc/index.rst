@@ -11,6 +11,7 @@ User Guide
    ci
    cron
    settings
+   argo
    airflow
    dev
 

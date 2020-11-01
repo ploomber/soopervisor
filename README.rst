@@ -30,6 +30,12 @@ When running a pipeline, Soopervisor expects the following file layout:
 2. ``pipeline.yaml``: Ploomber pipeline specification
 
 The parent folder to all these files is defined as the project's root folder.
+The name of such folder is designed as the project's name.
+
+For example if your ``pipeline.yaml`` is located at
+``/path/to/projects/some-project/pipeline.yaml``, your project's root folder
+is ``/path/to/projects/some-project`` and your project's name is
+``some-project``.
 
 If your project follows these two conventions, you'll be able to use Soopervisor
 to run your project locally, continuous integration service or Apache Airflow.

@@ -20,3 +20,11 @@ def test_no_docker(c):
     """Run all tests except the ones that use Docker
     """
     c.run('pytest tests --ignore tests/test_docker_executor.py', pty=True)
+
+
+@task
+def doc(c, open_=True):
+    with c.cd('doc'):
+        c.run('make html')
+        if open_:
+            c.run('open _build/html/index.html')

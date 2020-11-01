@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: dag-diamond-
+
+spec:
+  entrypoint: diamond
+  
+  volumes:
+  - name: workdir
+    persistentVolumeClaim:
+      claimName: nfs
+
+  templates:
+  - name: touch
+    inputs:
+      parameters:
+      - name: filename
+    container:
+      image: continuumio/miniconda3
+      command: [sh, -c]
+      args: ["touch /mnt/vol/{{inputs.parameters.filename}}"]
+      volumeMounts:
+        - name: workdir
+          mountPath: /mnt/vol
+
+  - name: diamond
+    dag:
+      tasks:
+      - name: A
+        template: touch
+        arguments:
+          parameters: [{name: filename, value: A}]
+      - name: B
+        dependencies: [A]
+        template: touch
+        arguments:
+          parameters: [{name: filename, value: B}]
+      - name: C
+        dependencies: [A]
+        template: touch
+        arguments:
+          parameters: [{name: filename, value: C}]
+      - name: D
+        dependencies: [B, C]
+        template: touch
+        arguments:
+          parameters: [{name: filename, value: D}]

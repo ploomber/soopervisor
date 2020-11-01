@@ -57,6 +57,7 @@ def upload_code(project_root):
 
 
 def to_argo(project_root):
+    # TODO: validate project first
     # TODO: use lazy_import from script_cfg
     dag = DAGSpec(f'{project_root}/pipeline.yaml', lazy_import=True).to_dag()
 

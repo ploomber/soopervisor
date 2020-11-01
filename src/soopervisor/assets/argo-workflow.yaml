@@ -24,10 +24,12 @@ spec:
       workingDir: /mnt/vol
       source: |
         set -e
-        # TODO: install stable versions once they're released
+        # TODO: remove this once I make a soopervisor release, installing
+        # soopervisor installs ploomber
         pip install ploomber
+        # TODO: install stable versions once they're released
         pip install git+https://github.com/ploomber/soopervisor@dev-edu
-        python -m soopervisor.script.ScriptConfig "ploomber task {{inputs.parameters.task_name}}" > script.sh
+        python -m soopervisor.script.ScriptConfig "ploomber task {{inputs.parameters.task_name}} --force" > script.sh
         bash script.sh
       volumeMounts:
           # reference: https://argoproj.github.io/argo/fields/#volumemount
