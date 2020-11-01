@@ -8,7 +8,7 @@ spec:
   entrypoint: dag
 
   volumes:
-  - name: workdir
+  - name: nfs-volume
     # FIXME: this should be a parameter
     persistentVolumeClaim:
       claimName: nfs
@@ -21,20 +21,19 @@ spec:
     script:
       image: continuumio/miniconda3
       command: [bash]
+      workingDir: /mnt/vol
       source: |
         set -e
-        # TODO: should cd to the project root
-        cd /mnt/vol/ml-basic
         # TODO: install stable versions once they're released
-        pip install git+https://github.com/ploomber/ploomber@dev
+        pip install ploomber
         pip install git+https://github.com/ploomber/soopervisor@dev-edu
         python -m soopervisor.script.ScriptConfig "ploomber task {{inputs.parameters.task_name}}" > script.sh
         bash script.sh
       volumeMounts:
-          # FIXME: this should also be a parameter
           # reference: https://argoproj.github.io/argo/fields/#volumemount
-        - name: workdir
+        - name: nfs-volume
           mountPath: /mnt/vol
+          subPath: null
 
   - name: dag
     dag:

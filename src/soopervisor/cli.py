@@ -42,12 +42,19 @@ def upload(directory, help='Directory to upload'):
 
 
 @cli.command()
-def export():
+@click.option('--upload', '-u', is_flag=True, help='Upload code')
+def export(upload):
     """
     Export to argo
     """
-    print('Writing argo workflow to argo.yaml...')
+    if upload:
+        export_module.upload_code(project_root='.')
+
+    print('Generating argo spec from project...')
     export_module.to_argo(project_root='.')
+    print('Done. Saved argo spec to "argo.yaml"')
+
+    print('Submit your workflow with: argo submit -n argo argo.yaml')
 
 
 if __name__ == '__main__':

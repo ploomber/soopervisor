@@ -4,10 +4,11 @@ Export a Ploomber DAG to Argo/Airflow
 import os
 import shutil
 from pathlib import Path
+import subprocess
 try:
     import importlib.resources as pkg_resources
 except ImportError:
-    # Try backported to PY<37 `importlib_resources`.
+    # if python<3.7
     import importlib_resources as pkg_resources
 
 import yaml
@@ -35,6 +36,26 @@ def _make_argo_task(name, dependencies):
     return task
 
 
+def upload_code(project_root):
+
+    print('Locating nfs-server pod...')
+    result = subprocess.run([
+        'kubectl', 'get', 'pods', '-l', 'role=nfs-server', '-o',
+        'jsonpath="{.items[0].metadata.name}"'
+    ],
+                            check=True,
+                            capture_output=True)
+
+    pod_name = result.stdout.decode('utf-8').replace('"', '')
+    project_name = Path(project_root).resolve().name
+
+    print('Uploading code...')
+    subprocess.run([
+        'kubectl', 'cp',
+        str(project_root), f'{pod_name}:/exports/{project_name}'
+    ])
+
+
 def to_argo(project_root):
     # TODO: use lazy_import from script_cfg
     dag = DAGSpec(f'{project_root}/pipeline.yaml', lazy_import=True).to_dag()
@@ -52,9 +73,13 @@ def to_argo(project_root):
 
     d['metadata']['generateName'] = f'{project_name}-'
     d['spec']['templates'][1]['dag']['tasks'] = tasks_specs
+    d['spec']['templates'][0]['script']['volumeMounts'][0][
+        'subPath'] = project_name
 
     with open(f'{project_root}/argo.yaml', 'w') as f:
         yaml.dump(d, f)
+
+    return d
 
 
 def to_airflow(project_root):

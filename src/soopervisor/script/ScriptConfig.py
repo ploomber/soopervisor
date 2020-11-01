@@ -315,9 +315,6 @@ class ArgoConfig(ScriptConfig):
 
     # NOTE: the storage option is useful here, add support for uploading to
     # google cloud storage
-
-    # to get the nfs pod's name
-    # kubectl get pods -l role=nfs-server -o jsonpath="{.items[0].metadata.name}"
     pass
 
 
