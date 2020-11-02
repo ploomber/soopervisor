@@ -45,7 +45,7 @@ setup(
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],
-    package_data={"": ["*.txt", "*.rst", "*.sql", "*.ipynb", "*.sh"]},
+    package_data={"": ["*.yaml", "*.sh"]},
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
