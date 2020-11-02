@@ -28,7 +28,7 @@ def test_export_airflow(monkeypatch, tmp_empty):
     p = subprocess.Popen(['airflow', 'scheduler'])
 
     import time
-    time.sleep(30)
+    time.sleep(45)
 
     # from IPython import embed
     # embed()
