@@ -1,7 +1,7 @@
 Running in Kubernetes
 =====================
 
-**Note** Soopervisor is in prototype phase
+**Note:** Soopervisor is in prototype phase
 
 Soopervisor can export Ploomber projects to run in Kubernetes via
 `Argo <https://argoproj.github.io/argo/>`_.
@@ -9,28 +9,28 @@ Soopervisor can export Ploomber projects to run in Kubernetes via
 Argo
 ----
 
-Argo is a general-purpose framework tool to execute, schedule and monitor workflows
+Argo is a general-purpose framework to execute, schedule and monitor workflows
 in Kubernetes. Argo workflows are written in YAML and it requires you to
 specify each task in your pipeline, task dependencies, script to run, Docker image to use,
 mounted volumes, etc. This implies a steep (and unnecessary) learning curve
-for a lot of people who can benefit from a production tool like Argo.
+for a lot of people who can benefit from a production tool like this.
 
-Soopervisor automates the creation of Argo's YAML spec, to execution and
-scheduling of batch jobs that requires users to only think in terms of
-functions, scripts and notebooks, not in terms of clusters nor containers.
+Soopervisor automates the creation of Argo's YAML spec that requires users to
+think in terms of functions, scripts and notebooks, not in terms of clusters
+nor containers.
 
-Soopervisor is exports Ploomber projects. A Ploomber workflow can be
-specified via a YAML spec (although there is a Python API for advanced users),
-which only requires the user to tell what to run (function/script/notebook)
+Soopervisor exports `Ploomber <https://github.com/ploomber/ploomber>`_ projects. A Ploomber workflow can be
+specified via a YAML spec (there is a Python API for advanced use cases),
+which only requires users to tell what to run (function/script/notebook)
 and where to save the output:
 
 .. code-block:: yaml
 
 
-    # example pipeline.yaml
+    # Ploomber's "pipeline.yaml" example
 
     tasks:
-    # tasks.get, features and join are python functions
+    # tasks.get, features and join are python functions defined in tasks.py
     - source: tasks.get
       product: output/get.parquet
 
@@ -43,12 +43,14 @@ and where to save the output:
     # fit.ipynb is a notebook
     - source: fit.ipynb
       product:
-        # where to save the executed version copy
+        # where to save the executed copy
         nb: output/nb.ipynb
+        # and any other generated files
         model: output/model.pickle
 
 
-Execution order is inferred by static analysis in the source code.
+Execution order is inferred by building a directed acyclic graph via static
+analysis in the source code.
 
 `Click here <https://github.com/ploomber/projects/tree/master/ml-basic>`_ to
 see the full code example.
@@ -56,14 +58,14 @@ see the full code example.
 Deployment process
 ------------------
 
-Once you have your Ploomber project ready, generate the Argo spec using:
+Once you have a Ploomber project ready, generate the Argo spec using:
 
 .. code-block:: sh
 
     soopervisor export
 
 
-The previous commands runs a few checks to make sure your pipeline looks fine,
+This command runs a few checks to make sure your pipeline is good to go,
 and then generates the Argo's YAML spec. Once you upload your source code
 to the cluster (strategies vary here). You can execute the workflow with:
 
@@ -74,16 +76,16 @@ to the cluster (strategies vary here). You can execute the workflow with:
 
 
 By standardizing the deployment process (how to upload the code, which image
-to use and how to install dependencies). End-users are able to leverage Argo
-without having to deal with such nuances.
+to use, how to mount volumes and how to install dependencies), end-users are
+able to leverage Argo without having to deal with such nuances.
 
 Technical details
 -----------------
 
-*This section describes in details the process of interfacing Ploomber projects
-with Argo and Kubernetes.*
+*This section describes the deailed process of interfacing Ploomber projects
+with Argo/Kubernetes with a complete example*
 
-`argo submit` triggers a workflow by just uploading a YAML file, but it does
+``argo submit`` triggers a workflow by just uploading a YAML file, but it does
 not take care of uploading anything else such as the project's source code.
 This implies that to execute a  Ploomber project you have to ensure that
 1) project's source code is available on each Pod and 2) Pods can get their
@@ -221,6 +223,7 @@ You should see files A, B, C, D. Generate by ``dag.yaml``.
 
 **Part 3: Execute Ploomber sample projects**
 
+Enable Argo's UI:
 
 .. code-block:: sh
 
@@ -231,9 +234,15 @@ You should see files A, B, C, D. Generate by ``dag.yaml``.
 Then open: http://127.0.0.1:2746
 
 
+Run a Ploomber sample pipeline:
+
 .. code-block:: sh
+
     # get the sample projects
     git clone https://github.com/ploomber/projects
+
+    # get nfs pod name
+    kubectl get pods -l role=nfs-server
 
     # upload source code to the nfs server
     # (recommended: ml-basic/ (machine learning pipeline) and etl/)
@@ -247,3 +256,4 @@ Then open: http://127.0.0.1:2746
 
 
 **Make sure you delete your cluster after running this example.**
+
