@@ -13,19 +13,17 @@ Argo is a general-purpose framework to execute, schedule and monitor workflows
 in Kubernetes. Argo workflows are written in YAML and it requires you to
 specify each task in your pipeline, task dependencies, script to run, Docker image to use,
 mounted volumes, etc. This implies a steep (and unnecessary) learning curve
-for a lot of people who can benefit from a production tool like this.
+for a lot of people who can benefit from a production tool like Argo.
 
-Soopervisor automates the creation of Argo's YAML spec that requires users to
-think in terms of functions, scripts and notebooks, not in terms of clusters
-nor containers.
+Soopervisor automates the creation of Argo's YAML spec. So users think in terms
+of functions, scripts and notebooks, not in terms of clusters nor containers.
 
-Soopervisor exports `Ploomber <https://github.com/ploomber/ploomber>`_ projects. A Ploomber workflow can be
-specified via a YAML spec (there is a Python API for advanced use cases),
-which only requires users to tell what to run (function/script/notebook)
-and where to save the output:
+Soopervisor exports `Ploomber <https://github.com/ploomber/ploomber>`_ projects.
+A Ploomber workflow can be specified via a YAML spec (there is also a Python
+API for advanced use cases), which only requires users to tell what to run
+(function/script/notebook) and where to save the output:
 
 .. code-block:: yaml
-
 
     # Ploomber's "pipeline.yaml" example
 
@@ -49,7 +47,7 @@ and where to save the output:
         model: output/model.pickle
 
 
-Execution order is inferred by building a directed acyclic graph via static
+Execution order is inferred by building a directed acyclic graph through static
 analysis in the source code.
 
 `Click here <https://github.com/ploomber/projects/tree/master/ml-basic>`_ to
