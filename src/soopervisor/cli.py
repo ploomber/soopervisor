@@ -37,6 +37,8 @@ def upload(directory, help='Directory to upload'):
     """
     Upload files
     """
+    # TODO: make this an internal cli tool (like python -m soopervisor.upload)
+    # this is not intended to be called by end-users
     uploader = BoxUploader.from_environ()
     uploader.upload_files([directory])
 

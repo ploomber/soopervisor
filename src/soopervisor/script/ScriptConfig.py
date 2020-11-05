@@ -7,7 +7,6 @@ from typing import Optional
 
 from pydantic import BaseModel, validator, Field
 from jinja2 import Template
-import click
 import yaml
 
 from soopervisor.script.script import generate_script
@@ -316,16 +315,3 @@ class ArgoConfig(ScriptConfig):
     # NOTE: the storage option is useful here, add support for uploading to
     # google cloud storage
     pass
-
-
-@click.command()
-@click.argument('command')
-def _make_script(command):
-    # TODO: this should use ArgoConfig
-    script = ScriptConfig.from_path('.').to_script(validate=True,
-                                                   command=command)
-    print(script)
-
-
-if __name__ == "__main__":
-    _make_script()
