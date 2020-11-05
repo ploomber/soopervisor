@@ -43,7 +43,7 @@ def upload(directory, help='Directory to upload'):
 
 @cli.command()
 @click.option('--upload', '-u', is_flag=True, help='Upload code')
-def export(airflow, upload):
+def export(upload):
     """
     Export Ploomber project to Argo (Kubernetes)
     """

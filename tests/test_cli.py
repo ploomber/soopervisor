@@ -18,3 +18,23 @@ def test_build(args, monkeypatch, tmp_sample_project, git_hash):
     runner = CliRunner()
     result = runner.invoke(cli, args)
     assert result.exit_code == 0
+
+
+@pytest.mark.parametrize('args', [
+    ['export'],
+    ['export-airflow'],
+])
+def test_export_sample_project(args, tmp_sample_project):
+    runner = CliRunner()
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 0
+
+
+@pytest.mark.parametrize('args', [
+    ['export'],
+    ['export-airflow'],
+])
+def test_export_callables(args, tmp_callables):
+    runner = CliRunner()
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 0
