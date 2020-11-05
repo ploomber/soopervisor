@@ -43,18 +43,33 @@ def upload(directory, help='Directory to upload'):
 
 @cli.command()
 @click.option('--upload', '-u', is_flag=True, help='Upload code')
-def export(upload):
+def export(airflow, upload):
     """
-    Export to argo
+    Export Ploomber project to Argo (Kubernetes)
     """
     if upload:
         export_module.upload_code(project_root='.')
 
-    print('Generating argo spec from project...')
+    click.echo('Generating argo spec from project...')
     export_module.to_argo(project_root='.')
-    print('Done. Saved argo spec to "argo.yaml"')
+    click.echo('Done. Saved argo spec to "argo.yaml"')
 
-    print('Submit your workflow with: argo submit -n argo argo.yaml')
+    click.echo('Submit your workflow with: argo submit -n argo argo.yaml')
+
+
+@cli.command()
+@click.option('--output',
+              '-o',
+              type=str,
+              help='Output path, if empty looks for env var AIRFLOW_HOME, '
+              'if undefined, uses ~/airflow',
+              default=None)
+def export_airflow(output):
+    """
+    Export Ploomber project to Apache Airflow
+    """
+    click.echo('Exporting to Airflow...')
+    export_module.to_airflow(project_root='.', output_path=output)
 
 
 if __name__ == '__main__':

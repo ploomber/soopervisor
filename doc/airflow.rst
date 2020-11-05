@@ -20,8 +20,9 @@ However, we can still leverage Airflow's production-grade scheduler to run our
 Ploomber pipelines and get the best of both worlds: a great development
 experience and a reliable production scheduler.
 
-Parametrizing your pipeline
----------------------------
+
+Step 1: Parametrizing your pipeline
+-----------------------------------
 
 Say you are developing a pipeline, you might choose a folder to save all
 outputs (such as ``/data/project/output``. When you deploy to Airflow, it is
@@ -46,47 +47,72 @@ an error message if any pipeline task will attempt to save files inside
 the project's root folder.
 
 
-Exporting pipeline
-------------------
+Step 2: Exporting pipeline
+--------------------------
 
 Since Airflow uses Python to declare pipelines, Soopervisor has to generate
 a Python file that Airflow understands:
 
 .. code-block:: sh
 
-    soopervisor export {path-to-project}
+    soopervisor export-airflow --output airflow/
 
 
-Once the export process finishes, you can move the script to Airlow's
-DAG folder (usually located at ``AIRFLOW_HOME/dags/``) and your project's
-source code to ``AIRFLOW_HOME/ploomber/``.
+Once the export process finishes, you'll see a new ``airflow/`` folder with
+two sub folders ``dag/``, which contains the Airflow DAG definition and
+``ploomber/`` which contains your project's source code. To deploy, just move
+those directories to your AIRFLOW_HOME.
+
+If you don't pass the ``--output`` parameter, it will export the project to
+AIRFLOW_HOME.
 
 
 Examples
 --------
 
-TODO: link to examples
-TODO: link to "to-airflow" repository once it's ready
+The sample projects repository contains a few example pipelines that can be
+exported to Airflow:
+
+
+.. code-block:: sh
+
+    git clone https://github.com/ploomber/projects
+    cd setup-airflow
+
+    # configure environment
+    # if you don't have conda, you can "pip install" the dependencies
+    conda env create --file environment.yml
+    conda activate setup-airflow
+
+    # init airflow database
+    airflow initdb
+
+    # export a few projects
+    cd ../ml-intermediate
+    soopervisor export-airflow
+
+    cd ../etl
+    soopervisor export-airflow
+
+    # initialize airflow
+    cd ../setup-airflow
+    # shortcut to start airflow and the scheduler (see Procfile for details)
+    honcho start
+
+
+Airflow should start running: http://localhost:8080/
+
+You should see the exported ``ml-intermediate`` and ``etl`` projects as DAGs.
+
+
+Generated Airflow DAG
+---------------------
+
+The exported Airflow DAG has the same structure as the Ploomber DAG and it
+generates tasks using ``BashOperator``.
 
 
 Customizing Airflow output DAG
 ------------------------------
 
 [WIP]
-
-
-Configuration
--------------
-
-
-:doc:`local`
-
-An optional ``soopervisor.yaml`` file allows you to customize the build process.
-
-Configuration for exporting Ploomber projects to Airflow.
-
-It has the same schema as ScriptConfig, with a few restrictions, to make
-deployment simpler and changes a few default values that make more sense
-for an Airflow deployment.
-
-

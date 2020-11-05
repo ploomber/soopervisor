@@ -83,8 +83,23 @@ def to_argo(project_root):
     return d
 
 
-def to_airflow(project_root):
-    """Convert a Soopervisor project to an Airflow one
+def to_airflow(project_root, output_path=None):
+    """Export Ploomber project to Airflow
+
+    Calling this function generates an Airflow DAG definition at
+    {airflow-home}/dags/{project-name}.py and copies the project's source code
+    to {airflow-home}/ploomber/{project-name}. The exported Airflow DAG is
+    composed of BashOperator tasks, one per task in the Ploomber DAG.
+
+    Parameters
+    ----------
+    project_root : str
+        Project's root folder (pipeline.yaml parent)
+
+    output_path : str, optional
+        Output folder. If None, it looks up the value in the
+        AIRFLOW_HOME environment variable. If the variable isn't set, it
+        defaults to ~/airflow
     """
     env = Environment(loader=PackageLoader('soopervisor', 'assets'),
                       undefined=StrictUndefined)
@@ -97,15 +112,20 @@ def to_airflow(project_root):
     config.validate()
 
     # use airflow-home to know where to save the Airflow dag definition
-    airflow_home = os.environ.get('AIRFLOW_HOME', '~/airflow')
-    airflow_home = str(Path(airflow_home).expanduser())
+    if output_path is None:
+        output_path = os.environ.get('AIRFLOW_HOME', '~/airflow')
+
+    output_path = str(Path(output_path).expanduser())
+
+    Path(output_path).mkdir(exist_ok=True, parents=True)
 
     print('Processing project: ', project_root)
 
     # copy project-root to airflow-home (create a folder with the same name)
     # TODO: what to exclude?
     project_name = Path(project_root).name
-    project_root_airflow = Path(airflow_home, 'ploomber', project_name)
+    project_root_airflow = Path(output_path, 'ploomber', project_name)
+    project_root_airflow.mkdir(exist_ok=True, parents=True)
 
     out = template.render(project_root=project_root_airflow,
                           project_name=project_name)
@@ -114,7 +134,25 @@ def to_airflow(project_root):
         print('Removing existing project')
         shutil.rmtree(project_root_airflow)
 
-    shutil.copytree(project_root, dst=project_root_airflow)
+    # make sure this works if copying everything in a project root
+    # sub-directory
+    try:
+        rel = project_root_airflow.resolve().relative_to(project_root)
+        sub_dir = rel.parts[0]
+        is_sub_dir = True
+    except ValueError:
+        is_sub_dir = False
+        sub_dir = None
+
+    if is_sub_dir:
+
+        def ignore(src, names):
+            dir_name = Path(src).resolve().relative_to(project_root)
+            return names if str(dir_name).startswith(sub_dir) else []
+
+        shutil.copytree(project_root, dst=project_root_airflow, ignore=ignore)
+    else:
+        shutil.copytree(project_root, dst=project_root_airflow)
 
     # delete env.yaml and rename env.airflow.yaml
     env_yaml = Path(project_root_airflow / 'env.yaml')
@@ -122,14 +160,15 @@ def to_airflow(project_root):
     Path(project_root_airflow / 'env.airflow.yaml').rename(env_yaml)
 
     # generate script that exposes the DAG airflow
-    path_out = Path(airflow_home, 'dags', project_name + '.py')
+    path_out = Path(output_path, 'dags', project_name + '.py')
+    path_out.parent.mkdir(exist_ok=True, parents=True)
     path_out.write_text(out)
 
     print('Copied project source code to: ', project_root_airflow)
     print('Saved Airflow DAG definition to: ', path_out)
 
 
-def spec_to_airflow(project_root, project_name, airflow_default_args):
+def spec_to_airflow(project_root, dag_name, airflow_default_args):
     """Initialize a Soopervisor project DAG and convert it to Airflow
 
     Notes
@@ -145,7 +184,7 @@ def spec_to_airflow(project_root, project_name, airflow_default_args):
     # TODO: use lazy_import from script_cfg
     dag = DAGSpec(f'{project_root}/pipeline.yaml', lazy_import=True).to_dag()
 
-    return _dag_to_airflow(dag, project_name, script_cfg, airflow_default_args)
+    return _dag_to_airflow(dag, dag_name, script_cfg, airflow_default_args)
 
 
 def _dag_to_airflow(dag, dag_name, script_cfg, airflow_default_args):
