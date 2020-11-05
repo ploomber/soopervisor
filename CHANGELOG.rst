@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+0.3dev
+------
+* Adds Airflow DAG export
+* Adds Argo/Kubernetes DAG export
+
+
 0.2 (2020-10-15)
 ----------------
 * Adds ``DockerExecutor``
