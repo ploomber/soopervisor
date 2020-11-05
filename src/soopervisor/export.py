@@ -12,8 +12,6 @@ except ImportError:
     import importlib_resources as pkg_resources
 
 import yaml
-from airflow import DAG
-from airflow.operators.bash_operator import BashOperator
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
 from ploomber.spec import DAGSpec
@@ -195,6 +193,11 @@ def _dag_to_airflow(dag, dag_name, script_cfg, airflow_default_args):
     This function is called by the DAG definition parsed by Airflow in
     {AIRFLOW_HOME}/dags
     """
+    # airflow *is not* a soopervisor dependency, moving the imports here to
+    # prevent module not found errors for users who don't use airflow
+    from airflow import DAG
+    from airflow.operators.bash_operator import BashOperator
+
     dag_airflow = DAG(
         dag_name,
         default_args=airflow_default_args,

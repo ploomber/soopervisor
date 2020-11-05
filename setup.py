@@ -26,8 +26,8 @@ def read(*names, **kwargs):
 REQUIRES = [
     'click', 'tqdm', 'pydantic', 'boxsdk', 'Jinja2', 'pyyaml', 'ploomber'
 ]
-EXTRAS = ['docker', 'apache-airflow']
-DEV = ['pytest', 'Faker', 'yapf', 'sphinx']
+EXTRAS = ['docker']
+DEV = ['pytest', 'Faker', 'yapf', 'sphinx', 'apache-airflow']
 
 DESCRIPTION = ''
 
