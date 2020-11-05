@@ -6,17 +6,12 @@ Soopervisor
    :alt: CI badge
 
 
-**Note:** Soopervisor is currently in beta, if you are interested in being a beta tester, please open an issue in the repository
-
 Soopervisor introduces the concept of a *Ploomber project*, which is a standard
 way of running `Ploomber <github.com/ploomber/ploomber>`_ pipelines.
 
 
 Use cases
 =========
-
-
-There are currently four use cases for Soopervisor:
 
 1. Running a pipeline locally
 2. Running a pipeline in a continuous integration service

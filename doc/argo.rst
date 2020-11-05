@@ -1,7 +1,7 @@
 Running in Kubernetes
 =====================
 
-**Note:** Soopervisor is in prototype phase
+**Note:** This feature is in beta, if you are interested in being a beta tester, please open an issue in the repository
 
 Soopervisor can export Ploomber projects to run in Kubernetes via
 `Argo <https://argoproj.github.io/argo/>`_.

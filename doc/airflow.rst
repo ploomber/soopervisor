@@ -1,6 +1,8 @@
 Export to Airflow
 =================
 
+**Note:** This feature is in beta, if you are interested in being a beta tester, please open an issue in the repository
+
 Maintaining a pipeline running in production is hard, and there are tools
 dedicated to that. The most widely used is Apache Airflow. Similarly to
 Ploomber, it allows you to write pipelines as DAGs.
