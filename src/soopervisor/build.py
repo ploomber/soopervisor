@@ -1,6 +1,5 @@
 from soopervisor.script.ScriptConfig import ScriptConfig
 from soopervisor.executors.LocalExecutor import LocalExecutor
-from soopervisor.executors.DockerExecutor import DockerExecutor
 
 
 def build_project(project_root, clean_products_path, dry_run):
@@ -21,6 +20,8 @@ def build_project(project_root, clean_products_path, dry_run):
     if config.executor == 'local':
         executor = LocalExecutor(script_config=config)
     elif config.executor == 'docker':
+        # this imports docker, do so only when you're actually going to use it
+        from soopervisor.executors.DockerExecutor import DockerExecutor
         executor = DockerExecutor(script_config=config)
     else:
         raise ValueError('Unknown executor "{}"'.format(config.executor))
