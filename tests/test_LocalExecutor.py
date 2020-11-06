@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from soopervisor.script.ScriptConfig import ScriptConfig
+from soopervisor.base.config import ScriptConfig
 from soopervisor.executors.LocalExecutor import LocalExecutor
 
 

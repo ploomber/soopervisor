@@ -5,41 +5,7 @@ from ploomber.spec import DAGSpec
 from ploomber.products import MetaProduct
 
 
-def project(config_dict):
-    """
-    Verify project has the right structure before running the script.
-    This runs as a sanity check in the development machine
-    """
-    if not Path(config_dict['paths']['environment']).exists():
-        raise FileNotFoundError(
-            'Expected a conda "environment.yml" at: {}'.format(
-                config_dict['paths']['environment']))
-
-    # TODO: warn if the environment file does not have pinned versions
-    # TODO: warn if the setup.py dependencies (if any), does not have pinned
-    # versions
-
-    if config_dict['environment_name'] is None:
-        raise ValueError('Failed to extract the environment name from the '
-                         'conda "environment.yaml"')
-
-    pipeline_yaml = Path(config_dict['paths']['project'], 'pipeline.yaml')
-    if not pipeline_yaml.exists():
-        raise FileNotFoundError('Expected a "pipeline.yaml" file at: ' +
-                                str(pipeline_yaml))
-
-    try:
-        # NOTE: should lazy_import be an option from config?
-        dag = DAGSpec(pipeline_yaml, lazy_import=True).to_dag()
-        dag.render()
-    except Exception as e:
-        raise RuntimeError(
-            'Failed to initialize DAG from pipeline.yaml') from e
-
-    return dag
-
-
-def airflow_pre(config_dict, dag):
+def pre(config_dict, dag):
     """
     Validates a project before exporting as an Airflow DAG.
     This runs as a sanity check in the development machine
@@ -111,7 +77,7 @@ def airflow_pre(config_dict, dag):
     # paths?
 
 
-def airflow_post():
+def post():
     """
     Validates an Airflow DAG converted from a Ploomber DAG.
     This runs as a sanity check in the development machine
@@ -119,7 +85,7 @@ def airflow_post():
     pass
 
 
-def airflow_host_pre():
+def host_pre():
     """
     Validate a Ploomer DAG about to be exported to an Airflow DAG, this
     function is meant to be executed in the Airflow host. It is called

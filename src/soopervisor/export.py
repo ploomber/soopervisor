@@ -15,8 +15,9 @@ import yaml
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
 from ploomber.spec import DAGSpec
-from soopervisor.script.ScriptConfig import (AirflowConfig, ScriptConfig,
-                                             ArgoConfig)
+from soopervisor.airflow.config import AirflowConfig
+from soopervisor.argo.config import ArgoConfig
+from soopervisor.base.config import ScriptConfig
 from soopervisor import assets
 
 
@@ -147,6 +148,7 @@ def to_airflow(project_root, output_path=None):
 
     # validate the project passses soopervisor checks
     config = AirflowConfig.from_path(project_root)
+    # TODO: from_path should always call .validate()
     config.validate()
 
     # use airflow-home to know where to save the Airflow dag definition

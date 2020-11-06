@@ -1,6 +1,6 @@
 import pytest
 
-from soopervisor.script.ScriptConfig import ArgoConfig, ArgoMountedVolume
+from soopervisor.argo.config import ArgoConfig, ArgoMountedVolume
 
 
 @pytest.mark.parametrize(

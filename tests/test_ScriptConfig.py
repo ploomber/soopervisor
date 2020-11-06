@@ -6,8 +6,8 @@ import yaml
 import pytest
 from pydantic import ValidationError
 
-from soopervisor.script import ScriptConfig as script_config_module
-from soopervisor.script.ScriptConfig import ScriptConfig, StorageConfig, Paths
+import soopervisor.base.config as base_config
+from soopervisor.base.config import ScriptConfig, StorageConfig, Paths
 
 
 @pytest.mark.parametrize('class_', [ScriptConfig, StorageConfig, Paths])
@@ -90,7 +90,7 @@ def test_save_script(git_hash, tmp_sample_project, monkeypatch):
     # doest not work (pydantic models raise errors when trying to set an
     # attribute that is not a field). Patching the class works
     monkeypatch.setattr(ScriptConfig, 'export', m)
-    monkeypatch.setattr(script_config_module, 'generate_script',
+    monkeypatch.setattr(base_config, 'generate_script',
                         Mock(side_effect='some script'))
 
     config = ScriptConfig()
@@ -145,7 +145,7 @@ def test_converts_product_root_to_absolute(git_hash, project_root,
     def _open(path):
         return StringIO(yaml.dump({'name': 'some-env'}))
 
-    monkeypatch.setattr(script_config_module, 'open', _open, raising=False)
+    monkeypatch.setattr(base_config, 'open', _open, raising=False)
 
     d = ScriptConfig(
         paths=dict(project=project_root, products=product_root)).export(
@@ -164,7 +164,7 @@ def test_converts_path_to_env_to_absolute(git_hash, project_root,
     def _open(path):
         return StringIO(yaml.dump({'name': 'some-env'}))
 
-    monkeypatch.setattr(script_config_module, 'open', _open, raising=False)
+    monkeypatch.setattr(base_config, 'open', _open, raising=False)
 
     config = ScriptConfig(
         paths=dict(project=project_root, environment=path_to_environment))
@@ -185,7 +185,7 @@ def test_converts_environment_prefix_to_absolute(git_hash, project_root,
     def _open(path):
         return StringIO(yaml.dump({'name': 'some-env'}))
 
-    monkeypatch.setattr(script_config_module, 'open', _open, raising=False)
+    monkeypatch.setattr(base_config, 'open', _open, raising=False)
 
     d = ScriptConfig(paths=dict(project=project_root),
                      environment_prefix=prefix).export(validate=False)

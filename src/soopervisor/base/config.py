@@ -1,10 +1,10 @@
 """
-Schema for the (optional) soopervisor.yaml configuration file
+Configuration objects declare the schema for the configuration file, perform
+schema validation, compute some attributes dynamically and render placeholders
 """
-import abc
 import shutil
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional
 
 from pydantic import BaseModel, validator, Field
 from jinja2 import Template
@@ -13,7 +13,7 @@ import yaml
 from soopervisor.script.script import generate_script
 from soopervisor.git_handler import GitRepo
 from soopervisor.storage.LocalStorage import LocalStorage
-from soopervisor import validate as validate_module
+from soopervisor.base import validate as validate_base
 
 
 class StorageConfig(BaseModel):
@@ -247,13 +247,13 @@ class ScriptConfig(BaseModel):
 
     def validate(self):
         d = self.dict()
-        validate_module.project(d)
+        validate_base.project(d)
 
     def export(self, validate=True, return_dag=False):
         d = self.dict()
 
         if validate:
-            dag = validate_module.project(d)
+            dag = validate_base.project(d)
         else:
             dag = None
 
@@ -283,94 +283,3 @@ class ScriptConfig(BaseModel):
     @property
     def project_name(self):
         return str(Path(self.paths.project).resolve().name)
-
-
-class AirflowConfig(ScriptConfig):
-    # TODO: Airflow-exclusive parameters, which operator to use (bash,
-    # docker, kubernetespod). Maybe template? jinja template where ploomber's
-    # code will be generated, in case there is some customization to do for
-    # default parameters
-
-    # TODO: some default values should change. for example, look by default
-    # for an environment.lock.yml (explain why) and do not set a default
-    # to products. lazy_import=True, allow_incremental=False
-    lazy_import: bool = True
-
-    # NOTE: another validation we can implement would be to create the
-    # environment.yml and then make sure we can instantiate the dag, this would
-    # allow to verify missing dependencies before exporting rather than when
-    # trying to run it in the airflow host
-    def validate(self):
-        d = self.dict()
-        dag = validate_module.project(d)
-        validate_module.airflow_pre(d, dag)
-
-
-class ConfigBaseModel(BaseModel):
-    @abc.abstractmethod
-    def render(self):
-        pass
-
-
-class ArgoMountedVolume(ConfigBaseModel):
-    """
-    Volume to mount in the Pod, mounted at /mnt/{claim_name}
-
-    Parameters
-    ----------
-    claim_name : str
-        Claim name for the volume (set in persistentVolumeClaim.claimName)
-
-    sub_path : str
-        Sub path from the volume to mount in the Pod (set in subPath). You
-        can use the placeholder {{project_name}} which will be automatically
-        replaced (e.g. if sub_path='data/{{project_name}}' in a project with
-        name 'my_project', it will render to 'data/my_project')
-
-    """
-    claim_name: str
-    sub_path: str
-
-    def render(self, **kwargs):
-        self.sub_path = Template(self.sub_path).render(**kwargs)
-
-
-class ArgoConfig(ScriptConfig):
-    """Configuration for exporting to Argo
-
-    Parameters
-    ----------
-    mounted_volumes : list
-        List of volumes to mount on each Pod (``ArgoMountedVolumes``).
-        Defaults to [{'claim_name': 'nfs', 'sub_path': '{{project_name}}'}]
-
-    image : str, default='continuumio/miniconda3'
-        Docker image to use
-
-    Notes
-    -----
-    ``mounted_volumes`` and ``image`` are only used when generating the Argo
-    YAML spec and have no bearing during execution, since the YAML espec is
-    already created by then
-    """
-    lazy_import: bool = True
-
-    # TODO: support for secrets https://argoproj.github.io/argo/examples/#secrets
-    # NOTE: the storage option is useful here, add support for uploading to
-    # google cloud storage
-
-    mounted_volumes: List[ArgoMountedVolume] = [
-        ArgoMountedVolume(claim_name='nfs', sub_path='{{project_name}}')
-    ]
-
-    image: str = 'continuumio/miniconda3'
-
-    def render(self):
-        for mv in self.mounted_volumes:
-            mv.render(**dict(project_name=self.project_name))
-
-    @classmethod
-    def from_path(cls, project):
-        obj = super().from_path(project)
-        obj.render()
-        return obj

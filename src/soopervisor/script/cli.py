@@ -1,4 +1,4 @@
-from soopervisor.script.ScriptConfig import ScriptConfig
+from soopervisor.base.config import ScriptConfig
 import click
 
 
