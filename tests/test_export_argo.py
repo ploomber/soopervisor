@@ -9,8 +9,22 @@ def test_argo_spec(tmp_sample_project):
     tasks = d['spec']['templates'][1]['dag']['tasks']
     dag = DAGSpec('pipeline.yaml').to_dag()
 
+    d['spec']['volumes'] = [{
+        'name': 'nfs',
+        'persistentVolumeClaim': {
+            'claimName': 'nfs'
+        }
+    }]
+
+    run_task_template['script']['volumeMounts'] = [{
+        'name': 'nfs',
+        'mountPath': '/mnt/nfs',
+        'subPath': 'sample_project'
+    }]
+
+    assert run_task_template['script']['image'] == 'continuumio/miniconda3'
     assert run_task_template['name'] == 'run-task'
-    assert run_task_template['script']['workingDir'] == '/mnt/vol'
+    assert run_task_template['script']['workingDir'] == '/mnt/nfs'
     assert run_task_template['script']['volumeMounts'][0][
         'subPath'] == 'sample_project'
 

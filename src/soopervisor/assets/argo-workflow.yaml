@@ -1,17 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  # set programatically
+  # set via ArgoConfig.project_name
   generateName: null
 
 spec:
   entrypoint: dag
 
-  volumes:
-  - name: nfs-volume
-    # FIXME: this should be a parameter
-    persistentVolumeClaim:
-      claimName: nfs
+  # set via ArgoConfig.mounted_volumes
+  volumes: null
 
   templates:
   - name: run-task
@@ -19,19 +16,17 @@ spec:
       parameters:
       - name: task_name
     script:
-      image: continuumio/miniconda3
+      # set via ArgoConfig.image
+      image: null
       command: [bash]
-      workingDir: /mnt/vol
+      # set via ArgoConfig.mounted_volumes (using the first entry)
+      workingDir: null
       source: |
         set -e
         pip install soopervisor
         python -m soopervisor.script "ploomber task {{inputs.parameters.task_name}} --force" > script.sh
         bash script.sh
-      volumeMounts:
-          # reference: https://argoproj.github.io/argo/fields/#volumemount
-        - name: nfs-volume
-          mountPath: /mnt/vol
-          subPath: null
+      volumeMounts: null
 
   - name: dag
     dag:

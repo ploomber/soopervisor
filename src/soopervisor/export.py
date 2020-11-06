@@ -15,7 +15,8 @@ import yaml
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
 from ploomber.spec import DAGSpec
-from soopervisor.script.ScriptConfig import AirflowConfig, ScriptConfig
+from soopervisor.script.ScriptConfig import (AirflowConfig, ScriptConfig,
+                                             ArgoConfig)
 from soopervisor import assets
 
 
@@ -54,12 +55,48 @@ def upload_code(project_root):
     ])
 
 
+def _make_volume_entries(mv):
+    """
+    Generate volume-related entries in argo spec, returns one for "volumes"
+    section and another one for "volumeMounts"
+    """
+    volume = {
+        'name': mv.claim_name,
+        'persistentVolumeClaim': {
+            'claimName': mv.claim_name
+        }
+    }
+
+    # reference: https://argoproj.github.io/argo/fields/#volumemount
+    volume_mount = {
+        'name': mv.claim_name,
+        # by convention, mount to /mnt/ and use the claim name
+        'mountPath': f'/mnt/{mv.claim_name}',
+        'subPath': mv.sub_path
+    }
+
+    return volume, volume_mount
+
+
 def to_argo(project_root):
+    """Export Argo YAML spec from Ploomber project to argo.yaml
+
+    Parameters
+    ----------
+    project_root : str
+        Project root (pipeline.yaml parent folder)
+    """
     # TODO: validate project first
-    # TODO: use lazy_import from script_cfg
-    dag = DAGSpec(f'{project_root}/pipeline.yaml', lazy_import=True).to_dag()
+    config = ArgoConfig.from_path(project_root)
+
+    dag = DAGSpec(f'{project_root}/pipeline.yaml',
+                  lazy_import=config.lazy_import).to_dag()
+
+    volumes, volume_mounts = zip(*(_make_volume_entries(mv)
+                                   for mv in config.mounted_volumes))
 
     d = yaml.safe_load(pkg_resources.read_text(assets, 'argo-workflow.yaml'))
+    d['volumes'] = volumes
 
     tasks_specs = []
 
@@ -68,12 +105,15 @@ def to_argo(project_root):
         spec = _make_argo_task(task_name, list(task.upstream))
         tasks_specs.append(spec)
 
-    project_name = Path(project_root).resolve().name
-
-    d['metadata']['generateName'] = f'{project_name}-'
+    d['metadata']['generateName'] = f'{config.project_name}-'
     d['spec']['templates'][1]['dag']['tasks'] = tasks_specs
-    d['spec']['templates'][0]['script']['volumeMounts'][0][
-        'subPath'] = project_name
+    d['spec']['templates'][0]['script']['volumeMounts'] = volume_mounts
+
+    # set Pods working directory to the root of the first mounted volume
+    d['spec']['templates'][0]['script']['workingDir'] = volume_mounts[0][
+        'mountPath']
+
+    d['spec']['templates'][0]['script']['image'] = config.image
 
     with open(f'{project_root}/argo.yaml', 'w') as f:
         yaml.dump(d, f)
@@ -179,7 +219,10 @@ def spec_to_airflow(project_root, dag_name, airflow_default_args):
     # write a soopervisor.yaml, then we can we rid of this line
     script_cfg.paths.project = project_root
 
-    # TODO: use lazy_import from script_cfg
+    # NOTE: we don't use script_cfg.lazy_import here because this runs in the
+    # airflow host and we should never expect that environment to have
+    # the project environment configured, as its only purpose is to parse
+    # the DAG
     dag = DAGSpec(f'{project_root}/pipeline.yaml', lazy_import=True).to_dag()
 
     return _dag_to_airflow(dag, dag_name, script_cfg, airflow_default_args)

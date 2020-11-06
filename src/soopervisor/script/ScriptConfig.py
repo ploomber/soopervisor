@@ -1,9 +1,10 @@
 """
 Schema for the (optional) soopervisor.yaml configuration file
 """
+import abc
 import shutil
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel, validator, Field
 from jinja2 import Template
@@ -158,6 +159,15 @@ class ScriptConfig(BaseModel):
     storage : dict
         Section to configure product's upload after execution, see
         StorageConfig for schema
+
+    lazy_import : bool, default=False
+        When processing your project, the DAG is initialized to run a few
+        validations on it. If your pipeline has any dotted paths
+        (e.g. tasks that are Python functions), they will be imported by
+        default, if this option is False, they will not be imported. This
+        limits the number of validation checks but allows you to process your
+        pipeline without having to setup an environment that has all
+        dependencies required to import dotted paths
     """
     # TODO: Create env again only if environment.yml has changed
     cache_env: Optional[bool] = False
@@ -165,19 +175,11 @@ class ScriptConfig(BaseModel):
     environment_prefix: Optional[str] = None
     allow_incremental: Optional[bool] = True
     args: Optional[str] = ''
+    lazy_import: bool = False
 
     # sub sections
     paths: Optional[Paths] = Field(default_factory=Paths)
     storage: StorageConfig = None
-
-    # TODO: add a lazy_import option? there are cases when we want to
-    # instantiate the dag and render without actually executing it,
-    # for rendering, we don't have to import all dotted paths (although this
-    # limits our ability to do render-time checks), the benefit is that
-    # we could export dags in environments that do not necessarily have
-    # all dependencies installed, but just limit themselves to do a few checks
-    # this is a must when loading the dag in the airflow host but could be
-    # optional when exporting
 
     class Config:
         extra = 'forbid'
@@ -278,6 +280,10 @@ class ScriptConfig(BaseModel):
             shutil.rmtree(self.paths.products)
             Path(self.paths.products).mkdir()
 
+    @property
+    def project_name(self):
+        return str(Path(self.paths.project).resolve().name)
+
 
 class AirflowConfig(ScriptConfig):
     # TODO: Airflow-exclusive parameters, which operator to use (bash,
@@ -288,6 +294,7 @@ class AirflowConfig(ScriptConfig):
     # TODO: some default values should change. for example, look by default
     # for an environment.lock.yml (explain why) and do not set a default
     # to products. lazy_import=True, allow_incremental=False
+    lazy_import: bool = True
 
     # NOTE: another validation we can implement would be to create the
     # environment.yml and then make sure we can instantiate the dag, this would
@@ -299,19 +306,71 @@ class AirflowConfig(ScriptConfig):
         validate_module.airflow_pre(d, dag)
 
 
+class ConfigBaseModel(BaseModel):
+    @abc.abstractmethod
+    def render(self):
+        pass
+
+
+class ArgoMountedVolume(ConfigBaseModel):
+    """
+    Volume to mount in the Pod, mounted at /mnt/{claim_name}
+
+    Parameters
+    ----------
+    claim_name : str
+        Claim name for the volume (set in persistentVolumeClaim.claimName)
+
+    sub_path : str
+        Sub path from the volume to mount in the Pod (set in subPath). You
+        can use the placeholder {{project_name}} which will be automatically
+        replaced (e.g. if sub_path='data/{{project_name}}' in a project with
+        name 'my_project', it will render to 'data/my_project')
+
+    """
+    claim_name: str
+    sub_path: str
+
+    def render(self, **kwargs):
+        self.sub_path = Template(self.sub_path).render(**kwargs)
+
+
 class ArgoConfig(ScriptConfig):
     """Configuration for exporting to Argo
+
+    Parameters
+    ----------
+    mounted_volumes : list
+        List of volumes to mount on each Pod (``ArgoMountedVolumes``).
+        Defaults to [{'claim_name': 'nfs', 'sub_path': '{{project_name}}'}]
+
+    image : str, default='continuumio/miniconda3'
+        Docker image to use
+
+    Notes
+    -----
+    ``mounted_volumes`` and ``image`` are only used when generating the Argo
+    YAML spec and have no bearing during execution, since the YAML espec is
+    already created by then
     """
-    # there are a few extra parameters to be defined:
-    # what persistent colume claim to mount and where
-    # is there a way to mount only a specific path?
-    # e.g. if the nfs drive has
-    # /export/ploomber/{project-name}/{source, output, runs}
-    # we could mount /export/ploomber/{project-name}/source to /mnt/vol/source
-    # and /export/ploomber/{project-name}/output to /mnt/vol/output
+    lazy_import: bool = True
 
     # TODO: support for secrets https://argoproj.github.io/argo/examples/#secrets
-
     # NOTE: the storage option is useful here, add support for uploading to
     # google cloud storage
-    pass
+
+    mounted_volumes: List[ArgoMountedVolume] = [
+        ArgoMountedVolume(claim_name='nfs', sub_path='{{project_name}}')
+    ]
+
+    image: str = 'continuumio/miniconda3'
+
+    def render(self):
+        for mv in self.mounted_volumes:
+            mv.render(**dict(project_name=self.project_name))
+
+    @classmethod
+    def from_path(cls, project):
+        obj = super().from_path(project)
+        obj.render()
+        return obj

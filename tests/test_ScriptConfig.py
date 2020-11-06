@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from io import StringIO
 from unittest.mock import Mock
@@ -31,6 +30,7 @@ def test_default_values(git_hash, session_sample_project):
         Path(session_sample_project, 'output'))
     assert config['paths']['environment'] == str(
         Path(session_sample_project, 'environment.yml'))
+    assert not config['lazy_import']
 
 
 def test_on_update(git_hash, tmp_empty):
