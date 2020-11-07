@@ -6,7 +6,7 @@ def build_project(project_root, clean_products_path, dry_run):
     """
     Build a project using settings from a soopervisor.yaml file
     """
-    config = ScriptConfig.from_path(project_root)
+    config = ScriptConfig.from_project(project_root)
 
     print(f'Env prefix {config.environment_prefix}')
     print(config.paths)

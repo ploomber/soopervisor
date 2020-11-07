@@ -34,14 +34,14 @@ def test_default_values(git_hash, session_sample_project):
 
 def test_initialize_from_empty_project(git_hash):
     # must initialize with default values
-    assert ScriptConfig.from_path('.') == ScriptConfig()
+    assert ScriptConfig.from_project('.') == ScriptConfig()
 
 
 def test_initialize_from_custom_path(tmp_sample_project_in_subdir):
     sub_dir = Path('subdir')
 
     # initialize with a custom path
-    config = ScriptConfig.from_path('subdir', validate=False)
+    config = ScriptConfig.from_project('subdir', validate=False)
 
     # project path should be located in the custom path
     assert config.paths.project == str(sub_dir.resolve())
@@ -59,7 +59,7 @@ def test_initialize_with_config_file(git_hash, tmp_empty):
     }
     Path('soopervisor.yaml').write_text(yaml.dump(d))
 
-    config = ScriptConfig.from_path('.', validate=False)
+    config = ScriptConfig.from_project('.', validate=False)
 
     assert Path(config.paths.products) == Path('some/directory/').resolve()
     assert config.storage.path == 'dir-name/GIT-HASH'
@@ -170,7 +170,7 @@ def test_converts_environment_prefix_to_absolute(git_hash, project_root,
 def test_environment_name(prefix, expected, tmp_sample_project):
     Path('soopervisor.yaml').write_text(
         yaml.dump({'environment_prefix': prefix}))
-    config = ScriptConfig.from_path('.')
+    config = ScriptConfig.from_project('.')
     assert config.environment_name == expected
 
 
@@ -181,7 +181,7 @@ def test_environment_name(prefix, expected, tmp_sample_project):
 def test_conda_activate_line_in_script(prefix, expected, tmp_sample_project):
     d = {'environment_prefix': prefix}
     Path('soopervisor.yaml').write_text(yaml.dump(d))
-    config = ScriptConfig.from_path('.', validate=False)
+    config = ScriptConfig.from_project('.', validate=False)
     script = config.to_script()
 
     assert f'conda activate {expected}' in script
@@ -190,7 +190,7 @@ def test_conda_activate_line_in_script(prefix, expected, tmp_sample_project):
 def test_script_does_not_upload_if_empty_provider(tmp_sample_project):
     d = {'storage': {'provider': None}}
     Path('soopervisor.yaml').write_text(yaml.dump(d))
-    config = ScriptConfig.from_path('.', validate=False)
+    config = ScriptConfig.from_project('.', validate=False)
     script = config.to_script()
     assert 'soopervisor upload' not in script
 
@@ -199,7 +199,7 @@ def test_script_does_not_upload_if_empty_provider(tmp_sample_project):
 def test_script_uploads_if_provider(git_hash, provider, tmp_sample_project):
     d = {'storage': {'provider': provider}}
     Path('soopervisor.yaml').write_text(yaml.dump(d))
-    config = ScriptConfig.from_path('.', validate=False)
+    config = ScriptConfig.from_project('.', validate=False)
     script = config.to_script()
     assert 'soopervisor upload' in script
 

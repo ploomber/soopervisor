@@ -171,9 +171,7 @@ class ScriptConfig(AbstractConfig):
     paths: Optional[Paths] = Field(default_factory=Paths)
     storage: StorageConfig = None
 
-    # Computed field, we don't document them to prevent users directly passing
-    # a value, an appropriate value is computed using user submitted values
-    # in .render()
+    # COMPUTED FIELDS
     environment_name: Optional[str] = None
 
     def __init__(self, **data) -> None:
@@ -186,9 +184,8 @@ class ScriptConfig(AbstractConfig):
         self.storage = StorageConfig(paths=self.paths, **storage)
         self.render()
 
-    # TODO: rename to from_project
     @classmethod
-    def from_path(cls, project, validate=True, return_dag=False):
+    def from_project(cls, project_root, validate=True, return_dag=False):
         """
         Initializes a ScriptConfig from a project. Looks for a
         project/soopervisor.yaml file, if it doesn't exist, it just
@@ -197,10 +194,10 @@ class ScriptConfig(AbstractConfig):
 
         Parameters
         ----------
-        project : str or pathlib.Path
+        project_root : str or pathlib.Path
             The project's location
         """
-        path = Path(project, 'soopervisor.yaml')
+        path = Path(project_root, 'soopervisor.yaml')
 
         if path.exists():
             with open(str(path)) as f:
@@ -209,7 +206,7 @@ class ScriptConfig(AbstractConfig):
             config = cls(**d)
 
         else:
-            config = cls(paths=dict(project=str(project)))
+            config = cls(paths=dict(project=str(project_root)))
 
         if validate:
             dag = validate_base.project(config)
@@ -262,6 +259,7 @@ class ScriptConfig(AbstractConfig):
             shutil.rmtree(self.paths.products)
             Path(self.paths.products).mkdir()
 
+    # TODO: make this a computed field
     @property
     def project_name(self):
         return str(Path(self.paths.project).resolve().name)

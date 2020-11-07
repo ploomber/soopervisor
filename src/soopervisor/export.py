@@ -87,7 +87,7 @@ def to_argo(project_root):
     project_root : str
         Project root (pipeline.yaml parent folder)
     """
-    config = ArgoConfig.from_path(project_root)
+    config = ArgoConfig.from_project(project_root)
 
     dag = DAGSpec(f'{project_root}/pipeline.yaml',
                   lazy_import=config.lazy_import).to_dag()
@@ -146,7 +146,7 @@ def to_airflow(project_root, output_path=None):
     project_root = Path(project_root).resolve()
 
     # validate the project passses soopervisor checks
-    AirflowConfig.from_path(project_root)
+    AirflowConfig.from_project(project_root)
 
     # use airflow-home to know where to save the Airflow dag definition
     if output_path is None:
@@ -213,7 +213,7 @@ def spec_to_airflow(project_root, dag_name, airflow_default_args):
     This function is called by the DAG definition parsed by Airflow in
     {AIRFLOW_HOME}/dags
     """
-    script_cfg = ScriptConfig.from_path(project_root)
+    script_cfg = ScriptConfig.from_project(project_root)
 
     # NOTE: we don't use script_cfg.lazy_import here because this runs in the
     # airflow host and we should never expect that environment to have

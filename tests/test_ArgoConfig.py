@@ -61,7 +61,7 @@ def test_argo_config_defaults():
 
 
 def test_sample_project_from_path(session_sample_project):
-    cfg = ArgoConfig.from_path('.')
+    cfg = ArgoConfig.from_project('.')
 
     assert cfg.image == 'continuumio/miniconda3'
     assert cfg.mounted_volumes == [{

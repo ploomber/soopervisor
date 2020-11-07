@@ -7,6 +7,10 @@ class AbstractBaseModel(BaseModel):
     class Config:
         extra = 'forbid'
 
+    # computed fields (fields whose value depends on other fields) must
+    # properly identifier with this marker:
+    # COMPUTED FIELDS
+
     @abc.abstractmethod
     def render(self):
         """
@@ -49,7 +53,7 @@ class AbstractConfig(AbstractBaseModel):
     an example
     """
     @abc.abstractclassmethod
-    def from_path(cls, project_root):
+    def from_project(cls, project_root):
         """
         Public API to interface with other modules, it loads the YAML file
         from soopervisor.yaml, renders the model and validates the project
