@@ -5,12 +5,12 @@ from ploomber.spec import DAGSpec
 from ploomber.products import MetaProduct
 
 
-def pre(config_dict, dag):
+def pre(config, dag):
     """
     Validates a project before exporting as an Airflow DAG.
     This runs as a sanity check in the development machine
     """
-    project_root = Path(config_dict['paths']['project'])
+    project_root = Path(config.paths.project)
     env_airflow_yaml = project_root / 'env.airflow.yaml'
 
     if not env_airflow_yaml.exists():

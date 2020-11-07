@@ -51,9 +51,11 @@ def test_argo_config_defaults():
     cfg = ArgoConfig()
 
     assert cfg.image == 'continuumio/miniconda3'
+    # FIXME: why is this using session_sample_project fixture if I didn't
+    # add it to this test?
     assert cfg.mounted_volumes == [{
         'claim_name': 'nfs',
-        'sub_path': '{{project_name}}'
+        'sub_path': 'sample_project'
     }]
     assert cfg.lazy_import
 

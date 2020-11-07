@@ -32,12 +32,11 @@ def generate_script(config, command):
     template = env.get_template('script.sh')
     # config = __scape_spaces_on_paths(config)
 
-    args = config['args']
-
-    if args and command:
-        raise ValueError(f'args should be empty (got "{args}") if passing a '
-                         'custom command, pass any extra ags directly in '
-                         'the command argument')
+    if config.args and command:
+        raise ValueError(
+            f'args should be empty (got "{config.args}") if passing a '
+            'custom command, pass any extra ags directly in '
+            'the command argument')
 
     return template.render(config=config, command=command)
 

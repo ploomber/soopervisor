@@ -1,22 +1,15 @@
 """
 Schema for the (optional) soopervisor.yaml configuration file
 """
-import abc
 from typing import List
 
-from pydantic import BaseModel
 from jinja2 import Template
 
+from soopervisor.base.abstract import AbstractBaseModel
 from soopervisor.base.config import ScriptConfig
 
 
-class ConfigBaseModel(BaseModel):
-    @abc.abstractmethod
-    def render(self):
-        pass
-
-
-class ArgoMountedVolume(ConfigBaseModel):
+class ArgoMountedVolume(AbstractBaseModel):
     """
     Volume to mount in the Pod, mounted at /mnt/{claim_name}
 
@@ -74,11 +67,7 @@ class ArgoConfig(ScriptConfig):
     image: str = 'continuumio/miniconda3'
 
     def render(self):
+        super().render()
+
         for mv in self.mounted_volumes:
             mv.render(**dict(project_name=self.project_name))
-
-    @classmethod
-    def from_path(cls, project):
-        obj = super().from_path(project)
-        obj.render()
-        return obj

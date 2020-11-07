@@ -23,30 +23,13 @@ def test_models_fail_when_passing_extra_args(class_):
 
 
 def test_default_values(git_hash, session_sample_project):
-    config = ScriptConfig().export(validate=False)
-
-    assert config['paths']['project'] == session_sample_project
-    assert config['paths']['products'] == str(
-        Path(session_sample_project, 'output'))
-    assert config['paths']['environment'] == str(
-        Path(session_sample_project, 'environment.yml'))
-    assert not config['lazy_import']
-
-
-def test_on_update(git_hash, tmp_empty):
     config = ScriptConfig()
 
-    config.paths.project = 'new_project_root'
-    proj = Path('new_project_root')
-    proj.mkdir()
-    (proj / 'environment.yml').write_text(yaml.dump({'name': 'some-env'}))
-
-    d = config.export(validate=False)
-    new_root = Path(tmp_empty, 'new_project_root')
-
-    assert d['paths']['project'] == str(new_root)
-    assert d['paths']['environment'] == str(Path(new_root, 'environment.yml'))
-    assert d['paths']['products'] == str(Path(new_root, 'output'))
+    assert config.paths.project == session_sample_project
+    assert config.paths.products == str(Path(session_sample_project, 'output'))
+    assert config.paths.environment == str(
+        Path(session_sample_project, 'environment.yml'))
+    assert not config.lazy_import
 
 
 def test_initialize_from_empty_project(git_hash):
@@ -58,7 +41,7 @@ def test_initialize_from_custom_path(tmp_sample_project_in_subdir):
     sub_dir = Path('subdir')
 
     # initialize with a custom path
-    config = ScriptConfig.from_path('subdir')
+    config = ScriptConfig.from_path('subdir', validate=False)
 
     # project path should be located in the custom path
     assert config.paths.project == str(sub_dir.resolve())
@@ -76,28 +59,17 @@ def test_initialize_with_config_file(git_hash, tmp_empty):
     }
     Path('soopervisor.yaml').write_text(yaml.dump(d))
 
-    config = ScriptConfig.from_path('.').export(validate=False)
+    config = ScriptConfig.from_path('.', validate=False)
 
-    assert Path(
-        config['paths']['products']) == Path('some/directory/').resolve()
-    assert config['storage']['path'] == 'dir-name/GIT-HASH'
+    assert Path(config.paths.products) == Path('some/directory/').resolve()
+    assert config.storage.path == 'dir-name/GIT-HASH'
 
 
 def test_save_script(git_hash, tmp_sample_project, monkeypatch):
-
-    m = Mock()
-    # NOTE: we patch the class instead of the instance becayse pydantic
-    # doest not work (pydantic models raise errors when trying to set an
-    # attribute that is not a field). Patching the class works
-    monkeypatch.setattr(ScriptConfig, 'export', m)
-    monkeypatch.setattr(base_config, 'generate_script',
-                        Mock(side_effect='some script'))
-
     config = ScriptConfig()
     config.save_script()
 
     assert Path(config.paths.project, 'script.sh').exists()
-    m.assert_called_once_with(validate=True)
 
 
 @pytest.mark.parametrize('args', [
@@ -147,11 +119,10 @@ def test_converts_product_root_to_absolute(git_hash, project_root,
 
     monkeypatch.setattr(base_config, 'open', _open, raising=False)
 
-    d = ScriptConfig(
-        paths=dict(project=project_root, products=product_root)).export(
-            validate=False)
+    config = ScriptConfig(
+        paths=dict(project=project_root, products=product_root))
 
-    assert d['paths']['products'] == expected
+    assert config.paths.products == expected
 
 
 @pytest.mark.parametrize('project_root, path_to_environment, expected', [
@@ -168,11 +139,10 @@ def test_converts_path_to_env_to_absolute(git_hash, project_root,
 
     config = ScriptConfig(
         paths=dict(project=project_root, environment=path_to_environment))
-    d = config.export(validate=False)
     expected_line = (f'conda env create --file {expected}')
 
-    assert d['paths']['environment'] == expected
-    assert expected_line in config.to_script(validate=False)
+    assert config.paths.environment == expected
+    assert expected_line in config.to_script()
 
 
 @pytest.mark.parametrize('project_root, prefix, expected', [
@@ -187,10 +157,10 @@ def test_converts_environment_prefix_to_absolute(git_hash, project_root,
 
     monkeypatch.setattr(base_config, 'open', _open, raising=False)
 
-    d = ScriptConfig(paths=dict(project=project_root),
-                     environment_prefix=prefix).export(validate=False)
+    config = ScriptConfig(paths=dict(project=project_root),
+                          environment_prefix=prefix)
 
-    assert d['environment_prefix'] == expected
+    assert config.environment_prefix == expected
 
 
 @pytest.mark.parametrize('prefix, expected', [
@@ -201,8 +171,7 @@ def test_environment_name(prefix, expected, tmp_sample_project):
     Path('soopervisor.yaml').write_text(
         yaml.dump({'environment_prefix': prefix}))
     config = ScriptConfig.from_path('.')
-    d = config.export(validate=False)
-    assert d['environment_name'] == expected
+    assert config.environment_name == expected
 
 
 @pytest.mark.parametrize('prefix, expected', [
@@ -212,8 +181,8 @@ def test_environment_name(prefix, expected, tmp_sample_project):
 def test_conda_activate_line_in_script(prefix, expected, tmp_sample_project):
     d = {'environment_prefix': prefix}
     Path('soopervisor.yaml').write_text(yaml.dump(d))
-    config = ScriptConfig.from_path('.')
-    script = config.to_script(validate=False)
+    config = ScriptConfig.from_path('.', validate=False)
+    script = config.to_script()
 
     assert f'conda activate {expected}' in script
 
@@ -221,8 +190,8 @@ def test_conda_activate_line_in_script(prefix, expected, tmp_sample_project):
 def test_script_does_not_upload_if_empty_provider(tmp_sample_project):
     d = {'storage': {'provider': None}}
     Path('soopervisor.yaml').write_text(yaml.dump(d))
-    config = ScriptConfig.from_path('.')
-    script = config.to_script(validate=False)
+    config = ScriptConfig.from_path('.', validate=False)
+    script = config.to_script()
     assert 'soopervisor upload' not in script
 
 
@@ -230,8 +199,8 @@ def test_script_does_not_upload_if_empty_provider(tmp_sample_project):
 def test_script_uploads_if_provider(git_hash, provider, tmp_sample_project):
     d = {'storage': {'provider': provider}}
     Path('soopervisor.yaml').write_text(yaml.dump(d))
-    config = ScriptConfig.from_path('.')
-    script = config.to_script(validate=False)
+    config = ScriptConfig.from_path('.', validate=False)
+    script = config.to_script()
     assert 'soopervisor upload' in script
 
 

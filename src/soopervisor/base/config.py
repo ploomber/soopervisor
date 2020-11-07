@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
-from pydantic import BaseModel, validator, Field
+from pydantic import validator, Field
 from jinja2 import Template
 import yaml
 
@@ -14,9 +14,10 @@ from soopervisor.script.script import generate_script
 from soopervisor.git_handler import GitRepo
 from soopervisor.storage.LocalStorage import LocalStorage
 from soopervisor.base import validate as validate_base
+from soopervisor.base.abstract import AbstractBaseModel, AbstractConfig
 
 
-class StorageConfig(BaseModel):
+class StorageConfig(AbstractBaseModel):
     """Store pipeline products after execution
 
     Parameters
@@ -40,12 +41,10 @@ class StorageConfig(BaseModel):
     # this is not a field, but a reference to the paths section
     paths: Optional[str]
 
-    class Config:
-        extra = 'forbid'
-
     def __init__(self, *, paths, **data) -> None:
         super().__init__(**data)
         self.paths = paths
+        self.render()
 
     @validator('provider', always=True)
     def validate_provider(cls, v):
@@ -54,21 +53,16 @@ class StorageConfig(BaseModel):
             raise ValueError(f'Provider must be one of: {valid}')
         return v
 
-    def check(self):
-        LocalStorage(self.path)
-
-    def dict(self, *args, **kwargs):
-        d = super().dict(*args, **kwargs)
-
+    def render(self):
         # only expand if storage is enabled
-        if d['provider']:
-            d['path'] = Template(d['path']).render(
+        if self.provider:
+            self.path = Template(self.path).render(
                 git=GitRepo(self.paths.project).get_git_hash())
 
-        return d
+        LocalStorage(self.path)
 
 
-class Paths(BaseModel):
+class Paths(AbstractBaseModel):
     """Project's paths
 
     Parameters
@@ -87,10 +81,6 @@ class Paths(BaseModel):
         using this file before executing the pipeline. If relative, it is so to
         the project's root, not to the current working directory.
     """
-    class Config:
-        validate_assignment = True
-        extra = 'forbid'
-
     project: Optional[str] = '.'
     # this only used by storage, maybe move to Storage then.
     # although we need it for airflow when running in docker/kubernetes
@@ -103,16 +93,16 @@ class Paths(BaseModel):
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
+        # maybe call this in the super class?
+        self.render()
 
     @validator('project', always=True)
     def project_must_be_absolute(cls, v):
         return str(Path(v).resolve())
 
-    def dict(self, *args, **kwargs):
-        d = super().dict(*args, **kwargs)
-        d['environment'] = self._resolve_path(d['environment'])
-        d['products'] = self._resolve_path(d['products'])
-        return d
+    def render(self):
+        self.environment = self._resolve_path(self.environment)
+        self.products = self._resolve_path(self.products)
 
     def _resolve_path(self, path):
         if Path(path).is_absolute():
@@ -127,7 +117,7 @@ class Paths(BaseModel):
                 f'\n  * Environment: {self.environment}')
 
 
-class ScriptConfig(BaseModel):
+class ScriptConfig(AbstractConfig):
     """Coonfiguration schema to execute Ploomber pipelines
 
     Parameters
@@ -181,8 +171,10 @@ class ScriptConfig(BaseModel):
     paths: Optional[Paths] = Field(default_factory=Paths)
     storage: StorageConfig = None
 
-    class Config:
-        extra = 'forbid'
+    # Computed field, we don't document them to prevent users directly passing
+    # a value, an appropriate value is computed using user submitted values
+    # in .render()
+    environment_name: Optional[str] = None
 
     def __init__(self, **data) -> None:
         if 'storage' in data:
@@ -192,12 +184,13 @@ class ScriptConfig(BaseModel):
 
         super().__init__(**data)
         self.storage = StorageConfig(paths=self.paths, **storage)
-        self.storage.check()
+        self.render()
 
+    # TODO: rename to from_project
     @classmethod
-    def from_path(cls, project):
+    def from_path(cls, project, validate=True, return_dag=False):
         """
-        Initializes a ScriptConfig from a directory. Looks for a
+        Initializes a ScriptConfig from a project. Looks for a
         project/soopervisor.yaml file, if it doesn't exist, it just
         initializes with default values, except by paths.project, which is set
         to ``project``
@@ -218,46 +211,33 @@ class ScriptConfig(BaseModel):
         else:
             config = cls(paths=dict(project=str(project)))
 
-        return config
-
-    def to_script(self, validate=True, command=None):
-        return generate_script(config=self.export(validate=validate),
-                               command=command)
-
-    def dict(self, *args, **kwargs):
-        d = super().dict(*args, **kwargs)
-
-        if d['environment_prefix'] is not None:
-            d['environment_prefix'] = self._resolve_path(
-                d['environment_prefix'])
-            d['environment_name'] = d['environment_prefix']
-        else:
-            if Path(d['paths']['environment']).exists():
-                with open(d['paths']['environment']) as f:
-                    env_spec = yaml.safe_load(f)
-
-                try:
-                    d['environment_name'] = env_spec['name']
-                except Exception:
-                    d['environment_name'] = None
-            else:
-                d['environment_name'] = None
-
-        return d
-
-    def validate(self):
-        d = self.dict()
-        validate_base.project(d)
-
-    def export(self, validate=True, return_dag=False):
-        d = self.dict()
-
         if validate:
-            dag = validate_base.project(d)
+            dag = validate_base.project(config)
         else:
             dag = None
 
-        return d if not return_dag else (d, dag)
+        return config if not return_dag else (config, dag)
+
+    # TODO: remove, config objects should not implement this logic
+    def to_script(self, command=None):
+        return generate_script(config=self, command=command)
+
+    def render(self):
+        if self.environment_prefix is not None:
+            self.environment_prefix = self._resolve_path(
+                self.environment_prefix)
+            self.environment_name = self.environment_prefix
+        else:
+            if Path(self.paths.environment).exists():
+                with open(self.paths.environment) as f:
+                    env_spec = yaml.safe_load(f)
+
+                try:
+                    self.environment_name = env_spec['name']
+                except Exception:
+                    pass
+
+        return self
 
     def _resolve_path(self, path):
         if Path(path).is_absolute():
@@ -265,16 +245,18 @@ class ScriptConfig(BaseModel):
         else:
             return str(Path(self.paths.project, path).resolve())
 
+    # TODO: remove, config objects should not implement this logic
     def save_script(self):
         """
         Generate, validate and save script to the project's root directory,
         returns script location
         """
-        script = self.to_script(validate=True)
+        script = self.to_script()
         path_to_script = Path(self.paths.project, 'script.sh')
         path_to_script.write_text(script)
         return str(path_to_script)
 
+    # TODO: remove, config objects should not implement this logic
     def clean_products(self):
         if Path(self.paths.products).exists():
             shutil.rmtree(self.paths.products)

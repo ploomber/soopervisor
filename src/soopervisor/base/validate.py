@@ -7,25 +7,25 @@ from pathlib import Path
 from ploomber.spec import DAGSpec
 
 
-def project(config_dict):
+def project(config):
     """
     Verify project has the right structure before running the script.
     This runs as a sanity check in the development machine
     """
-    if not Path(config_dict['paths']['environment']).exists():
+    if not Path(config.paths.environment).exists():
         raise FileNotFoundError(
             'Expected a conda "environment.yml" at: {}'.format(
-                config_dict['paths']['environment']))
+                config.paths.environment))
 
     # TODO: warn if the environment file does not have pinned versions
     # TODO: warn if the setup.py dependencies (if any), does not have pinned
     # versions
 
-    if config_dict['environment_name'] is None:
+    if config.environment_name is None:
         raise ValueError('Failed to extract the environment name from the '
                          'conda "environment.yaml"')
 
-    pipeline_yaml = Path(config_dict['paths']['project'], 'pipeline.yaml')
+    pipeline_yaml = Path(config.paths.project, 'pipeline.yaml')
     if not pipeline_yaml.exists():
         raise FileNotFoundError('Expected a "pipeline.yaml" file at: ' +
                                 str(pipeline_yaml))

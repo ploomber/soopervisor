@@ -87,7 +87,6 @@ def to_argo(project_root):
     project_root : str
         Project root (pipeline.yaml parent folder)
     """
-    # TODO: validate project first
     config = ArgoConfig.from_path(project_root)
 
     dag = DAGSpec(f'{project_root}/pipeline.yaml',
@@ -147,9 +146,7 @@ def to_airflow(project_root, output_path=None):
     project_root = Path(project_root).resolve()
 
     # validate the project passses soopervisor checks
-    config = AirflowConfig.from_path(project_root)
-    # TODO: from_path should always call .validate()
-    config.validate()
+    AirflowConfig.from_path(project_root)
 
     # use airflow-home to know where to save the Airflow dag definition
     if output_path is None:
@@ -217,9 +214,6 @@ def spec_to_airflow(project_root, dag_name, airflow_default_args):
     {AIRFLOW_HOME}/dags
     """
     script_cfg = ScriptConfig.from_path(project_root)
-    # Replace the project root to reflect the new location - or maybe just
-    # write a soopervisor.yaml, then we can we rid of this line
-    script_cfg.paths.project = project_root
 
     # NOTE: we don't use script_cfg.lazy_import here because this runs in the
     # airflow host and we should never expect that environment to have
