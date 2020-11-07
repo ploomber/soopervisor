@@ -2,7 +2,8 @@ import click
 
 from soopervisor.build import build_project
 from soopervisor.storage.box import BoxUploader
-from soopervisor import export as export_module
+from soopervisor.airflow import export as export_airflow_module
+from soopervisor.argo import export as export_argo
 
 
 @click.group()
@@ -50,10 +51,10 @@ def export(upload):
     Export Ploomber project to Argo (Kubernetes)
     """
     if upload:
-        export_module.upload_code(project_root='.')
+        export_argo.upload_code(project_root='.')
 
     click.echo('Generating argo spec from project...')
-    export_module.to_argo(project_root='.')
+    export_argo.project(project_root='.')
     click.echo('Done. Saved argo spec to "argo.yaml"')
 
     click.echo('Submit your workflow with: argo submit -n argo argo.yaml')
@@ -71,7 +72,7 @@ def export_airflow(output):
     Export Ploomber project to Apache Airflow
     """
     click.echo('Exporting to Airflow...')
-    export_module.to_airflow(project_root='.', output_path=output)
+    export_airflow_module.project(project_root='.', output_path=output)
 
 
 if __name__ == '__main__':

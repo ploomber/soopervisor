@@ -118,7 +118,7 @@ class Paths(AbstractBaseModel):
 
 
 class ScriptConfig(AbstractConfig):
-    """Coonfiguration schema to execute Ploomber pipelines
+    """Configuration schema to execute Ploomber pipelines
 
     Parameters
     ----------

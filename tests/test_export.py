@@ -3,11 +3,11 @@ from pathlib import Path
 
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
-from soopervisor import export
+from soopervisor.airflow import export
 
 
 def test_export_airflow(monkeypatch, tmp_sample_project):
-    export.to_airflow(project_root='.', output_path='exported')
+    export.project(project_root='.', output_path='exported')
     monkeypatch.syspath_prepend('exported/dags')
     airflow_home = Path(tmp_sample_project, 'exported').resolve()
     monkeypatch.setenv('AIRFLOW_HOME', airflow_home)
@@ -26,7 +26,7 @@ def test_export_airflow(monkeypatch, tmp_sample_project):
 
 
 def test_export_airflow_callables(monkeypatch, tmp_callables):
-    export.to_airflow(project_root='.', output_path='exported')
+    export.project(project_root='.', output_path='exported')
     monkeypatch.syspath_prepend('exported/dags')
     airflow_home = Path(tmp_callables, 'exported').resolve()
     monkeypatch.setenv('AIRFLOW_HOME', airflow_home)

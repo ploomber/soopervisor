@@ -47,13 +47,22 @@ class ArgoConfig(ScriptConfig):
     Notes
     -----
     ``mounted_volumes`` and ``image`` are only used when generating the Argo
-    YAML spec and have no bearing during execution, since the YAML espec is
-    already created by then
+    YAML spec and have no bearing during execution
 
     The first volume in ``mounted_volumes`` is set as the working directory
     for all Pods, make sure it's the volume where the project's source code
     is located
     """
+    # defaults that we might want to change here
+    # ScriptConfig.args should not be allowed, since each script runs a single
+    # task and there isn't anything to customize
+    # ScriptConfig.executor, do not allow 'docker', just 'local'
+    # ScriptConfig.allow_incremental set default to false (?)
+    # ScriptConfig.Paths.environment, maybe look for an environment.lock.yml
+    # by default
+    # ScriptConfig.Storage.path, we don't expect the code in argo to be in a
+    # git repo, change "runs/{{git}}" default value
+
     lazy_import: bool = True
 
     # TODO: support for secrets https://argoproj.github.io/argo/examples/#secrets

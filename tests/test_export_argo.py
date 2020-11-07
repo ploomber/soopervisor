@@ -1,9 +1,9 @@
 from ploomber.spec import DAGSpec
-from soopervisor import export
+from soopervisor.argo import export
 
 
 def test_argo_spec(tmp_sample_project):
-    d = export.to_argo('.')
+    d = export.project('.')
 
     run_task_template = d['spec']['templates'][0]
     tasks = d['spec']['templates'][1]['dag']['tasks']

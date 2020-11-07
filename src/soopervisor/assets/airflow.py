@@ -4,7 +4,7 @@ Template to convert a Ploomber DAG to Airflow
 from pathlib import Path
 import os
 
-from soopervisor.export import spec_to_airflow
+from soopervisor.airflow.export import spec_to_airflow
 from airflow.utils.dates import days_ago
 
 default_args = {
