@@ -17,13 +17,24 @@ CHUNKED_UPLOAD_MINIMUM = 20000000
 class BoxUploader:
     """
 
+    Parameters
+    ----------
+    client_id : str
+        Client ID
+
+    primary_access_token : str
+        Primary access token
+
+    root_folder : str
+        The name of the folder to use for this upload session
+
     Examples
     --------
     >>> from soopervisor.storage.box import BoxUploader
-    >>> uploader = BoxUploader.from_yaml('~/.auth/box.yaml')
+    >>> uploader = BoxUploader.from_yaml('~/.auth/box.yaml', 'my_uploads')
     >>> uploader.upload_files(['some_file.png'])
     """
-    def __init__(self, client_id, primary_access_token):
+    def __init__(self, client_id, primary_access_token, root_folder):
         auth = OAuth2(
             client_id=client_id,
             client_secret='',
@@ -31,23 +42,24 @@ class BoxUploader:
         )
 
         self.client = Client(auth)
-        self.__root_folder = self.client.root_folder().get()
+
+        # TODO: only works when passing a single name, breaks with "a/b/c"
+        # '0' is the root folder id
+        self.root_folder = self._create_folder('0', root_folder)
 
     @classmethod
-    def from_yaml(cls, path_to_credentials):
+    def from_yaml(cls, path_to_credentials, root_folder):
         with open(str(Path(path_to_credentials).expanduser())) as f:
             d = yaml.safe_load(f)
 
-        return cls(d['client_id'], d['primary_access_token'])
+        return cls(d['client_id'], d['primary_access_token'], root_folder)
 
     @classmethod
-    def from_environ(cls):
-        return cls(os.environ['CLIENT_ID'], os.environ['PRIMARY_ACCESS_TOKEN'])
+    def from_environ(cls, root_folder):
+        return cls(os.environ['CLIENT_ID'], os.environ['PRIMARY_ACCESS_TOKEN'],
+                   root_folder)
 
-    def get_root_folder(self):
-        return self.__root_folder
-
-    def upload_files(self, paths: List[str], replace: bool = False, root_folder = None):
+    def upload_files(self, paths: List[str], replace: bool = False):
         """
         Upload files to Box
 
@@ -58,24 +70,24 @@ class BoxUploader:
         replace: bool,optional
             If True, all the files and folders will be replaced by the new ones
         """
-        if not root_folder:
-            root_folder = self.__root_folder
-
         for path in paths:
             path = Path(path)
             if path.exists():
                 if path.is_dir():
-                    total_size_upload = sum(file.stat().st_size for file in path.glob('**/*') if (not file.name.startswith(".") and file.is_file()))
+                    total_size_upload = sum(
+                        file.stat().st_size for file in path.glob('**/*')
+                        if (not file.name.startswith(".") and file.is_file()))
                     progress_bar = tqdm(total=total_size_upload)
-                    folder = self._create_folder(root_folder.id, path.name, replace_folder=replace)
+                    folder = self._create_folder(self.root_folder.id,
+                                                 path.name,
+                                                 replace_folder=replace)
                     self._upload_directory(path=path,
-                                            parent_folder_id=folder.id,
-                                            progress_bar=progress_bar)
+                                           parent_folder_id=folder.id,
+                                           progress_bar=progress_bar)
                 elif path.is_file():
-                    self._upload_each_file(folder_id=root_folder.id,
-                                        file=path,
-                                        progress_bar=progress_bar,
-                                        replace_file=replace)
+                    self._upload_each_file(folder_id=self.root_folder.id,
+                                           file=path,
+                                           replace_file=replace)
             else:
                 raise FileNotFoundError("Invaid or non-existent path")
 
@@ -107,16 +119,18 @@ class BoxUploader:
 
         """
         file_system_objects = (file for file in path.iterdir()
-                            if not file.name.startswith("."))
-        for object in file_system_objects:
-            if object.is_dir():
-                folder = self._create_folder(parent_folder_id, object.name)
-                self._upload_directory(path=object.absolute(), parent_folder_id=folder.id, progress_bar=progress_bar)
-            elif object.is_file():
-                self._upload_each_file(folder_id=parent_folder_id, file=object)
+                               if not file.name.startswith("."))
+        for file_ in file_system_objects:
+            if file_.is_dir():
+                folder = self._create_folder(parent_folder_id, file_.name)
+                self._upload_directory(path=file_.absolute(),
+                                       parent_folder_id=folder.id,
+                                       progress_bar=progress_bar)
+            elif file_.is_file():
+                self._upload_each_file(folder_id=parent_folder_id, file=file_)
 
-            progress_bar.set_postfix(file=object.name, refresh=False)
-            progress_bar.update(object.stat().st_size)
+            progress_bar.set_postfix(file=file_.name, refresh=False)
+            progress_bar.update(file_.stat().st_size)
 
         return True
 
@@ -124,6 +138,8 @@ class BoxUploader:
                        parent_folder_id: str,
                        folder_name: str,
                        replace_folder: bool = False):
+        """Create a new folder
+        """
         try:
             subfolder = self.client.folder(
                 folder_id=parent_folder_id).create_subfolder(folder_name)
@@ -151,9 +167,10 @@ class BoxUploader:
         if file_size < CHUNKED_UPLOAD_MINIMUM:
             file_uploaded = self._upload_file(folder_id, file, replace_file)
         else:
-            file_uploaded = self._upload_large_file(folder_id=folder_id, file=file, file_size=file_size,
-                                               replace_file=replace_file)
-
+            file_uploaded = self._upload_large_file(folder_id=folder_id,
+                                                    file=file,
+                                                    file_size=file_size,
+                                                    replace_file=replace_file)
 
         return file_uploaded
 
@@ -190,8 +207,8 @@ class BoxUploader:
             with open(file.absolute(), mode="rb") as f:
                 sha1 = hashlib.sha1()
                 upload_session = self.client.folder(
-                    folder_id=folder_id).create_upload_session(file_size,
-                                                            file_name=file.name)
+                    folder_id=folder_id).create_upload_session(
+                        file_size, file_name=file.name)
 
                 for part_num in range(upload_session.total_parts):
                     copied_length = 0
@@ -212,9 +229,10 @@ class BoxUploader:
                         chunk, part_num * upload_session.part_size, file_size)
                     part_array.append(uploaded_part)
                     updated_sha1 = sha1.update(chunk)
+
                 content_sha1 = sha1.digest()
-                uploaded_file = upload_session.commit(content_sha1=content_sha1,
-                                                    parts=part_array)
+                uploaded_file = upload_session.commit(
+                    content_sha1=content_sha1, parts=part_array)
 
         logging.info("File: {0} uploaded".format(uploaded_file.name))
 

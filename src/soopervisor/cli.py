@@ -2,7 +2,6 @@ import click
 
 from soopervisor.build import build_project
 from soopervisor.argo.config import ArgoConfig
-from soopervisor.storage.box import BoxUploader
 from soopervisor.airflow import export as export_airflow_module
 from soopervisor.argo import export as export_argo
 
@@ -31,18 +30,6 @@ def build(clean_products_path, dry_run):
     build_project(project_root='.',
                   clean_products_path=clean_products_path,
                   dry_run=dry_run)
-
-
-@cli.command()
-@click.argument('directory')
-def upload(directory, help='Directory to upload'):
-    """
-    Upload files
-    """
-    # TODO: make this an internal cli tool (like python -m soopervisor.upload)
-    # this is not intended to be called by end-users
-    uploader = BoxUploader.from_environ()
-    uploader.upload_files([directory])
 
 
 @cli.command()
