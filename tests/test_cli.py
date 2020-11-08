@@ -45,7 +45,7 @@ def test_export_callables(args, tmp_callables):
     assert result.exit_code == 0
 
 
-def test_export_with_upload_option(monkeypatch, tmp_sample_project):
+def test_export_with_upload(monkeypatch, tmp_sample_project):
     m_stdout = Mock()
     m_stdout.stdout = b'some_pod_id'
     m = Mock(return_value=m_stdout)
@@ -88,6 +88,16 @@ def test_export_with_upload_option(monkeypatch, tmp_sample_project):
 
     assert m.call_count == 2
     assert result.exit_code == 0
+
+
+def test_export_with_upload_missing_code_pod(tmp_sample_project):
+    runner = CliRunner()
+    result = runner.invoke(cli, ['export', '--upload'])
+
+    assert isinstance(result.exception, ValueError)
+    assert '"code_pod" section in the configuration file' in str(
+        result.exception)
+    assert result.exit_code == 1
 
 
 def test_make_script(tmp_sample_project):

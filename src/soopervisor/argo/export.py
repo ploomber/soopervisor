@@ -31,7 +31,7 @@ def upload_code(config):
 
     if config.code_pod is None:
         raise ValueError('"code_pod" section in the configuration file '
-                         'is required to used the upload option')
+                         'is required when using the upload option')
 
     get_pods_args = shlex.split(config.code_pod.args or '')
 
