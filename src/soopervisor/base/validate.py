@@ -33,7 +33,7 @@ def project(config):
     try:
         # NOTE: should lazy_import be an option from config?
         dag = DAGSpec(pipeline_yaml, lazy_import=True).to_dag()
-        dag.render()
+        dag.render(force=True)
     except Exception as e:
         raise RuntimeError(
             'Failed to initialize DAG from pipeline.yaml') from e

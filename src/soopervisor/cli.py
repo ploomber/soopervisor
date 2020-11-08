@@ -46,7 +46,10 @@ def upload(directory, help='Directory to upload'):
 
 
 @cli.command()
-@click.option('--upload', '-u', is_flag=True, help='Upload code')
+@click.option('--upload',
+              '-u',
+              is_flag=True,
+              help='Upload code, assumes "kubectl" is properly configured')
 def export(upload):
     """
     Export Ploomber project to Argo (Kubernetes)

@@ -44,8 +44,8 @@ def upload_code(config):
                             capture_output=True)
 
     pod_name = result.stdout.decode('utf-8').replace('"', '')
+    print(f'Got pod: "{pod_name}". Uploading code to "{config.code_pod.path}"')
 
-    print('Uploading code...')
     subprocess.run([
         'kubectl', 'cp',
         str(config.paths.project), f'{pod_name}:{config.code_pod.path}'
@@ -83,6 +83,7 @@ def project(config):
     project_root : str
         Project root (pipeline.yaml parent folder)
     """
+    # TODO: validate returns a dag, maybe use that one?
     dag = DAGSpec(f'{config.paths.project}/pipeline.yaml',
                   lazy_import=config.lazy_import).to_dag()
 
@@ -93,7 +94,7 @@ def project(config):
     volume_mounts = list(volume_mounts)
 
     d = yaml.safe_load(pkg_resources.read_text(assets, 'argo-workflow.yaml'))
-    d['volumes'] = volumes
+    d['spec']['volumes'] = volumes
 
     tasks_specs = []
 

@@ -23,6 +23,10 @@ def test_argo_spec(tmp_sample_project):
         'subPath': 'sample_project'
     }]
 
+    assert set(d) == {'apiVersion', 'kind', 'metadata', 'spec'}
+    assert set(d['metadata']) == {'generateName'}
+    assert set(d['spec']) == {'entrypoint', 'templates', 'volumes'}
+
     assert run_task_template['script']['image'] == 'continuumio/miniconda3'
     assert run_task_template['name'] == 'run-task'
     assert run_task_template['script']['workingDir'] == '/mnt/nfs'
