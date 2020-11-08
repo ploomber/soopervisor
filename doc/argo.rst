@@ -13,7 +13,7 @@ Argo is a general-purpose framework to execute, schedule and monitor workflows
 in Kubernetes. Argo workflows are written in YAML and it requires you to
 specify each task in your pipeline, task dependencies, script to run, Docker image to use,
 mounted volumes, etc. This implies a steep (and unnecessary) learning curve
-for a lot of people who can benefit from a production tool like Argo.
+for a lot of people who can benefit from it.
 
 Soopervisor automates the creation of Argo's YAML spec. So users think in terms
 of functions, scripts and notebooks, not in terms of clusters nor containers.
@@ -64,8 +64,17 @@ Once you have a Ploomber project ready, generate the Argo spec using:
 
 
 This command runs a few checks to make sure your pipeline is good to go,
-and then generates the Argo's YAML spec. Once you upload your source code
-to the cluster (strategies vary here). You can execute the workflow with:
+and then generates the Argo's YAML spec. Before running your workflow, you
+have to make sure the source code is available to the Pods, there are many
+approaches to do this; Soopervisor implements a simple one, it uses ``kubectl``
+to upload the code to the cluster, you can enable this using:
+
+.. code-block::
+
+    soopervisor export --upload
+
+
+Once you upload your source code.You can execute the workflow with:
 
 
 .. code-block:: sh
@@ -75,7 +84,9 @@ to the cluster (strategies vary here). You can execute the workflow with:
 
 By standardizing the deployment process (how to upload the code, which image
 to use, how to mount volumes and how to install dependencies), end-users are
-able to leverage Argo without having to deal with such nuances.
+able to leverage Argo without having to modify their Ploomber projects.
+
+For a complete API reference see :doc:`Argo API <api/argo>`.
 
 Technical details
 -----------------
@@ -101,15 +112,19 @@ Argo YAML spec. This involves generating one entry in the spec per pipeline
 task and setting the same graph structure by indicating the dependencies for
 each task.
 
-Each Pod runs a single task using the ``continuumio/miniconda3`` image. The
-script executed on each Pod sets up the conda environment using the
+Each Pod runs a single task using the ``continuumio/miniconda3`` image by
+default. The script executed on each Pod sets up the conda environment using the
 user-provided ``environment.yml`` file, then executes the given task.
 
 
-Currently, the spec expects a ``nfs`` `persistent volume clain (PVC) <https://kubernetes.io/docs/concepts/storage/persistent-volumes/>`_
-to exist in the cluster and mounts the folder ``/{project-name}`` in such volume
-to ``/mnt/vol`` on each Pod. Where ``{project-name}`` is the name of your project
-(the name of the folder that contains your ``pipeline.yaml`` file).
+By default, the spec mounts
+`persistent volume clain (PVC) <https://kubernetes.io/docs/concepts/storage/persistent-volumes/>`_
+with name ``nfs`` and mounts folder ``/{project-name}`` from that PVC to
+``/mnt/nfs`` on each Pod, where `{project-name}` is replaced by your
+project's name (the name of the folder that contains your ``pipeline.yaml``
+file). Tasks are executed with ``/{project-name}`` as the working directory.
+Te mounting logic can be customized using a ``soopervisor.yaml`` configuration
+file, see the :doc:`Argo API <api/argo>`. for details.
 
 
 Uploading project's source code
@@ -128,6 +143,19 @@ would be to fetch the source code from a repository. For simplicity, this
 prototype directly uploads the source code from the client to a cluster shared
 disk.
 
+You can upload the code to the cluster directly from the CLI, by using:
+
+
+.. code-block::
+
+    soopervisor export --upload
+
+
+To enable the use of the ``--upload`` flag, you have to configure the
+``code_pod`` section in the ``soopervisor.yaml`` configuration file, see the
+:doc:`Argo API <api/argo>`. for details.
+
+
 Input data
 **********
 
@@ -138,13 +166,15 @@ running in Kubernetes, each Pod has its own filesystem.
 
 The simplest solution is to mount a shared disk and have all tasks write their
 outputs to the shared resource. This reduces the need to move large datasets
-over the network. Although simple, this approach is unfeasible if the cluster
-spans several cloud regions and it isn't possible to mount a shared disk on all
-pods.
+over the network.
 
-An alternative approach is to have each task fetch its inputs over the network
-before execution. The current prototype assumes all tasks write to a shared
-disk.
+Although simple, this approach is unfeasible if the cluster
+spans several cloud regions and it isn't possible to mount a shared disk on all
+pods. An alternative approach is to have each task fetch its inputs over the
+network before execution.
+
+The current implementations assumes all tasks write to a shared disk,
+mounting logic can be configured using a ``soopervisor.yaml`` file.
 
 
 Full example
@@ -198,7 +228,7 @@ Submit a sample workflow to make sure Argo works:
     argo submit -n argo --watch dag.yaml
 
 Container see the contents of the shared drive ``/export/`` directory at
-``/mnt/vol``.
+``/mnt/nfs``.
 
 Check the output of ``dag.yaml``:
 
@@ -244,10 +274,32 @@ Run a Ploomber sample pipeline:
 
     # upload source code to the nfs server
     # (recommended: ml-basic/ (machine learning pipeline) and etl/)
-    kubectl cp projects/ml-basic {nfs-server-pod-name}:/exports
+    kubectl cp projects/ml-basic {nfs-server-pod-name}:/exports/ml-basic
 
     # generate argo spec
     soopervisor export
+
+    # submit workflow
+    argo submit -n argo --watch argo.yaml
+
+
+Alternatively, you can use the ``--upload`` flag
+
+Save the following ``soopervisor.yaml`` file:
+
+.. code-block:: yaml
+
+  code_pod:
+    args: -l role=nfs-server
+    path: /exports/{{project_name}}
+
+
+To execute the workflow:
+
+.. code-block:: sh
+
+    # generate argo spec and upload source code
+    soopervisor export --upload
 
     # submit workflow
     argo submit -n argo --watch argo.yaml

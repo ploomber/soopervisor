@@ -19,10 +19,10 @@ spec:
     container:
       image: continuumio/miniconda3
       command: [sh, -c]
-      args: ["touch /mnt/vol/{{inputs.parameters.filename}}"]
+      args: ["touch /mnt/nfs/{{inputs.parameters.filename}}"]
       volumeMounts:
         - name: workdir
-          mountPath: /mnt/vol
+          mountPath: /mnt/nfs
 
   - name: diamond
     dag:
