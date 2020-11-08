@@ -1,4 +1,4 @@
-from pathlib import Path
+import shlex
 import subprocess
 
 from ploomber.spec import DAGSpec
@@ -10,7 +10,6 @@ except ImportError:
     import importlib_resources as pkg_resources
 
 from soopervisor import assets
-from soopervisor.argo.config import ArgoConfig
 
 
 def _make_argo_task(name, dependencies):
@@ -28,23 +27,28 @@ def _make_argo_task(name, dependencies):
     return task
 
 
-def upload_code(project_root):
+def upload_code(config):
+
+    if config.code_pod is None:
+        raise ValueError('"code_pod" section in the configuration file '
+                         'is required to used the upload option')
+
+    get_pods_args = shlex.split(config.code_pod.args or '')
 
     print('Locating nfs-server pod...')
     result = subprocess.run([
-        'kubectl', 'get', 'pods', '-l', 'role=nfs-server', '-o',
+        'kubectl', 'get', 'pods', '--output',
         'jsonpath="{.items[0].metadata.name}"'
-    ],
+    ] + get_pods_args,
                             check=True,
                             capture_output=True)
 
     pod_name = result.stdout.decode('utf-8').replace('"', '')
-    project_name = Path(project_root).resolve().name
 
     print('Uploading code...')
     subprocess.run([
         'kubectl', 'cp',
-        str(project_root), f'{pod_name}:/exports/{project_name}'
+        str(config.paths.project), f'{pod_name}:{config.code_pod.path}'
     ])
 
 
@@ -71,7 +75,7 @@ def _make_volume_entries(mv):
     return volume, volume_mount
 
 
-def project(project_root):
+def project(config):
     """Export Argo YAML spec from Ploomber project to argo.yaml
 
     Parameters
@@ -79,14 +83,14 @@ def project(project_root):
     project_root : str
         Project root (pipeline.yaml parent folder)
     """
-    # TODO: from project can return the dag
-    config = ArgoConfig.from_project(project_root)
-
-    dag = DAGSpec(f'{project_root}/pipeline.yaml',
+    dag = DAGSpec(f'{config.paths.project}/pipeline.yaml',
                   lazy_import=config.lazy_import).to_dag()
 
     volumes, volume_mounts = zip(*(_make_volume_entries(mv)
                                    for mv in config.mounted_volumes))
+    # force them to be lists to prevent "!!python/tuple" to be added
+    volumes = list(volumes)
+    volume_mounts = list(volume_mounts)
 
     d = yaml.safe_load(pkg_resources.read_text(assets, 'argo-workflow.yaml'))
     d['volumes'] = volumes
@@ -108,7 +112,7 @@ def project(project_root):
 
     d['spec']['templates'][0]['script']['image'] = config.image
 
-    with open(f'{project_root}/argo.yaml', 'w') as f:
+    with open(f'{config.paths.project}/argo.yaml', 'w') as f:
         yaml.dump(d, f)
 
     return d

@@ -10,9 +10,9 @@ User Guide
    local
    ci
    cron
-   settings
    argo
    airflow
+   api/index
    dev
 
 

@@ -1,7 +1,7 @@
 """
 Schema for the (optional) soopervisor.yaml configuration file
 """
-from typing import List
+from typing import List, Optional
 
 from jinja2 import Template
 
@@ -19,10 +19,10 @@ class ArgoMountedVolume(AbstractBaseModel):
         Claim name for the volume (set in persistentVolumeClaim.claimName)
 
     sub_path : str
-        Sub path from the volume to mount in the Pod (set in subPath). You
-        can use the placeholder {{project_name}} which will be automatically
-        replaced (e.g. if sub_path='data/{{project_name}}' in a project with
-        name 'my_project', it will render to 'data/my_project')
+        Sub path from the volume to mount in the Pod (set in subPath). Use the
+        placeholder ``{{project_name}}`` to refer to your project's name
+        (e.g. if ``sub_path='data/{{project_name}}'`` in a project named
+        'my_project', it will render to 'data/my_project')
 
     """
     claim_name: str
@@ -32,17 +32,44 @@ class ArgoMountedVolume(AbstractBaseModel):
         self.sub_path = Template(self.sub_path).render(**kwargs)
 
 
+class ArgoCodePod(AbstractBaseModel):
+    """Configuration to upload code to a Pod with a shared disk mounted
+
+    Parameters
+    ----------
+    args : str
+        Arguments passed to ``kubectl get pods`` to find the pod name to upload
+        the code to. Cannot contain the -o/--output option. For example, if
+        your disk is located in a pod with role 'nfs-server' in namespace
+        'argo', pass ``args='-l role=nfs-server -n argo'``
+
+    path : str
+        Path to upload the code to. Use the '{{project_name}}' to replace for
+        the project's name
+    """
+    args: str
+    path: str
+
+    def render(self, **kwargs):
+        self.path = Template(self.path).render(**kwargs)
+
+
 class ArgoConfig(ScriptConfig):
     """Configuration for exporting to Argo
 
     Parameters
     ----------
     mounted_volumes : list
-        List of volumes to mount on each Pod (``ArgoMountedVolumes``).
+        List of volumes to mount on each Pod, described with the
+        ``ArgoMountedVolumes`` schema.
         Defaults to [{'claim_name': 'nfs', 'sub_path': '{{project_name}}'}]
 
     image : str, default='continuumio/miniconda3'
         Docker image to use
+
+    code_pod : ArgoCodePod, default=None
+        Pod for uploading the code, only required if using the ``-u/--upload``
+        option when running ``soopervisor export``
 
     Notes
     -----
@@ -52,6 +79,9 @@ class ArgoConfig(ScriptConfig):
     The first volume in ``mounted_volumes`` is set as the working directory
     for all Pods, make sure it's the volume where the project's source code
     is located
+
+    Unlike the base settings default, ``lazy_import`` is set to ``True`` by
+    default
     """
     # defaults that we might want to change here
     # ScriptConfig.args should not be allowed, since each script runs a single
@@ -73,10 +103,15 @@ class ArgoConfig(ScriptConfig):
         ArgoMountedVolume(claim_name='nfs', sub_path='{{project_name}}')
     ]
 
+    code_pod: Optional[ArgoCodePod] = None
+
     image: str = 'continuumio/miniconda3'
 
     def render(self):
         super().render()
 
         for mv in self.mounted_volumes:
-            mv.render(**dict(project_name=self.project_name))
+            mv.render(project_name=self.project_name)
+
+        if self.code_pod is not None:
+            self.code_pod.render(project_name=self.project_name)

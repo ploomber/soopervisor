@@ -58,6 +58,7 @@ def test_argo_config_defaults():
         'sub_path': 'sample_project'
     }]
     assert cfg.lazy_import
+    assert cfg.code_pod is None
 
 
 def test_sample_project_from_path(session_sample_project):
