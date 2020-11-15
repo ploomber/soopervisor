@@ -57,5 +57,5 @@ then
 fi
 
 # upload products
-soopervisor upload {{config.paths.products}}
+python -m soopervisor.upload {{config.paths.products}} {{config.storage.path}}
 {% endif %}

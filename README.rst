@@ -1,8 +1,8 @@
 Soopervisor
 ===========
 
-.. image:: https://github.com/ploomber/ci-for-ds/workflows/CI/badge.svg
-   :target: https://github.com/ploomber/ci-for-ds/workflows/CI/badge.svg
+.. image:: https://github.com/ploomber/soopervisor/workflows/CI/badge.svg
+   :target: https://github.com/ploomber/soopervisor/workflows/CI/badge.svg
    :alt: CI badge
 
 

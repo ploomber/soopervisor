@@ -201,6 +201,7 @@ def test_script_uploads_if_provider(git_hash, provider, tmp_sample_project):
     Path('soopervisor.yaml').write_text(yaml.dump(d))
     config = ScriptConfig.from_project('.', validate=False)
     script = config.to_script()
+    # TODO: test arguments passed to python -m soopervisor.upload
     assert 'soopervisor upload' in script
 
 
