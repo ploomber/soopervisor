@@ -71,6 +71,9 @@ class ArgoConfig(ScriptConfig):
         Pod for uploading the code, only required if using the ``-u/--upload``
         option when running ``soopervisor export``
 
+    version : str, default=None
+        Which soopervisor version to use whhen executing tasks in Argo
+
     Notes
     -----
     ``mounted_volumes`` and ``image`` are only used when generating the Argo
@@ -106,6 +109,8 @@ class ArgoConfig(ScriptConfig):
     code_pod: Optional[ArgoCodePod] = None
 
     image: str = 'continuumio/miniconda3'
+
+    version: Optional[str] = None
 
     def render(self):
         super().render()

@@ -21,11 +21,7 @@ spec:
       command: [bash]
       # set via ArgoConfig.mounted_volumes (using the first entry)
       workingDir: null
-      source: |
-        set -e
-        pip install soopervisor
-        python -m soopervisor.script "ploomber task {{inputs.parameters.task_name}} --force" > script.sh
-        bash script.sh
+      source: null
       volumeMounts: null
 
   - name: dag

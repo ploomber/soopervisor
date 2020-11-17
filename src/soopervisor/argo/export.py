@@ -2,7 +2,9 @@ import shlex
 import subprocess
 
 from ploomber.spec import DAGSpec
+from jinja2 import Template
 import yaml
+
 try:
     import importlib.resources as pkg_resources
 except ImportError:
@@ -25,6 +27,30 @@ def _make_argo_task(name, dependencies):
         }
     }
     return task
+
+
+def _make_argo_script(version):
+    # no arg, use the latest stable version
+    if not version:
+        pip_arg = 'soopervisor'
+    # installing from another version but not from git
+    elif not version.startswith('git+'):
+        pip_arg = f'soopervisor=={version}'
+    # installing from git
+    else:
+        pip_arg = version
+
+    script = Template(
+        """
+set -e
+pip install [[pip_arg]]
+python -m soopervisor.script "ploomber task {{inputs.parameters.task_name}} --force" --flavor argo > script.sh
+bash script.sh
+""",
+        variable_start_string='[[',
+        variable_end_string=']]',
+    ).render(pip_arg=pip_arg)
+    return script
 
 
 def upload_code(config):
@@ -112,6 +138,8 @@ def project(config):
         'mountPath']
 
     d['spec']['templates'][0]['script']['image'] = config.image
+    d['spec']['templates'][0]['script']['source'] = _make_argo_script(
+        config.version)
 
     with open(f'{config.paths.project}/argo.yaml', 'w') as f:
         yaml.dump(d, f)
