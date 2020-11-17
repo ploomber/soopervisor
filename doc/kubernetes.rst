@@ -15,10 +15,12 @@ specify each task in your pipeline, task dependencies, script to run, Docker ima
 mounted volumes, etc. This implies a steep (and unnecessary) learning curve
 for a lot of people who can benefit from it.
 
-Soopervisor automates the creation of Argo's YAML spec. So users think in terms
-of functions, scripts and notebooks, not in terms of clusters nor containers.
+Soopervisor can export `Ploomber <https://github.com/ploomber/ploomber>`_
+projects to Argo's YAML spec format. This way users can test their workflows
+locally and scale to a cluster when they need to and organize workflows in
+terms of functions, scripts and notebooks, not in terms of clusters nor
+containers.
 
-Soopervisor exports `Ploomber <https://github.com/ploomber/ploomber>`_ projects.
 A Ploomber workflow can be specified via a YAML spec (there is also a Python
 API for advanced use cases), which only requires users to tell what to run
 (function/script/notebook) and where to save the output:
@@ -86,7 +88,8 @@ By standardizing the deployment process (how to upload the code, which image
 to use, how to mount volumes and how to install dependencies), end-users are
 able to leverage Argo without having to modify their Ploomber projects.
 
-For a complete API reference see :doc:`Argo API <api/argo>`.
+For options to configure the exported DAG and to set up code uploading see:
+:doc:`Argo API <api/argo>`.
 
 Technical details
 -----------------
@@ -117,13 +120,13 @@ default. The script executed on each Pod sets up the conda environment using the
 user-provided ``environment.yml`` file, then executes the given task.
 
 
-By default, the spec mounts
-`persistent volume clain (PVC) <https://kubernetes.io/docs/concepts/storage/persistent-volumes/>`_
+By default, the spec mounts `persistent volume clain (PVC) <https://kubernetes.io/docs/concepts/storage/persistent-volumes/>`_
 with name ``nfs`` and mounts folder ``/{project-name}`` from that PVC to
 ``/mnt/nfs`` on each Pod, where `{project-name}` is replaced by your
 project's name (the name of the folder that contains your ``pipeline.yaml``
-file). Tasks are executed with ``/{project-name}`` as the working directory.
-Te mounting logic can be customized using a ``soopervisor.yaml`` configuration
+file). Tasks are executed with ``/mnt/nfs`` as the working directory.
+
+The mounting logic can be customized using a ``soopervisor.yaml`` configuration
 file, see the :doc:`Argo API <api/argo>`. for details.
 
 

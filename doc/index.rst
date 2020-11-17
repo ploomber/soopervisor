@@ -10,7 +10,7 @@ User Guide
    local
    ci
    scheduling
-   argo
+   kubernetes
    airflow
    api/index
    dev
