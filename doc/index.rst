@@ -9,7 +9,7 @@ User Guide
 
    local
    ci
-   cron
+   scheduling
    argo
    airflow
    api/index
