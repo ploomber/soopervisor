@@ -16,12 +16,12 @@ mounted volumes, etc. This implies a steep (and unnecessary) learning curve
 for a lot of people who can benefit from it.
 
 Soopervisor can export `Ploomber <https://github.com/ploomber/ploomber>`_
-projects to Argo's YAML spec format. This way users can test their workflows
-locally and scale to a cluster when they need to and organize workflows in
-terms of functions, scripts and notebooks, not in terms of clusters nor
-containers.
+projects to Argo's YAML spec format. This way users can develop and their
+workflows locally and think in terms of functions, scripts and notebooks, not
+in terms of clusters nor containers. When they're ready, they can scale the
+workload in a cluster.
 
-A Ploomber workflow can be specified via a YAML spec (there is also a Python
+A Ploomber workflow can be specified via a YAML spec (although there is also a Python
 API for advanced use cases), which only requires users to tell what to run
 (function/script/notebook) and where to save the output:
 
@@ -55,8 +55,8 @@ analysis in the source code.
 `Click here <https://github.com/ploomber/projects/tree/master/ml-basic>`_ to
 see the full code example.
 
-Deployment process
-------------------
+Overview
+--------
 
 Once you have a Ploomber project ready, generate the Argo spec using:
 
@@ -67,16 +67,19 @@ Once you have a Ploomber project ready, generate the Argo spec using:
 
 This command runs a few checks to make sure your pipeline is good to go,
 and then generates the Argo's YAML spec. Before running your workflow, you
-have to make sure the source code is available to the Pods, there are many
-approaches to do this; Soopervisor implements a simple one, it uses ``kubectl``
-to upload the code to the cluster, you can enable this using:
+have to make sure the source code is available in the Pods, Soopervisor
+implements a simple approach: it uses ``kubectl`` to directly upload the code
+to a cluster shared disk. However, you can customize this process to suit your
+needs.
+
+To upload the code using the cli:
 
 .. code-block::
 
     soopervisor export --upload
 
 
-Once you upload your source code.You can execute the workflow with:
+Once you upload your project. You can execute the workflow with:
 
 
 .. code-block:: sh
@@ -94,7 +97,7 @@ For options to configure the exported DAG and to set up code uploading see:
 Technical details
 -----------------
 
-*This section describes the deailed process of interfacing Ploomber projects
+*This section describes the detailed process of interfacing Ploomber projects
 with Argo/Kubernetes with a complete example*
 
 ``argo submit`` triggers a workflow by just uploading a YAML file, but it does
@@ -121,7 +124,7 @@ user-provided ``environment.yml`` file, then executes the given task.
 
 
 By default, the spec mounts `persistent volume clain (PVC) <https://kubernetes.io/docs/concepts/storage/persistent-volumes/>`_
-with name ``nfs`` and mounts folder ``/{project-name}`` from that PVC to
+with name ``nfs`` and mounts folder ``/exports/{project-name}`` from such PVC to
 ``/mnt/nfs`` on each Pod, where `{project-name}` is replaced by your
 project's name (the name of the folder that contains your ``pipeline.yaml``
 file). Tasks are executed with ``/mnt/nfs`` as the working directory.
@@ -138,17 +141,6 @@ A Ploomber project is composed of a conda ``environment.yml``,
 simplest way to make the source code available to every Pod is to upload your
 code to a persistent volume and mount it on every Pod when it starts execution.
 
-The primary disadvantage is that there is no control over pipeline versions,
-another way to solve this is to generate a package from your project
-(each time with a different version number), upload it to a package registry
-and have the pods pull the project from the registry. An alternative approach
-would be to fetch the source code from a repository. For simplicity, this
-prototype directly uploads the source code from the client to a cluster shared
-disk.
-
-You can upload the code to the cluster directly from the CLI, by using:
-
-
 .. code-block::
 
     soopervisor export --upload
@@ -158,6 +150,11 @@ To enable the use of the ``--upload`` flag, you have to configure the
 ``code_pod`` section in the ``soopervisor.yaml`` configuration file, see the
 :doc:`Argo API <api/argo>`. for details.
 
+The primary disadvantage of uploading the code directly is that there is no
+control over pipeline versions, a different approach is to generate a package
+from your project (each time with a different version number), upload it to a
+package registry and have the pods pull the project from the registry. Another
+approach would be to fetch the source code from a repository.
 
 Input data
 **********
@@ -265,7 +262,8 @@ Enable Argo's UI:
 Then open: http://127.0.0.1:2746
 
 
-Run a Ploomber sample pipeline:
+Run a Ploomber sample pipeline, which consists of a few tasks that prepare
+data and train a machine learning model:
 
 .. code-block:: sh
 
@@ -305,7 +303,50 @@ To execute the workflow:
     soopervisor export --upload
 
     # submit workflow
-    argo submit -n argo --watch argo.yaml
+    argo submit -n argo
+
+
+You can keep track of execution by opening the GUI.
+
+Once execution is finished, you can take a look at the generated arfifacts:
+
+.. code-block:: sh
+
+    # get pod names
+    kubectl get pod
+
+    # ssh to nfs pod, replace {pod-name} with your nfs pod name
+    kubectl exec --stdin --tty {pod-name} -- /bin/bash
+
+    # output folder
+    cd /exports/ml-basic/output/
+
+**Other examples**
+
+You can execute other examples from the same repository in the same way:
+
+1. ``ml-intermediate`` - A bit more sophisticated ML example, showing how to
+execute integration tests upon task execution and parametrize your pipeline
+(i.e. run locally with a sample to iterate faster, but with the full dataset in
+Kubernetes).
+
+2. ``ml-advanced`` - Shows how to write a machine learning pipeline using the
+Python API (instead of a ``pipeline.yaml``) file, shows how to create an array
+of experiments to try several models.
+
+3. ``etl`` - Pipeline with a SQL tasks demonstrating how to extract data from a
+database and then process it with Python and R
+
+**A note on mounted volumes**
+
+Soopervisor offers a way to configure mounted volumes through an optional
+``soopervisor.yaml`` file, here we explain the default behavior.
+
+Our cluster has a shared disk that exposes its ``/exports/`` directory. By
+default, soopervisor expects a volume claim with name ``nfs`` and mounts the
+folder ``/exports/{project-name}`` from the shared disk to ``/mnt/nfs`` in the
+Pods, where ``{project-name}`` is the name of the directory that contains your
+project. At runtime, the Pod's working directory is set to ``/mnt/nfs``.
 
 
 **Make sure you delete your cluster after running this example.**
