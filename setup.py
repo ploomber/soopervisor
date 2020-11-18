@@ -23,10 +23,8 @@ def read(*names, **kwargs):
                    encoding=kwargs.get('encoding', 'utf8')).read()
 
 
-REQUIRES = [
-    'click', 'tqdm', 'pydantic', 'boxsdk', 'Jinja2', 'pyyaml', 'ploomber'
-]
-EXTRAS = ['docker']
+REQUIRES = ['click', 'tqdm', 'pydantic', 'Jinja2', 'pyyaml', 'ploomber']
+EXTRAS = ['docker', 'boxsdk']
 DEV = ['pytest', 'Faker', 'yapf', 'sphinx', 'apache-airflow']
 
 DESCRIPTION = ''
