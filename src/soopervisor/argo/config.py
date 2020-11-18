@@ -110,8 +110,6 @@ class ArgoConfig(ScriptConfig):
 
     image: str = 'continuumio/miniconda3'
 
-    version: Optional[str] = None
-
     def render(self):
         super().render()
 

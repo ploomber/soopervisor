@@ -46,6 +46,16 @@ def test_initialize_from_custom_path(tmp_sample_project_in_subdir):
     assert config.paths.project == str(sub_dir.resolve())
 
 
+def test_change_project_root(session_sample_project):
+    config = ScriptConfig()
+    config_new = config.with_project_root('/mnt/volume/project')
+
+    assert config_new.paths.project == '/mnt/volume/project'
+    assert config_new.paths.products == '/mnt/volume/project/output'
+    assert (
+        config_new.paths.environment == '/mnt/volume/project/environment.yml')
+
+
 def test_initialize_with_config_file(git_hash, tmp_empty):
     d = {
         'paths': {

@@ -3,6 +3,7 @@ from soopervisor.argo.config import ArgoConfig
 import click
 
 
+# FIXME: is any of the tools still using this, if not, delete
 @click.command()
 @click.argument('command')
 @click.option('--flavor',

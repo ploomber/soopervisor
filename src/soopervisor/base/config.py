@@ -263,3 +263,30 @@ class ScriptConfig(AbstractConfig):
     @property
     def project_name(self):
         return str(Path(self.paths.project).resolve().name)
+
+    def with_project_root(self, project_root):
+        """
+        Generate a new instance with the same value but a new project root,
+        currently used to generate the Argo YAML spec, the spec is generated
+        by analyzing the current DAG locally but it must contain the product
+        root when executed in the cluster
+        """
+        project_root = str(Path(project_root).resolve())
+
+        d = dict(self)
+        d_path = dict(d['paths'])
+        d_storage = dict(d['storage'])
+        del d_storage['paths']
+
+        d['paths'] = d_path
+        d['storage'] = d_storage
+
+        root_old = d['paths']['project']
+
+        d['paths']['project'] = project_root
+        d['paths']['products'] = d['paths']['products'].replace(
+            root_old, project_root)
+        d['paths']['environment'] = d['paths']['environment'].replace(
+            root_old, project_root)
+
+        return type(self)(**d)
