@@ -10,9 +10,15 @@ dst/ exists:
     * dst/src doesn't exist: create dst/src, copy src/, result dst/src/file.txt
     * dst/src exists: Show error
 """
+import abc
 
 
-class Uploader:
+class AbstractUploader(abc.ABC):
     """
     """
-    pass
+    @abc.abstractmethod
+    def upload(self, src, dst):
+        """
+        Upload files from ``src`` directory to ``dst``.
+        """
+        pass

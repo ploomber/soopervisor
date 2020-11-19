@@ -9,12 +9,13 @@ from tqdm import tqdm
 
 import yaml
 from boxsdk import Client, OAuth2
-from boxsdk.exception import BoxAPIException, BoxValueError
+from boxsdk.exception import BoxAPIException
+from soopervisor.upload.abc import AbstractUploader
 
 CHUNKED_UPLOAD_MINIMUM = 20000000
 
 
-class BoxUploader:
+class BoxUploader(AbstractUploader):
     """
 
     Parameters
@@ -32,9 +33,9 @@ class BoxUploader:
     --------
     >>> from soopervisor.storage.box import BoxUploader
     >>> uploader = BoxUploader.from_yaml('~/.auth/box.yaml', 'my_uploads')
-    >>> uploader.upload_files(['some_file.png'])
+    >>> uploader.upload(src='my_directory', dst='my_box_directory')
     """
-    def __init__(self, client_id, primary_access_token, root_folder):
+    def __init__(self, client_id, primary_access_token):
         auth = OAuth2(
             client_id=client_id,
             client_secret='',
@@ -42,24 +43,25 @@ class BoxUploader:
         )
 
         self.client = Client(auth)
+        self.root_folder_id = '0'
 
+    def upload(self, src, dst):
         # TODO: only works when passing a single name, breaks with "a/b/c"
         # '0' is the root folder id
-        self.root_folder = self._create_folder('0', root_folder)
+        return self.upload_files(paths=[src], dst=dst)
 
     @classmethod
-    def from_yaml(cls, path_to_credentials, root_folder):
+    def from_yaml(cls, path_to_credentials):
         with open(str(Path(path_to_credentials).expanduser())) as f:
             d = yaml.safe_load(f)
 
-        return cls(d['client_id'], d['primary_access_token'], root_folder)
+        return cls(d['client_id'], d['primary_access_token'])
 
     @classmethod
     def from_environ(cls, root_folder):
-        return cls(os.environ['CLIENT_ID'], os.environ['PRIMARY_ACCESS_TOKEN'],
-                   root_folder)
+        return cls(os.environ['CLIENT_ID'], os.environ['PRIMARY_ACCESS_TOKEN'])
 
-    def upload_files(self, paths: List[str], replace: bool = False):
+    def upload_files(self, paths: List[str], dst, replace: bool = False):
         """
         Upload files to Box
 
@@ -78,14 +80,14 @@ class BoxUploader:
                         file.stat().st_size for file in path.glob('**/*')
                         if (not file.name.startswith(".") and file.is_file()))
                     progress_bar = tqdm(total=total_size_upload)
-                    folder = self._create_folder(self.root_folder.id,
-                                                 path.name,
+                    folder = self._create_folder(self.root_folder_id,
+                                                 dst,
                                                  replace_folder=replace)
                     self._upload_directory(path=path,
                                            parent_folder_id=folder.id,
                                            progress_bar=progress_bar)
                 elif path.is_file():
-                    self._upload_each_file(folder_id=self.root_folder.id,
+                    self._upload_each_file(folder_id=folder.id,
                                            file=path,
                                            replace_file=replace)
             else:
