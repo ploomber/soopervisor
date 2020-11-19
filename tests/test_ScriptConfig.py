@@ -1,5 +1,7 @@
 from pathlib import Path
 from io import StringIO
+from datetime import datetime
+from unittest.mock import Mock
 
 import yaml
 import pytest
@@ -21,7 +23,7 @@ def test_models_fail_when_passing_extra_args(class_):
         class_(**kwargs)
 
 
-def test_default_values(git_hash, session_sample_project):
+def test_default_values(session_sample_project):
     config = ScriptConfig()
 
     assert config.paths.project == session_sample_project
@@ -31,7 +33,19 @@ def test_default_values(git_hash, session_sample_project):
     assert not config.lazy_import
 
 
-def test_initialize_from_empty_project(git_hash):
+def test_defult_values_with_storage_enable(session_sample_project,
+                                           monkeypatch):
+
+    mock_datetime = Mock()
+    mock_datetime.now.return_value = datetime(2020, 1, 1)
+    monkeypatch.setattr(base_config, 'datetime', mock_datetime)
+
+    config = ScriptConfig(storage={'provider': 'local'})
+
+    assert config.storage.path == 'runs/2020-01-01T00:00:00'
+
+
+def test_initialize_from_empty_project():
     # must initialize with default values
     assert ScriptConfig.from_project('.') == ScriptConfig()
 
@@ -74,7 +88,7 @@ def test_initialize_with_config_file(git_hash, tmp_empty):
     assert config.storage.path == 'dir-name/GIT-HASH'
 
 
-def test_save_script(git_hash, tmp_sample_project, monkeypatch):
+def test_save_script(tmp_sample_project, monkeypatch):
     config = ScriptConfig()
     config.save_script()
 
@@ -85,8 +99,7 @@ def test_save_script(git_hash, tmp_sample_project, monkeypatch):
     '',
     '--entry-point .',
 ])
-def test_ploomber_command_args_in_script(args, git_hash,
-                                         session_sample_project):
+def test_ploomber_command_args_in_script(args, session_sample_project):
     config = ScriptConfig(args=args)
     assert 'ploomber build ' + args in config.to_script()
 
@@ -107,7 +120,7 @@ def test_error_if_custom_command_and_args(session_sample_project):
 
 
 @pytest.mark.parametrize('create_directory', [False, True])
-def test_clean_products(git_hash, create_directory, tmp_sample_project):
+def test_clean_products(create_directory, tmp_sample_project):
     config = ScriptConfig()
 
     if create_directory:
@@ -120,9 +133,8 @@ def test_clean_products(git_hash, create_directory, tmp_sample_project):
     ['/', 'output', '/output'],
     ['/project', '/path/to/output', '/path/to/output'],
 ])
-def test_converts_product_root_to_absolute(git_hash, project_root,
-                                           product_root, expected,
-                                           monkeypatch):
+def test_converts_product_root_to_absolute(project_root, product_root,
+                                           expected, monkeypatch):
     def _open(path):
         return StringIO(yaml.dump({'name': 'some-env'}))
 
@@ -138,9 +150,9 @@ def test_converts_product_root_to_absolute(git_hash, project_root,
     ['/', 'environment.yml', '/environment.yml'],
     ['/project', '/path/to/environment.yml', '/path/to/environment.yml'],
 ])
-def test_converts_path_to_env_to_absolute(git_hash, project_root,
-                                          path_to_environment, expected,
-                                          monkeypatch, tmp_sample_project):
+def test_converts_path_to_env_to_absolute(project_root, path_to_environment,
+                                          expected, monkeypatch,
+                                          tmp_sample_project):
     def _open(path):
         return StringIO(yaml.dump({'name': 'some-env'}))
 
@@ -158,9 +170,8 @@ def test_converts_path_to_env_to_absolute(git_hash, project_root,
     ['/', 'prefix', '/prefix'],
     ['/project', '/path/to/prefix', '/path/to/prefix'],
 ])
-def test_converts_environment_prefix_to_absolute(git_hash, project_root,
-                                                 prefix, expected,
-                                                 monkeypatch):
+def test_converts_environment_prefix_to_absolute(project_root, prefix,
+                                                 expected, monkeypatch):
     def _open(path):
         return StringIO(yaml.dump({'name': 'some-env'}))
 
@@ -205,7 +216,7 @@ def test_script_does_not_upload_if_empty_provider(tmp_sample_project):
 
 
 @pytest.mark.parametrize('provider', ['local', 'box'])
-def test_script_uploads_if_provider(git_hash, provider, tmp_sample_project):
+def test_script_uploads_if_provider(provider, tmp_sample_project):
     d = {'storage': {'provider': provider}}
     Path('soopervisor.yaml').write_text(yaml.dump(d))
     config = ScriptConfig.from_project('.', validate=False)
