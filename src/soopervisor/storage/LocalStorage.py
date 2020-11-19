@@ -1,16 +1,21 @@
 import os
 from pathlib import Path
+import shutil
 
 
 class LocalStorage:
-    def __init__(self, path):
-        self.path = Path(path)
+    def __init__(self):
+        pass
 
-        if self.path.exists():
-            if self.path.is_file():
+    def upload(self, from_, to):
+        to = Path(to)
+
+        if to.exists():
+            if to.is_file():
                 raise ValueError(
-                    "Storage directory '{}' exists but it's a file".format(
-                        self.path))
-            elif len(os.listdir(self.path)):
-                raise ValueError('Storage directory "{}" is not empty'.format(
-                    self.path))
+                    "Storage directory '{}' exists but it's a file".format(to))
+            elif len(os.listdir(to)):
+                raise ValueError(
+                    'Storage directory "{}" is not empty'.format(to))
+
+        shutil.copytree(from_, to)

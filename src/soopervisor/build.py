@@ -11,7 +11,9 @@ def build_project(project_root, clean_products_path, dry_run):
     print(f'Env prefix {config.environment_prefix}')
     print(config.paths)
 
-    print(f'Output will be stored at: {config.storage.path}')
+    if config.storage.provider:
+        print(
+            f'Upon execution, output will be copied to: {config.storage.path}')
 
     if clean_products_path:
         print('Cleaning product root folder...')

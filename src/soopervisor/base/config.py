@@ -5,9 +5,10 @@ schema validation, compute some attributes dynamically and render placeholders
 import shutil
 from pathlib import Path
 from typing import Optional
+from datetime import datetime
 
 from pydantic import validator, Field
-from jinja2 import Template
+from jinja2 import Template, meta
 import yaml
 
 from soopervisor.script.script import generate_script
@@ -26,16 +27,18 @@ class StorageConfig(AbstractBaseModel):
         'box' for uploading files to box or 'local' to just copy files
         to a local directory. None to disable
 
-    path : str, default='runs/{{git}}'
-        Path where the files will be moved, defaults to runs/{{git}},
-        where {{git}} will be replaced by the current git hash
+    path : str, default='runs/{{now}}'
+        Path where the files will be moved, defaults to runs/{{now}},
+        where {{now}} will be replaced by the current timestamp in ISO 8601
+        format. {{git}} is also available, it's replaced by the current git
+        hash, requires the project to be in a git repository.
 
     credentials : str, default=None
         Credentials for the storage provider, only required if provider
         is not 'local'
     """
     provider: Optional[str] = None
-    path: Optional[str] = 'runs/{{git}}'
+    path: Optional[str] = 'runs/{{now}}'
     credentials: Optional[str] = None
 
     # this is not a field, but a reference to the paths section
@@ -56,10 +59,27 @@ class StorageConfig(AbstractBaseModel):
     def render(self):
         # only expand if storage is enabled
         if self.provider:
-            self.path = Template(self.path).render(
-                git=GitRepo(self.paths.project).get_git_hash())
+            template = Template(self.path)
+            env = template.environment
+            vars_ = meta.find_undeclared_variables(env.parse(self.path))
+            available = {'git', 'now'}
+            extra = vars_ - available
 
-        LocalStorage(self.path)
+            if extra:
+                raise ValueError(f'Got unrecognized placeholders: {extra}')
+
+            to_pass = {}
+
+            if 'git' in vars_:
+                to_pass['git'] = GitRepo(self.paths.project).get_git_hash()
+
+            if 'now' in vars_:
+                to_pass['now'] = datetime.now().isoformat()
+
+            self.path = template.render(**to_pass)
+
+            # TODO: we should do some validation here, to prevent raising
+            # errors at runtime
 
 
 class Paths(AbstractBaseModel):
@@ -159,6 +179,9 @@ class ScriptConfig(AbstractConfig):
         pipeline without having to setup an environment that has all
         dependencies required to import dotted paths
     """
+    # NOTE: should args be "--force" by defauult, when using soopervisor,
+    # we are in production mode so it doesn't make sense to do incremental
+    # builds
     # TODO: Create env again only if environment.yml has changed
     cache_env: Optional[bool] = False
     executor: Optional[str] = 'local'
