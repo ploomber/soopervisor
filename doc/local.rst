@@ -19,10 +19,9 @@ and then executes the pipeline (using ``ploomber build``). This ensures
 dependency installation is part of the execution process.
 
 Once the pipeline finishes execution, it will grab all generated output and
-copy it to a ``runs/{{git}}`` folder, where ``{{git}}`` is replaced by the
-current git hash (Soopervisor assumes you are using git). If you are not
-using git or don't want to organize runs by the git hash, you can change
-the configuration by using a ``soopervisor.yaml`` file:
+copy it to a ``runs/{{now}}`` folder, where ``{{now}}`` is replaced by the
+timestamp at execution time. If you don't want to organize runs this way, you
+can change the configuration by using a ``soopervisor.yaml`` file:
 
 .. code-block:: yaml
 

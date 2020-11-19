@@ -1,4 +1,4 @@
-Export to Airflow
+Running in Airfow
 =================
 
 **Note:** This feature is in beta, if you are interested in being a beta tester, please open an issue in the repository

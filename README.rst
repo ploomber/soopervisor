@@ -15,9 +15,9 @@ Use cases
 
 1. Running a pipeline locally
 2. Running a pipeline in a continuous integration service
-3. Scheduling a pipeline using cron
-4. Exporting to Kubernetes via Argo workflows
-5. Exporting to Apache Airflow
+3. Scheduling a pipeline using cron (or Github Actions)
+4. Running in Kubernetes via Argo workflows
+5. Running in Apache Airflow
 
 
 How it works
@@ -53,7 +53,7 @@ and then run the pipeline.
 How the script is used to actually execute the pipeline depends on your
 configuration settings, the simplest case is to just run it locally, but you
 can also tell Soopervisor to run the pipeline inside a Docker container or
-to just generate the appropriate structure for Airflow to execute the pipeline.
+to just export your project to run in Kubernetes (using Argo) or Airflow.
 
 
 Installation

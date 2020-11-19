@@ -63,8 +63,6 @@ use Github Actions to schedule your pipelines.
       schedule:
         # run every hour
         - cron: '0 * * * *'
-
-
     jobs:
       run-pipeline:
         runs-on: ubuntu-latest
