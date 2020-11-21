@@ -209,7 +209,12 @@ class ScriptConfig(AbstractConfig):
         self.render()
 
     @classmethod
-    def from_project(cls, project_root, validate=True, return_dag=False):
+    # FIXME: remove parameters we are no longer using
+    def from_project(cls,
+                     project_root,
+                     validate=True,
+                     return_dag=False,
+                     load_dag=True):
         """
         Initializes a ScriptConfig from a project. Looks for a
         project/soopervisor.yaml file, if it doesn't exist, it just
@@ -233,7 +238,7 @@ class ScriptConfig(AbstractConfig):
             config = cls(paths=dict(project=str(project_root)))
 
         if validate:
-            dag = validate_base.project(config)
+            dag = validate_base.project(config, load_dag=load_dag)
         else:
             dag = None
 
