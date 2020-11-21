@@ -2,11 +2,11 @@ from soopervisor.base.config import ScriptConfig
 from soopervisor.executors.LocalExecutor import LocalExecutor
 
 
-def build_project(project_root, clean_products_path, dry_run):
+def build_project(project_root, clean_products_path, dry_run, load_dag=True):
     """
     Build a project using settings from a soopervisor.yaml file
     """
-    config = ScriptConfig.from_project(project_root)
+    config = ScriptConfig.from_project(project_root, load_dag=load_dag)
 
     print(f'Env prefix {config.environment_prefix}')
     print(config.paths)

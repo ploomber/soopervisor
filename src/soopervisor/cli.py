@@ -23,13 +23,17 @@ def cli():
               '-d',
               is_flag=True,
               help='Prepare execution without actually doing it')
-def build(clean_products_path, dry_run):
+@click.option('--load-dag/--no-load-dag',
+              default=False,
+              help='Whether to load dag for validation purposes')
+def build(clean_products_path, dry_run, load_dag):
     """
     Build project
     """
     build_project(project_root='.',
                   clean_products_path=clean_products_path,
-                  dry_run=dry_run)
+                  dry_run=dry_run,
+                  load_dag=load_dag)
 
 
 @cli.command()
