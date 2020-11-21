@@ -1,5 +1,4 @@
 from soopervisor.base.config import ScriptConfig
-from soopervisor.storage.box import BoxUploader
 from soopervisor.storage.LocalStorage import LocalStorage
 import click
 
@@ -17,6 +16,8 @@ def upload(folder, to, help='Directory to upload'):
     cfg = ScriptConfig.from_project('.')
 
     if cfg.storage.provider == 'box':
+        from soopervisor.storage.box import BoxUploader
+
         uploader = BoxUploader.from_environ()
         uploader.upload_files([folder], to)
     elif cfg.storage.provider == 'local':
