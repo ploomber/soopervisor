@@ -46,7 +46,6 @@ class BoxUploader(AbstractUploader):
         self.root_folder_id = '0'
 
     def upload(self, src, dst):
-        # TODO: only works when passing a single name, breaks with "a/b/c"
         # '0' is the root folder id
         return self.upload_files(paths=[src], dst=dst)
 
@@ -58,7 +57,11 @@ class BoxUploader(AbstractUploader):
         return cls(d['client_id'], d['primary_access_token'])
 
     @classmethod
-    def from_environ(cls, root_folder):
+    def from_environ(cls):
+        """
+        Initializes Box client using environment variables CLIENT_ID and
+        PRIMARY_ACCESS_TOKEN
+        """
         return cls(os.environ['CLIENT_ID'], os.environ['PRIMARY_ACCESS_TOKEN'])
 
     def upload_files(self, paths: List[str], dst, replace: bool = False):
@@ -84,10 +87,10 @@ class BoxUploader(AbstractUploader):
                                                  dst,
                                                  replace_folder=replace)
                     self._upload_directory(path=path,
-                                           parent_folder_id=folder.id,
+                                           parent_folder_id=folder.object_id,
                                            progress_bar=progress_bar)
                 elif path.is_file():
-                    self._upload_each_file(folder_id=folder.id,
+                    self._upload_each_file(folder_id=folder.object_id,
                                            file=path,
                                            replace_file=replace)
             else:
@@ -126,7 +129,7 @@ class BoxUploader(AbstractUploader):
             if file_.is_dir():
                 folder = self._create_folder(parent_folder_id, file_.name)
                 self._upload_directory(path=file_.absolute(),
-                                       parent_folder_id=folder.id,
+                                       parent_folder_id=folder.object_id,
                                        progress_bar=progress_bar)
             elif file_.is_file():
                 self._upload_each_file(folder_id=parent_folder_id, file=file_)
@@ -139,21 +142,39 @@ class BoxUploader(AbstractUploader):
     def _create_folder(self,
                        parent_folder_id: str,
                        folder_name: str,
-                       replace_folder: bool = False):
+                       replace_folder: bool = False,
+                       exist_ok: bool = True):
         """Create a new folder
         """
+        for folder in folder_name.split('/'):
+            folder_obj = self._create_single_folder(parent_folder_id, folder,
+                                                    replace_folder, exist_ok)
+            parent_folder_id = folder_obj.object_id
+
+        return folder_obj
+
+    def _create_single_folder(self,
+                              parent_folder_id: str,
+                              folder_name: str,
+                              replace_folder: bool = False,
+                              exist_ok: bool = True):
         try:
             subfolder = self.client.folder(
                 folder_id=parent_folder_id).create_subfolder(folder_name)
             logging.info("Folder {} created".format(folder_name))
             return subfolder
         except BoxAPIException as e:
-            if replace_folder:
+            if e.code == 'item_name_in_use' and exist_ok:
+                return self.client.folder(
+                    e.context_info.get("conflicts")[0].get("id"))
+            # this option is dangerous, delete it
+            elif replace_folder:
                 folder_id = e.context_info.get("conflicts")[0].get("id")
                 self._delete_folder(folder_id=folder_id)
                 return self._create_folder(parent_folder_id, folder_name)
             else:
-                raise FileExistsError("The folder already exists")
+                raise ValueError(
+                    f'Error creating folder {folder_name!r}') from e
 
     def _delete_folder(self, folder_id: str):
         try:

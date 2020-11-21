@@ -74,7 +74,7 @@ class StorageConfig(AbstractBaseModel):
                 to_pass['git'] = GitRepo(self.paths.project).get_git_hash()
 
             if 'now' in vars_:
-                to_pass['now'] = datetime.now().isoformat()
+                to_pass['now'] = datetime.now().isoformat(timespec='seconds')
 
             self.path = template.render(**to_pass)
 
@@ -108,6 +108,7 @@ class Paths(AbstractBaseModel):
     # single folder so we know what to mount - we have to think this,
     # cause there is some overlap but in the end, exporting is a different
     # operation than product storage
+    # NOTE: support for a glob pattern would be useful
     products: Optional[str] = 'output'
     environment: Optional[str] = 'environment.yml'
 

@@ -11,11 +11,14 @@ def upload(folder, to, help='Directory to upload'):
     """
     Upload files
     """
+    # NOTE: should this logic be here? or rather generate script.sh wit the
+    # appropriate option (e.g. with a parameter --service box), instead of
+    # parsing the config file again
     cfg = ScriptConfig.from_project('.')
 
     if cfg.storage.provider == 'box':
-        uploader = BoxUploader.from_environ(root_folder=to)
-        uploader.upload_files([folder])
+        uploader = BoxUploader.from_environ()
+        uploader.upload_files([folder], to)
     elif cfg.storage.provider == 'local':
         uploader = LocalStorage()
         uploader.upload(folder, to)

@@ -53,6 +53,9 @@ python -c "import soopervisor" || soopervisor_INSTALLED=$?
 if [[ $soopervisor_INSTALLED -ne 0 ]];
 then
     echo "soopervisor is not installed, consider adding it to your environment.yml file. Installing..."
+    # TODO: install soopervisor at the beginning and check that if storage
+    # is configured, the env variables (depending on the service) are defined,
+    # before even running the pipeline
     pip install soopervisor
 fi
 

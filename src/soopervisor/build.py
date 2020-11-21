@@ -12,6 +12,7 @@ def build_project(project_root, clean_products_path, dry_run):
     print(config.paths)
 
     if config.storage.provider:
+        # TODO: better message depending on box/local
         print(
             f'Upon execution, output will be copied to: {config.storage.path}')
 
