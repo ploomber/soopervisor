@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.2.2dev
---------
+0.2.2 (2020-11-21)
+-------------------
 * Adds ability to skip dag loading during project validation
 * Box uploader imported only if needed
 * Exposes option to skip dag loading from the CLI
