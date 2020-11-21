@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.2.1dev
-------
+0.2.1 (2020-11-20)
+-------------------
 * Adds Airflow DAG export
 * Adds Argo/Kubernetes DAG export
 * Support for uploading products to Box
