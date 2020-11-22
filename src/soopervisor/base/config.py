@@ -189,6 +189,8 @@ class ScriptConfig(AbstractConfig):
     environment_prefix: Optional[str] = None
     allow_incremental: Optional[bool] = True
     args: Optional[str] = ''
+    # TODO: make this and load_dag the same option, maybe:
+    # validate_dag: True, False or 'lazy'
     lazy_import: bool = False
 
     # sub sections
@@ -232,6 +234,8 @@ class ScriptConfig(AbstractConfig):
             with open(str(path)) as f:
                 d = yaml.safe_load(f)
 
+            # TODO: validate d is a dictionary, if empty, yaml.safe_load
+            # returns None, and it can also returns lists
             config = cls(**d)
 
         else:
