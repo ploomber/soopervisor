@@ -43,3 +43,10 @@ def test_export_airflow_callables(monkeypatch, tmp_callables):
                 'join': {'features', 'get'},
                 'fit.py': {'join'}
             }
+
+
+def test_export_airflow_no_airflow_env(tmp_callables, capsys):
+    Path('env.airflow.yaml').unlink()
+    export.project(project_root='.', output_path='exported')
+
+    assert 'No env.airflow.yaml found...' in capsys.readouterr().out

@@ -83,9 +83,14 @@ def project(project_root, output_path=None):
         shutil.copytree(project_root, dst=project_root_airflow)
 
     # delete env.yaml and rename env.airflow.yaml
-    env_yaml = Path(project_root_airflow / 'env.yaml')
-    env_yaml.unlink()
-    Path(project_root_airflow / 'env.airflow.yaml').rename(env_yaml)
+    env_airflow = Path(project_root_airflow / 'env.airflow.yaml')
+
+    if env_airflow.exists():
+        env_yaml = Path(project_root_airflow / 'env.yaml')
+        env_yaml.unlink()
+        env_airflow.rename(env_yaml)
+    else:
+        print('No env.airflow.yaml found...')
 
     # generate script that exposes the DAG airflow
     path_out = Path(output_path, 'dags', project_name + '.py')
