@@ -1,6 +1,10 @@
+from copy import copy
+
 from ploomber.spec import DAGSpec
 from soopervisor.argo.config import ArgoConfig
 from soopervisor.argo import export
+
+from argo.workflows.dsl import Workflow
 
 
 def test_argo_spec(tmp_sample_project):
@@ -22,6 +26,10 @@ def test_argo_spec(tmp_sample_project):
         'mountPath': '/mnt/nfs',
         'subPath': 'sample_project'
     }]
+
+    # validate is a valig argo spec. NOTE: using copy because this modifies
+    # the input dict
+    assert Workflow.from_dict(copy(d))
 
     assert set(d) == {'apiVersion', 'kind', 'metadata', 'spec'}
     assert set(d['metadata']) == {'generateName'}

@@ -25,7 +25,15 @@ def read(*names, **kwargs):
 
 REQUIRES = ['click', 'tqdm', 'pydantic', 'Jinja2', 'pyyaml', 'ploomber']
 EXTRAS = ['docker', 'boxsdk']
-DEV = ['pytest', 'Faker', 'yapf', 'sphinx', 'apache-airflow']
+DEV = [
+    'pytest',
+    'Faker',
+    'yapf',
+    'sphinx',
+    'apache-airflow',
+    # to validate argo specs
+    'argo-workflows-dsl',
+]
 
 DESCRIPTION = ''
 
