@@ -4,19 +4,49 @@ from soopervisor.argo.config import ArgoConfig, ArgoMountedVolume
 
 
 @pytest.mark.parametrize(
-    'claim_name, sub_path, expected_sub_path',
+    'name, sub_path, expected_sub_path',
     [
         ['name', 'sub_path', 'sub_path'],
         ['name', '{{project_name}}', 'some_project'],
         ['name', 'data/{{project_name}}', 'data/some_project'],
     ],
 )
-def test_argo_mounted_volume_render(claim_name, sub_path, expected_sub_path):
-    mv = ArgoMountedVolume(claim_name=claim_name, sub_path=sub_path)
+def test_argo_mounted_volume_render(name, sub_path, expected_sub_path):
+    mv = ArgoMountedVolume(name=name, sub_path=sub_path, spec=dict())
     mv.render(project_name='some_project')
 
     assert mv.sub_path == expected_sub_path
-    assert mv.claim_name == 'name'
+    assert mv.name == 'name'
+
+
+def test_make_volume_entries():
+    mv = ArgoMountedVolume(
+        name='name',
+        sub_path='sub_path',
+        spec=dict(persistentVolumeClaim=dict(claimName='claimName')))
+
+    assert mv.to_volume() == {
+        'name': 'name',
+        'persistentVolumeClaim': {
+            'claimName': 'claimName'
+        }
+    }
+
+    assert mv.to_volume_mount() == {
+        'name': 'name',
+        'mountPath': '/mnt/name',
+        'subPath': 'sub_path'
+    }
+
+
+def test_make_volume_entries_no_sub_path():
+    mv = ArgoMountedVolume(name='name', spec=dict())
+
+    assert mv.to_volume_mount() == {
+        'name': 'name',
+        'mountPath': '/mnt/name',
+        'subPath': ''
+    }
 
 
 @pytest.mark.parametrize(
@@ -24,18 +54,21 @@ def test_argo_mounted_volume_render(claim_name, sub_path, expected_sub_path):
     [
         [[
             {
-                'claim_name': 'name',
-                'sub_path': 'path'
+                'name': 'name',
+                'sub_path': 'path',
+                'spec': dict()
             },
         ], ['path']],
         [[
             {
-                'claim_name': 'name',
-                'sub_path': '{{project_name}}'
+                'name': 'name',
+                'sub_path': '{{project_name}}',
+                'spec': dict(),
             },
             {
-                'claim_name': 'name',
-                'sub_path': 'path'
+                'name': 'name',
+                'sub_path': 'path',
+                'spec': dict(),
             },
         ], ['sample_project', 'path']],
     ],
@@ -54,8 +87,13 @@ def test_argo_config_defaults():
     # FIXME: why is this using session_sample_project fixture if I didn't
     # add it to this test?
     assert cfg.mounted_volumes == [{
-        'claim_name': 'nfs',
-        'sub_path': 'sample_project'
+        'name': 'nfs',
+        'sub_path': 'sample_project',
+        'spec': {
+            'persistentVolumeClaim': {
+                'claimName': 'nfs'
+            }
+        }
     }]
     assert cfg.lazy_import
     assert cfg.code_pod is None
@@ -66,6 +104,11 @@ def test_sample_project_from_path(session_sample_project):
 
     assert cfg.image == 'continuumio/miniconda3'
     assert cfg.mounted_volumes == [{
-        'claim_name': 'nfs',
-        'sub_path': 'sample_project'
+        'name': 'nfs',
+        'sub_path': 'sample_project',
+        'spec': {
+            'persistentVolumeClaim': {
+                'claimName': 'nfs'
+            }
+        }
     }]

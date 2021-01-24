@@ -11,25 +11,50 @@ from soopervisor.base.config import ScriptConfig
 
 class ArgoMountedVolume(AbstractBaseModel):
     """
-    Volume to mount in the Pod, mounted at /mnt/{claim_name}
+    Volume to mount in the Pod at /mnt/{name}
 
     Parameters
     ----------
-    claim_name : str
-        Claim name for the volume (set in persistentVolumeClaim.claimName)
+    name : str
+        Volume's name
 
-    sub_path : str
-        Sub path from the volume to mount in the Pod (set in subPath). Use the
+    sub_path : str, default=''
+        Sub path from the volume to mount in the Pod (set in
+        volumeMounts[*].subPath). Use the
         placeholder ``{{project_name}}`` to refer to your project's name
         (e.g. if ``sub_path='data/{{project_name}}'`` in a project named
-        'my_project', it will render to 'data/my_project')
+        'my_project', it will render to 'data/my_project'). Defaults to
+        the volume's root
+
+    spec : dict
+        The volume spec, passed directly to the output spec.
+        e.g: {'persistentVolumeClaim': {'claimName': 'someName'}}
 
     """
-    claim_name: str
-    sub_path: str
+    name: str
+    sub_path: str = ''
+    spec: dict
 
     def render(self, **kwargs):
         self.sub_path = Template(self.sub_path).render(**kwargs)
+
+    def to_volume(self):
+        """
+        Generate the entry for the spec.volumes
+        """
+        return {'name': self.name, **self.spec}
+
+    def to_volume_mount(self):
+        """
+        Generate the entry for spec.templates[0].volumeMounts
+        """
+        # reference: https://argoproj.github.io/argo/fields/#volumemount
+        return {
+            'name': self.name,
+            # by convention, mount to /mnt/ and use the claim name
+            'mountPath': f'/mnt/{self.name}',
+            'subPath': self.sub_path
+        }
 
 
 class ArgoCodePod(AbstractBaseModel):
@@ -61,8 +86,9 @@ class ArgoConfig(ScriptConfig):
     ----------
     mounted_volumes : list
         List of volumes to mount on each Pod, described with the
-        ``ArgoMountedVolumes`` schema.
-        Defaults to [{'claim_name': 'nfs', 'sub_path': '{{project_name}}'}]
+        ``ArgoMountedVolumes`` schema. Defaults to
+        [{'name': 'nfs', 'sub_path': '{{project_name}}',
+        'spec': {'persistentVolumeClaim': {'claimName': 'nfs'}}}]
 
     image : str, default='continuumio/miniconda3'
         Docker image to use
@@ -103,7 +129,10 @@ class ArgoConfig(ScriptConfig):
     # google cloud storage
 
     mounted_volumes: List[ArgoMountedVolume] = [
-        ArgoMountedVolume(claim_name='nfs', sub_path='{{project_name}}')
+        ArgoMountedVolume(
+            name='nfs',
+            sub_path='{{project_name}}',
+            spec=dict(persistentVolumeClaim=dict(claimName='nfs')))
     ]
 
     code_pod: Optional[ArgoCodePod] = None

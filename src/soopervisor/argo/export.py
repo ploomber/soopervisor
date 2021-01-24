@@ -78,29 +78,6 @@ def upload_code(config):
     ])
 
 
-def _make_volume_entries(mv):
-    """
-    Generate volume-related entries in argo spec, returns one for "volumes"
-    section and another one for "volumeMounts"
-    """
-    volume = {
-        'name': mv.claim_name,
-        'persistentVolumeClaim': {
-            'claimName': mv.claim_name
-        }
-    }
-
-    # reference: https://argoproj.github.io/argo/fields/#volumemount
-    volume_mount = {
-        'name': mv.claim_name,
-        # by convention, mount to /mnt/ and use the claim name
-        'mountPath': f'/mnt/{mv.claim_name}',
-        'subPath': mv.sub_path
-    }
-
-    return volume, volume_mount
-
-
 def project(config):
     """Export Argo YAML spec from Ploomber project to argo.yaml
 
@@ -113,7 +90,7 @@ def project(config):
     dag = DAGSpec(f'{config.paths.project}/pipeline.yaml',
                   lazy_import=config.lazy_import).to_dag()
 
-    volumes, volume_mounts = zip(*(_make_volume_entries(mv)
+    volumes, volume_mounts = zip(*((mv.to_volume(), mv.to_volume_mount())
                                    for mv in config.mounted_volumes))
     # force them to be lists to prevent "!!python/tuple" to be added
     volumes = list(volumes)
