@@ -1,15 +1,25 @@
 CHANGELOG
 =========
 
+0.2.3dev
+--------
+* ``env.airflow.yaml`` optional when exporting to Airflow (#17)
+* Validating exported argo YAML spec
+* Output argo YAML spec displays script in literal mode to make it readable
+* Fixed extra whitespace in generated script
+* Refactors ``ArgoMountedVolume`` to provide flexibility for different types of k8s volumes
+* Adds section in the documentation to run examples using minikube
+* Adds a few ``echo`` statements to generated script to provide better status feedback
+
 0.2.2 (2020-11-21)
--------------------
+------------------
 * Adds ability to skip dag loading during project validation
 * Box uploader imported only if needed
 * Exposes option to skip dag loading from the CLI
 
 
 0.2.1 (2020-11-20)
--------------------
+------------------
 * Adds Airflow DAG export
 * Adds Argo/Kubernetes DAG export
 * Support for uploading products to Box
