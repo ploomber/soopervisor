@@ -31,6 +31,7 @@ DEV = [
     'yapf',
     'sphinx',
     'apache-airflow',
+    'twine',
     # to validate argo specs
     'argo-workflows-dsl',
 ]
