@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.2.3dev
---------
+0.3 (2021-01-24)
+----------------
 * ``env.airflow.yaml`` optional when exporting to Airflow (#17)
 * Validating exported argo YAML spec
 * Output argo YAML spec displays script in literal mode to make it readable
@@ -10,6 +10,7 @@ CHANGELOG
 * Refactors ``ArgoMountedVolume`` to provide flexibility for different types of k8s volumes
 * Adds section in the documentation to run examples using minikube
 * Adds a few ``echo`` statements to generated script to provide better status feedback
+
 
 0.2.2 (2020-11-21)
 ------------------
