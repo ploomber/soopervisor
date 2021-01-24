@@ -180,6 +180,97 @@ mounting logic can be configured using a ``soopervisor.yaml`` file.
 Full example
 ************
 
+Option 1: minikube
+++++++++++++++++++
+
+Install ``kubectl`` and `minikkube <https://minikube.sigs.k8s.io/docs/start/>`_.
+
+**Part 1: create a Kubernetes cluster and install Argo**
+
+.. code-block:: sh
+
+    # by default it creates a 20GB disk, which is too much for this example
+    minikube start --disk-size 10GB
+
+    # install argo
+    kubectl create ns argo
+    kubectl apply -n argo -f https://raw.githubusercontent.com/argoproj/argo/stable/manifests/quick-start-postgres.yaml
+
+
+Submit a sample workflow to make sure Argo is working:
+
+.. code-block:: sh
+
+    argo submit -n argo --watch https://raw.githubusercontent.com/argoproj/argo/master/examples/hello-world.yaml
+
+
+**Part 2: Add a shared folder**
+
+.. code-block:: sh
+
+    # create a folder to share data with the cluster
+    mkdir $HOME/minikube
+
+    # mount shared folder
+    minikube mount $HOME/minikube:/host
+
+
+**Part 3: Execute Ploomber sample projects**
+
+Open a new terminal, to enable Argo's UI:
+
+.. code-block:: sh
+
+    # port forwarding to enable the UI
+    kubectl -n argo port-forward svc/argo-server 2746:2746
+
+
+Then open: http://127.0.0.1:2746
+
+
+Open a new terminal, let's now run a Ploomber sample pipeline, which consists
+of a few tasks that prepare data and train a machine learning model:
+
+.. code-block:: sh
+
+    # get the sample projects
+    git clone https://github.com/ploomber/projects
+
+    # copy source code to the shared folder
+    # (recommended: ml-basic/ (machine learning pipeline) and etl/)
+    cp -r projects/ml-basic $HOME/minikube
+
+    # generate argo spec
+    cd projects/ml-basic
+
+    # uncomment the "config for minikube" section in soopervisor.yaml
+
+    soopervisor export
+
+    # submit workflow
+    argo submit -n argo --watch argo.yaml
+
+
+You can also watch progress from the UI.
+
+
+Once execution is finished, you can take a look at the generated arfifacts:
+
+.. code-block:: sh
+
+    ls $HOME/minikube/output/
+
+
+To delete the cluster:
+
+.. code-block:: sh
+
+    minikube delete
+
+
+Option 2: Google Cloud
+++++++++++++++++++++++
+
 This section is a complete example to run a Ploomber project in Kubernetes
 using Google Cloud. ``gcloud`` and ``kubectl`` are configured.
 
@@ -195,7 +286,7 @@ using Google Cloud. ``gcloud`` and ``kubectl`` are configured.
     kubectl apply -n argo -f https://raw.githubusercontent.com/argoproj/argo/stable/manifests/quick-start-postgres.yaml
 
 
-Submit a sample workflow to make sure Argo works:
+Submit a sample workflow to make sure Argo is working:
 
 .. code-block:: sh
 
@@ -321,7 +412,11 @@ Once execution is finished, you can take a look at the generated arfifacts:
     # output folder
     cd /exports/ml-basic/output/
 
-**Other examples**
+
+**Make sure you delete your cluster after running this example.**
+
+Other examples to try
+*********************
 
 You can execute other examples from the same repository in the same way:
 
@@ -337,7 +432,9 @@ of experiments to try several models.
 3. ``etl`` - Pipeline with a SQL tasks demonstrating how to extract data from a
 database and then process it with Python and R
 
-**A note on mounted volumes**
+
+A note on mounted volumes
+*************************
 
 Soopervisor offers a way to configure mounted volumes through an optional
 ``soopervisor.yaml`` file, here we explain the default behavior.
@@ -349,5 +446,5 @@ Pods, where ``{project-name}`` is the name of the directory that contains your
 project. At runtime, the Pod's working directory is set to ``/mnt/nfs``.
 
 
-**Make sure you delete your cluster after running this example.**
+
 
