@@ -1,6 +1,7 @@
 """
 Setup tasks (requires invoke: pip install invoke)
 """
+import versioneer
 from invoke import task
 
 
@@ -28,3 +29,17 @@ def doc(c, open_=True):
         c.run('make html')
         if open_:
             c.run('open _build/html/index.html')
+
+
+@task
+def new(c):
+    """Release a new version
+    """
+    versioneer.release(project_root='.', tag=True)
+
+
+@task
+def upload(c, tag, production=True):
+    """Upload to PyPI
+    """
+    versioneer.upload(tag, production=production)
