@@ -38,10 +38,11 @@ if [ -f "setup.py" ]; then
 fi
 
 {% if command -%}
+echo 'Executing task...'
 {{command}}
 
 {% else -%}
-# run pipeline
+echo 'Executing pipeline...'
 ploomber build {{config.args}}
 {% endif -%}
 
@@ -59,4 +60,6 @@ fi
 
 # upload products
 python -m soopervisor.upload {{config.paths.products}} {{config.storage.path}}
-{% endif %}
+{% endif -%}
+
+echo 'Done!'
