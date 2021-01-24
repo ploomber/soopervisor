@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+0.3.1dev
+--------
+
 0.3 (2021-01-24)
 ----------------
 * ``env.airflow.yaml`` optional when exporting to Airflow (#17)
