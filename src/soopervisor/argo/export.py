@@ -6,6 +6,7 @@ import subprocess
 
 from ploomber.spec import DAGSpec
 import yaml
+from yaml.representer import SafeRepresenter
 
 try:
     import importlib.resources as pkg_resources
@@ -14,6 +15,27 @@ except ImportError:
     import importlib_resources as pkg_resources
 
 from soopervisor import assets
+
+
+class literal_str(str):
+    """Custom str to represent it in YAML literal style
+    Source: https://stackoverflow.com/a/20863889/709975
+    """
+    pass
+
+
+def change_style(style, representer):
+    def new_representer(dumper, data):
+        scalar = representer(dumper, data)
+        scalar.style = style
+        return scalar
+
+    return new_representer
+
+
+# configure yaml to represent "literal_str" objects in literal style
+represent_literal_str = change_style('|', SafeRepresenter.represent_str)
+yaml.add_representer(literal_str, represent_literal_str)
 
 
 def _make_argo_task(name, dependencies):
@@ -119,8 +141,11 @@ def project(config):
 
     config_in_argo = config.with_project_root(working_dir)
 
-    d['spec']['templates'][0]['script']['source'] = config_in_argo.to_script(
-        command='ploomber task {{inputs.parameters.task_name}} --force')
+    # use literal_str to make the script source code be represented in YAML
+    # literal style, this makes it readable
+    d['spec']['templates'][0]['script']['source'] = literal_str(
+        config_in_argo.to_script(
+            command='ploomber task {{inputs.parameters.task_name}} --force'))
 
     with open(f'{config.paths.project}/argo.yaml', 'w') as f:
         yaml.dump(d, f)

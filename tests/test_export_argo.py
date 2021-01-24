@@ -1,3 +1,4 @@
+from pathlib import Path
 from copy import copy
 
 from ploomber.spec import DAGSpec
@@ -58,3 +59,11 @@ def test_argo_spec(tmp_sample_project):
             'value': t['name']
         } for t in tasks
     ])
+
+
+def test_argo_output_yaml(tmp_sample_project):
+    export.project(ArgoConfig.from_project(project_root='.'))
+    yaml_str = Path('argo.yaml').read_text()
+    # make sure the "source" key is represented in literal style
+    # (https://yaml-multiline.info/) to make the generated script more readable
+    assert 'source: |' in yaml_str

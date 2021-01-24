@@ -17,7 +17,7 @@ else
     conda env create --file {{config.paths.environment}} {{ '' if not config.environment_prefix else '--prefix ' + config.environment_prefix }} 
 fi
 {% else %}
-conda env create --file {{config.paths.environment}} --force {{ '' if not config.environment_prefix else '--prefix ' + config.environment_prefix }}
+conda env create --file {{config.paths.environment}} --force{{ '' if not config.environment_prefix else ' --prefix ' + config.environment_prefix }}
 {% endif %}
 
 echo 'Activating environtment...'
