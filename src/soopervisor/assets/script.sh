@@ -7,7 +7,7 @@ conda activate base
 # move to the project_root
 cd {{config.paths.project}}
 
-{% if config.cache_env %}
+{% if config.cache_env -%}
 ENV_EXISTS=$(conda env list | grep "{{config.environment_name}}" | wc -l)
 if [[ $ENV_EXISTS -ne 0 ]];
 then
@@ -16,9 +16,9 @@ else
     echo "Environment does not exist, creating it..."
     conda env create --file {{config.paths.environment}} {{ '' if not config.environment_prefix else '--prefix ' + config.environment_prefix }} 
 fi
-{% else %}
+{% else -%}
 conda env create --file {{config.paths.environment}} --force{{ '' if not config.environment_prefix else ' --prefix ' + config.environment_prefix }}
-{% endif %}
+{%- endif %}
 
 echo 'Activating environtment...'
 conda activate {{config.environment_name}}
@@ -32,20 +32,18 @@ then
     pip install ploomber
 fi
 
-
-
 if [ -f "setup.py" ]; then
     echo "Found setup.py, installing package..."
     pip install .
 fi
 
-
-{% if command %}
+{% if command -%}
 {{command}}
-{% else %}
+
+{% else -%}
 # run pipeline
 ploomber build {{config.args}}
-{% endif %}
+{% endif -%}
 
 {% if config.storage.provider %}
 # ploomber ci should also be installed in the project's env
