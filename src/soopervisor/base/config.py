@@ -236,8 +236,22 @@ class ScriptConfig(AbstractConfig):
 
             # TODO: validate d is a dictionary, if empty, yaml.safe_load
             # returns None, and it can also returns lists
-            config = cls(**d)
 
+            if 'paths' in d and 'project' in d['paths']:
+                proj = d['paths']['project']
+                if Path(proj).is_absolute():
+                    raise ValueError(
+                        'Relative paths in paths.project are not '
+                        'allowed when initializing a project '
+                        'that is not in the current working directory. '
+                        f'Edit paths.project in {path} and change the '
+                        f'current value ({proj!r}) to a relative path')
+
+            if 'paths' not in d:
+                d['paths'] = dict()
+
+            d['paths']['project'] = str(project_root)
+            config = cls(**d)
         else:
             config = cls(paths=dict(project=str(project_root)))
 
