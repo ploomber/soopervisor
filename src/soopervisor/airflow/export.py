@@ -114,7 +114,7 @@ def spec_to_airflow(project_root, dag_name, airflow_default_args):
     """
     script_cfg = ScriptConfig.from_project(project_root)
 
-    # NOTE: we don't use script_cfg.lazy_import here because this runs in the
+    # NOTE: we use lazy_import=True here because this runs in the
     # airflow host and we should never expect that environment to have
     # the project environment configured, as its only purpose is to parse
     # the DAG
