@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+0.3.2dev
+--------
+
 0.3.1 (2021-02-11)
 ------------------
 * Changes to the Airflow generated DAG
