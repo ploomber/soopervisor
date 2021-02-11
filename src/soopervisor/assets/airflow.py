@@ -1,6 +1,3 @@
-"""
-Template to convert a Ploomber DAG to Airflow
-"""
 from pathlib import Path
 
 from soopervisor.airflow.export import spec_to_airflow
