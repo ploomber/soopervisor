@@ -50,14 +50,38 @@ def test_initialize_from_empty_project():
     assert ScriptConfig.from_project('.') == ScriptConfig()
 
 
-def test_initialize_from_custom_path(tmp_sample_project_in_subdir):
-    sub_dir = Path('subdir')
+@pytest.mark.parametrize(
+    'config',
+    [
+        # no soopervisor.yaml
+        False,
+        # soopervisor.yaml with this content
+        dict(paths=dict(project='.')),
+        dict(paths=dict(products='output')),
+        dict(cache_env=False),
+    ])
+def test_initialize_from_custom_path(config, tmp_sample_project_in_subdir):
+    if config:
+        Path('subdir', 'soopervisor.yaml').write_text(yaml.dump(config))
 
-    # initialize with a custom path
     config = ScriptConfig.from_project('subdir', validate=False)
+    assert config.paths.project == str(Path('subdir').resolve())
 
-    # project path should be located in the custom path
-    assert config.paths.project == str(sub_dir.resolve())
+
+def test_error_if_custom_path_and_absolute_path_in_config(
+        tmp_sample_project_in_subdir):
+    config = dict(paths=dict(project='/absolute/path'))
+    Path('subdir', 'soopervisor.yaml').write_text(yaml.dump(config))
+
+    with pytest.raises(ValueError) as excinfo:
+        ScriptConfig.from_project('subdir', validate=False)
+
+    error = (
+        "Relative paths in paths.project are not allowed when "
+        "initializing a project that is not in the current "
+        "working directory. Edit paths.project in subdir/soopervisor.yaml "
+        "and change the current value ('/absolute/path') to a relative path")
+    assert str(excinfo.value) == error
 
 
 def test_change_project_root(session_sample_project):

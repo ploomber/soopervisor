@@ -87,7 +87,10 @@ def project(project_root, output_path=None):
 
     if env_airflow.exists():
         env_yaml = Path(project_root_airflow / 'env.yaml')
-        env_yaml.unlink()
+
+        if env_yaml.exists():
+            env_yaml.unlink()
+
         env_airflow.rename(env_yaml)
     else:
         print('No env.airflow.yaml found...')
