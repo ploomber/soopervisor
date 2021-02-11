@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.3.1dev
---------
+0.3.1 (2021-02-11)
+------------------
 * Changes to the Airflow generated DAG
 * Fixes a bug when initializing configuration from projects whose root is not the current directory
 
