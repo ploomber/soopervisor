@@ -1,5 +1,6 @@
 import click
 
+from soopervisor import __version__
 from soopervisor.build import build_project
 from soopervisor.argo.config import ArgoConfig
 from soopervisor.airflow import export as export_airflow_module
@@ -7,6 +8,7 @@ from soopervisor.argo import export as export_argo
 
 
 @click.group()
+@click.version_option(version=__version__)
 def cli():
     """
     CLI
@@ -64,12 +66,18 @@ def export(upload):
               help='Output path, if empty looks for env var AIRFLOW_HOME, '
               'if undefined, uses ~/airflow',
               default=None)
-def export_airflow(output):
+@click.option(
+    '--root',
+    '-r',
+    type=str,
+    help="Project's root path, defaults to current working directory",
+    default='.')
+def export_airflow(output, root):
     """
     Export Ploomber project to Apache Airflow
     """
     click.echo('Exporting to Airflow...')
-    export_airflow_module.project(project_root='.', output_path=output)
+    export_airflow_module.project(project_root=root, output_path=output)
 
 
 if __name__ == '__main__':
