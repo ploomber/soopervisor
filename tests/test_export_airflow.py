@@ -8,6 +8,7 @@ from airflow.operators.bash import BashOperator
 import pytest
 
 from soopervisor.airflow import export
+from soopervisor.base.config import ScriptConfig
 
 
 @pytest.fixture(scope='module')
@@ -65,9 +66,18 @@ def test_export_airflow_callables(monkeypatch, tmp_callables):
     mod = importlib.import_module('callables')
     dag = mod.dag
 
+    script_cfg = ScriptConfig.from_project('exported/ploomber/callables')
+    scripts = {
+        t: script_cfg.to_script(command=f'ploomber task {t}')
+        for t in dag.task_dict
+    }
+
     assert isinstance(dag, DAG)
+    # check tasks in dag
     assert set(dag.task_dict) == {'features', 'fit.py', 'get', 'join'}
+    # check task's class
     assert set(type(t) for t in dag.tasks) == {BashOperator}
+    # check dependencies
     assert {n: t.upstream_task_ids
             for n, t in dag.task_dict.items()} == {
                 'get': set(),
@@ -76,8 +86,11 @@ def test_export_airflow_callables(monkeypatch, tmp_callables):
                 'fit.py': {'join'}
             }
 
-    # from IPython import embed
-    # embed()
+    # check generated scripts
+    assert scripts['get'] == dag.task_dict['get'].bash_command
+    assert scripts['features'] == dag.task_dict['features'].bash_command
+    assert scripts['fit.py'] == dag.task_dict['fit.py'].bash_command
+    assert scripts['join'] == dag.task_dict['join'].bash_command
 
 
 def test_export_airflow_no_airflow_env(tmp_callables, capsys):
