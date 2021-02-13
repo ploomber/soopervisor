@@ -87,7 +87,7 @@ def project(config):
         Project root (pipeline.yaml parent folder)
     """
     # TODO: validate returns a dag, maybe use that one?
-    dag = DAGSpec(f'{config.paths.project}/pipeline.yaml',
+    dag = DAGSpec(config.paths.entry_point,
                   lazy_import=config.lazy_import).to_dag()
 
     volumes, volume_mounts = zip(*((mv.to_volume(), mv.to_volume_mount())

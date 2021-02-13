@@ -25,7 +25,7 @@ def project(config, load_dag=True):
         raise ValueError('Failed to extract the environment name from the '
                          'conda "environment.yaml"')
 
-    pipeline_yaml = Path(config.paths.project, 'pipeline.yaml')
+    pipeline_yaml = config.paths.entry_point
 
     if not pipeline_yaml.exists():
         raise FileNotFoundError('Expected a "pipeline.yaml" file at: ' +

@@ -59,8 +59,10 @@ def project(project_root, output_path=None):
                           project_name=project_name)
 
     if project_root_airflow.exists():
-        print('Removing existing project')
+        print(f'Removing existing project at {project_root_airflow}')
         shutil.rmtree(project_root_airflow)
+
+    print('Exporting...')
 
     # make sure this works if copying everything in a project root
     # sub-directory

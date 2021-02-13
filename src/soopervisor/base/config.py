@@ -11,6 +11,7 @@ from pydantic import validator, Field
 from jinja2 import Template, meta
 import yaml
 
+from ploomber.util import default
 from soopervisor.script.script import generate_script
 from soopervisor.git_handler import GitRepo
 from soopervisor.storage.LocalStorage import LocalStorage
@@ -120,6 +121,14 @@ class Paths(AbstractBaseModel):
     @validator('project', always=True)
     def project_must_be_absolute(cls, v):
         return str(Path(v).resolve())
+
+    @property
+    def entry_point(self):
+        """
+        Returns a path to the entry point by looking in standard locations
+        (uses Ploomber's API)
+        """
+        return Path(self.project, default.entry_point())
 
     def render(self):
         self.environment = self._resolve_path(self.environment)
