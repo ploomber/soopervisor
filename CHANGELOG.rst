@@ -3,6 +3,9 @@ CHANGELOG
 
 0.3.2dev
 --------
+* Adds ``--root`` arg to ``soopervisor export-airflow`` to select an alternative project's root
+* Determines default entry point using Ploomber's API to allow automated discovery of ``pipeline.yaml`` in package layouts (e.g. ``src/package/pipeline.yaml``)
+
 
 0.3.1 (2021-02-11)
 ------------------
