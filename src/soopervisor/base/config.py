@@ -14,7 +14,6 @@ import yaml
 from ploomber.util import default
 from soopervisor.script.script import generate_script
 from soopervisor.git_handler import GitRepo
-from soopervisor.storage.LocalStorage import LocalStorage
 from soopervisor.base import validate as validate_base
 from soopervisor.base.abstract import AbstractBaseModel, AbstractConfig
 
