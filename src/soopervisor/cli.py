@@ -43,11 +43,17 @@ def build(clean_products_path, dry_run, load_dag):
               '-u',
               is_flag=True,
               help='Upload code, assumes "kubectl" is properly configured')
-def export(upload):
+@click.option(
+    '--root',
+    '-r',
+    type=str,
+    help="Project's root path, defaults to current working directory",
+    default='.')
+def export(upload, root):
     """
     Export Ploomber project to Argo (Kubernetes)
     """
-    config = ArgoConfig.from_project(project_root='.')
+    config = ArgoConfig.from_project(project_root=root)
 
     if upload:
         export_argo.upload_code(config)

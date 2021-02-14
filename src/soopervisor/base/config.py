@@ -127,7 +127,9 @@ class Paths(AbstractBaseModel):
         Returns a path to the entry point by looking in standard locations
         (uses Ploomber's API)
         """
-        return Path(self.project, default.entry_point())
+        # this returns the default location relative to self.project
+        entry_point = default.entry_point(self.project)
+        return Path(self.project, entry_point)
 
     def render(self):
         self.environment = self._resolve_path(self.environment)

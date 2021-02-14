@@ -11,22 +11,15 @@ from soopervisor.airflow import export
 from soopervisor.base.config import ScriptConfig
 
 
-@pytest.fixture(scope='module')
-def tmp_projects(tmpdir_factory):
-    old = os.getcwd()
-    tmp_path = tmpdir_factory.mktemp('projects')
-    os.chdir(str(tmp_path))
-    subprocess.run(['git', 'clone', 'https://github.com/ploomber/projects'],
-                   check=True)
-    yield str(Path(tmp_path).resolve())
-    os.chdir(old)
-
-
 @pytest.mark.parametrize(
     'name',
-    ['ml-intermediate', 'etl'],
+    ['ml-intermediate', 'etl', 'ml-online'],
 )
 def test_generate_valid_airflow_dags(name, tmp_projects):
+    if name == 'ml-online':
+        subprocess.run(['pip', 'uninstall', 'ml-online', '--yes'], check=True)
+        subprocess.run(['pip', 'install', 'projects/ml-online'], check=True)
+
     subprocess.run([
         'soopervisor',
         'export-airflow',
@@ -36,6 +29,7 @@ def test_generate_valid_airflow_dags(name, tmp_projects):
         '.',
     ],
                    check=True)
+
     subprocess.run(['python', f'dags/{name}.py'], check=True)
 
 

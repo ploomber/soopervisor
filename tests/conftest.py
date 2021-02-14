@@ -1,3 +1,4 @@
+import subprocess
 from faker import Faker
 import os
 import shutil
@@ -96,3 +97,14 @@ def session_sample_project(tmp_path_factory):
 @pytest.fixture
 def git_hash(monkeypatch):
     monkeypatch.setattr(GitRepo, "get_git_hash", lambda *args: 'GIT-HASH')
+
+
+@pytest.fixture(scope='session')
+def tmp_projects(tmpdir_factory):
+    old = os.getcwd()
+    tmp_path = tmpdir_factory.mktemp('projects')
+    os.chdir(str(tmp_path))
+    subprocess.run(['git', 'clone', 'https://github.com/ploomber/projects'],
+                   check=True)
+    yield str(Path(tmp_path).resolve())
+    os.chdir(old)

@@ -120,7 +120,7 @@ def spec_to_airflow(project_root, dag_name, airflow_default_args):
     # airflow host and we should never expect that environment to have
     # the project environment configured, as its only purpose is to parse
     # the DAG
-    dag = DAGSpec(f'{project_root}/pipeline.yaml', lazy_import=True).to_dag()
+    dag = DAGSpec(script_cfg.paths.entry_point, lazy_import=True).to_dag()
 
     return _dag_to_airflow(dag, dag_name, script_cfg, airflow_default_args)
 
