@@ -73,6 +73,9 @@ def tmp_callables(tmp_path):
     os.chdir(old)
 
 
+# FIXME: this fixture has scope='session' but changes the working directory
+# this breaks tests that assume the project' roots directory is the current
+# directory - we currently don't have any but we should still fix this
 @pytest.fixture(scope='session')
 def session_sample_project(tmp_path_factory):
     """
@@ -99,6 +102,9 @@ def git_hash(monkeypatch):
     monkeypatch.setattr(GitRepo, "get_git_hash", lambda *args: 'GIT-HASH')
 
 
+# FIXME: this fixture has scope='session' but changes the working directory
+# this breaks tests that assume the project' roots directory is the current
+# directory - we currently don't have any but we should still fix this
 @pytest.fixture(scope='session')
 def tmp_projects(tmpdir_factory):
     old = os.getcwd()
