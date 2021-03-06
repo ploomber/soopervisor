@@ -134,15 +134,6 @@ def test_custom_command(session_sample_project):
         command='some custom command')
 
 
-def test_error_if_custom_command_and_args(session_sample_project):
-    config = ScriptConfig(args='some args')
-
-    with pytest.raises(ValueError) as excinfo:
-        config.to_script(command='some custom command')
-
-    assert 'args should be empty (got "some args")' in str(excinfo.value)
-
-
 @pytest.mark.parametrize('create_directory', [False, True])
 def test_clean_products(create_directory, tmp_sample_project):
     config = ScriptConfig()

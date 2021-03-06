@@ -64,7 +64,21 @@ def test_argo_spec(tmp_sample_project):
     ])
 
 
-def test_argo_output_yaml(tmp_sample_project):
+def test_custom_args(tmp_sample_project):
+    Path('soopervisor.yaml').write_text('args: --some-arg')
+    spec = export.project(ArgoConfig.from_project(project_root='.'))
+    cmd = 'ploomber task {{inputs.parameters.task_name}} --force --some-arg'
+    assert cmd in spec['spec']['templates'][0]['script']['source']
+
+
+@pytest.mark.parametrize('config', [
+    None,
+    'args: --some-arg',
+])
+def test_argo_output_yaml(tmp_sample_project, config):
+    if config:
+        Path('soopervisor.yaml').write_text(config)
+
     export.project(ArgoConfig.from_project(project_root='.'))
     yaml_str = Path('argo.yaml').read_text()
     # make sure the "source" key is represented in literal style
@@ -76,7 +90,7 @@ def test_argo_output_yaml(tmp_sample_project):
     'name',
     ['ml-intermediate', 'etl', 'ml-online'],
 )
-def test_generate_valid_airflow_dags(name, tmp_projects):
+def test_generate_valid_argo_specs(name, tmp_projects):
     if name == 'ml-online':
         subprocess.run(['pip', 'uninstall', 'ml-online', '--yes'], check=True)
         subprocess.run(['pip', 'install', 'projects/ml-online'], check=True)

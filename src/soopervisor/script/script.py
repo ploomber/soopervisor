@@ -22,21 +22,15 @@ def generate_script(config, command):
 
     Parameters
     ----------
-    project_root : str
-        Path to the project root (the one that contains the pipeline.yaml file)
     config : ScriptConfig
         Script settings
+    command : str
+        Command to execute. If None, runs "ploomber build"
     """
     env = Environment(loader=PackageLoader('soopervisor', 'assets'),
                       undefined=StrictUndefined)
     template = env.get_template('script.sh')
     # config = __scape_spaces_on_paths(config)
-
-    if config.args and command:
-        raise ValueError(
-            f'args should be empty (got "{config.args}") if passing a '
-            'custom command, pass any extra ags directly in '
-            'the command argument')
 
     return template.render(config=config, command=command)
 

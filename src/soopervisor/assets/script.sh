@@ -39,11 +39,11 @@ fi
 
 {% if command -%}
 echo 'Executing task...'
-{{command}}
+{{command}}{{ ' '+config.args if config.args else ''}}
 
 {% else -%}
 echo 'Executing pipeline...'
-ploomber build {{config.args}}
+ploomber build{{ ' '+config.args if config.args else ''}}
 {% endif -%}
 
 {% if config.storage.provider %}

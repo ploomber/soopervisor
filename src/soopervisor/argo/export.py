@@ -80,11 +80,6 @@ def upload_code(config):
 
 def project(config):
     """Export Argo YAML spec from Ploomber project to argo.yaml
-
-    Parameters
-    ----------
-    project_root : str
-        Project root (pipeline.yaml parent folder)
     """
     # TODO: validate returns a dag, maybe use that one?
     dag = DAGSpec(config.paths.entry_point,

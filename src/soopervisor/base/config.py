@@ -172,7 +172,7 @@ class ScriptConfig(AbstractConfig):
         Allow pipeline execution with non-empty product folders
 
     args : str, default=''
-        Extra arguments to pass to the "ploomber build" command
+        Extra cli arguments to pass when executing the pipeline
 
     paths : dict
         Section to configure project paths, see Paths for schema
