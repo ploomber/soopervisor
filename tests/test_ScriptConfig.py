@@ -125,7 +125,7 @@ def test_save_script(tmp_sample_project, monkeypatch):
 ])
 def test_ploomber_command_args_in_script(args, session_sample_project):
     config = ScriptConfig(args=args)
-    assert 'ploomber build ' + args in config.to_script()
+    assert ('ploomber build ' + args).strip() in config.to_script()
 
 
 def test_custom_command(session_sample_project):

@@ -1,3 +1,4 @@
+import sys
 import subprocess
 from faker import Faker
 import os
@@ -114,3 +115,20 @@ def tmp_projects(tmpdir_factory):
                    check=True)
     yield str(Path(tmp_path).resolve())
     os.chdir(old)
+
+
+@pytest.fixture
+def no_sys_modules_cache():
+    """
+    Removes modules from sys.modules that didn't exist before the test
+    """
+    mods = set(sys.modules)
+
+    yield
+
+    current = set(sys.modules)
+
+    to_remove = current - mods
+
+    for a_module in to_remove:
+        del sys.modules[a_module]

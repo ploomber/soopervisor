@@ -32,7 +32,8 @@ def test_generate_valid_airflow_dags(name, tmp_projects):
     subprocess.run(['python', f'dags/{name}.py'], check=True)
 
 
-def test_export_airflow_sample_project(monkeypatch, tmp_sample_project):
+def test_export_airflow_sample_project(monkeypatch, tmp_sample_project,
+                                       no_sys_modules_cache):
     export.project(project_root='.', output_path='exported')
     monkeypatch.syspath_prepend('exported/dags')
     airflow_home = Path(tmp_sample_project, 'exported').resolve()
@@ -51,7 +52,8 @@ def test_export_airflow_sample_project(monkeypatch, tmp_sample_project):
             }
 
 
-def test_export_airflow_custom_args(monkeypatch, tmp_sample_project):
+def test_export_airflow_custom_args(monkeypatch, tmp_sample_project,
+                                    no_sys_modules_cache):
     Path('soopervisor.yaml').write_text('args: --some-arg')
 
     export.project(project_root='.', output_path='exported')
