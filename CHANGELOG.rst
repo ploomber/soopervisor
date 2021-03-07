@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+0.3.4dev
+--------
+
 0.3.3 (2021-03-07)
 ------------------
 * Support to pass extra cli args to ``ploomber task`` (via ``args`` in ``soopervisor.yaml``) when running in Argo and Airflow
