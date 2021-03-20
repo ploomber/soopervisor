@@ -86,7 +86,7 @@ def test_export_airflow_callables(monkeypatch, tmp_callables):
 
     assert isinstance(dag, DAG)
     # check tasks in dag
-    assert set(dag.task_dict) == {'features', 'fit.py', 'get', 'join'}
+    assert set(dag.task_dict) == {'features', 'fit', 'get', 'join'}
     # check task's class
     assert set(type(t) for t in dag.tasks) == {BashOperator}
     # check dependencies
@@ -95,13 +95,13 @@ def test_export_airflow_callables(monkeypatch, tmp_callables):
                 'get': set(),
                 'features': {'get'},
                 'join': {'features', 'get'},
-                'fit.py': {'join'}
+                'fit': {'join'}
             }
 
     # check generated scripts
     assert scripts['get'] == dag.task_dict['get'].bash_command
     assert scripts['features'] == dag.task_dict['features'].bash_command
-    assert scripts['fit.py'] == dag.task_dict['fit.py'].bash_command
+    assert scripts['fit'] == dag.task_dict['fit'].bash_command
     assert scripts['join'] == dag.task_dict['join'].bash_command
 
 
