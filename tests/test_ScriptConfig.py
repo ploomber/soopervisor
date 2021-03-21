@@ -33,6 +33,18 @@ def test_default_values(session_sample_project):
     assert not config.lazy_import
 
 
+def test_init_from_empty_file(tmp_sample_project):
+    Path('soopervisor.yaml').touch()
+
+    config = ScriptConfig.from_project('.')
+
+    assert config.paths.project == str(tmp_sample_project)
+    assert config.paths.products == str(Path(tmp_sample_project, 'output'))
+    assert config.paths.environment == str(
+        Path(tmp_sample_project, 'environment.yml'))
+    assert not config.lazy_import
+
+
 def test_defult_values_with_storage_enable(session_sample_project,
                                            monkeypatch):
 

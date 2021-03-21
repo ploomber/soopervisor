@@ -244,6 +244,10 @@ class ScriptConfig(AbstractConfig):
             with open(str(path)) as f:
                 d = yaml.safe_load(f)
 
+            # allow initialization with empty file
+            if d is None:
+                d = dict()
+
             # TODO: validate d is a dictionary, if empty, yaml.safe_load
             # returns None, and it can also returns lists
 
