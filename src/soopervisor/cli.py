@@ -5,6 +5,7 @@ from soopervisor.build import build_project
 from soopervisor.argo.config import ArgoConfig
 from soopervisor.airflow import export as export_airflow_module
 from soopervisor.argo import export as export_argo
+from soopervisor.aws import lambda_
 
 
 @click.group()
@@ -51,7 +52,7 @@ def build(clean_products_path, dry_run, load_dag):
     default='.')
 def export(upload, root):
     """
-    Export Ploomber project to Argo (Kubernetes)
+    Export to Argo (Kubernetes)
     """
     config = ArgoConfig.from_project(project_root=root)
 
@@ -80,10 +81,18 @@ def export(upload, root):
     default='.')
 def export_airflow(output, root):
     """
-    Export Ploomber project to Apache Airflow
+    Export to Apache Airflow
     """
     click.echo('Exporting to Airflow...')
     export_airflow_module.project(project_root=root, output_path=output)
+
+
+@cli.command()
+def export_aws_lambda():
+    """
+    Export to AWS Lambda for online inference
+    """
+    lambda_.main()
 
 
 if __name__ == '__main__':

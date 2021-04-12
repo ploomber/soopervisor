@@ -1,0 +1,17 @@
+# Although most dependencies can be easily be installed using pip, doing it
+# via conda provides a higher level of isolation and reproducibility, since
+# conda handles non-Python dependencies that pip cannot. If you have issues
+# installing packages with pip, try with conda, chances are, it will be]
+# easier to install
+
+# For details on using pip inside a conda env see this:
+# https://www.anaconda.com/using-pip-in-a-conda-environment/
+name: my_project
+
+channels:
+  - conda-forge
+
+dependencies:
+  # you can switch the python version if you want to
+  - python=3.8
+  - pip

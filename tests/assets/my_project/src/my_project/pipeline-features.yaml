@@ -1,0 +1,10 @@
+- source: my_project.tasks.features.sepal_area
+  product: "{{cwd}}/products/features/sepal_area.parquet"
+  name: sepal-area
+
+- source: my_project.tasks.features.petal_area
+  product: "{{cwd}}/products/features/petal_area.parquet"
+  name: petal-area
+
+- source: my_project.tasks.features.features
+  product: "{{cwd}}/products/features/features.parquet"

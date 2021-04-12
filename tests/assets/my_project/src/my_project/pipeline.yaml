@@ -1,0 +1,18 @@
+meta:
+  source_loader:
+    module: my_project
+
+  import_tasks_from: pipeline-features.yaml
+
+
+serializer: my_project.io.serialize
+unserializer: my_project.io.unserialize
+
+tasks:
+  - source: my_project.tasks.raw.get
+    product: "{{cwd}}/products/raw/get.parquet"
+  
+  - source: notebooks/fit.py
+    product:
+      nb: "{{cwd}}/products/report.html"
+      model: "{{cwd}}/products/model.pickle"

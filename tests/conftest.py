@@ -43,6 +43,21 @@ def tmp_sample_project(tmp_path):
 
 
 @pytest.fixture()
+def tmp_packaged_project(tmp_path):
+    relative_path_project = "assets/my_project"
+    old = os.getcwd()
+    tmp = Path(tmp_path, relative_path_project)
+    my_project = _path_to_tests() / relative_path_project
+    shutil.copytree(str(my_project), str(tmp))
+
+    os.chdir(str(tmp))
+
+    yield tmp
+
+    os.chdir(old)
+
+
+@pytest.fixture()
 def tmp_sample_project_in_subdir(tmp_sample_project):
     """
     Sample as tmp_sample_project but moves all contents to a subdirectory
