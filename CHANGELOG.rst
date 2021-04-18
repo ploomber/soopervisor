@@ -3,6 +3,8 @@ CHANGELOG
 
 0.3.4dev
 --------
+* Export projects compatible with `ploomber.OnlineModel` to AWS Lambda
+* Allow initialization from empty `soopervisor.yaml`
 
 0.3.3 (2021-03-07)
 ------------------
