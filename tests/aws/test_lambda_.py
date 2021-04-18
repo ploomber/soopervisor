@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 import subprocess
 
+import pytest
+
 from soopervisor.aws import lambda_
 
 body = {
@@ -28,8 +30,16 @@ def replace_line(path, line, value):
     path.write_text('\n'.join(lines))
 
 
-def test_package_project(tmp_packaged_project):
+@pytest.fixture
+def setup_my_project(tmp_packaged_project):
     subprocess.run(['pip', 'install', '--editable', '.'], check=True)
+
+    yield
+
+    subprocess.run(['pip', 'uninstall', 'my_project', '--yes'], check=True)
+
+
+def test_package_project(setup_my_project):
 
     subprocess.run(['ploomber', 'build'], check=True)
     subprocess.run(
@@ -38,7 +48,7 @@ def test_package_project(tmp_packaged_project):
 
     lambda_.main()
 
-    erase_lines('aws-lambda/app.py', from_=16, to=17)
+    erase_lines('aws-lambda/app.py', from_=14, to=15)
 
     erase_lines('aws-lambda/test_aws_lambda.py', from_=10, to=12)
     replace_line('aws-lambda/test_aws_lambda.py',
@@ -46,5 +56,3 @@ def test_package_project(tmp_packaged_project):
                  value=f'    body = {json.dumps(body)}')
 
     subprocess.run(['invoke', 'aws-lambda-build'], check=True)
-
-    # uninstall my_project

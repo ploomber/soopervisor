@@ -80,12 +80,10 @@ def test_argo_config_render(mvs, expected_sub_paths, session_sample_project):
     assert [mv.sub_path for mv in cfg.mounted_volumes] == expected_sub_paths
 
 
-def test_argo_config_defaults():
+def test_argo_config_defaults(session_sample_project):
     cfg = ArgoConfig()
 
     assert cfg.image == 'continuumio/miniconda3'
-    # FIXME: why is this using session_sample_project fixture if I didn't
-    # add it to this test?
     assert cfg.mounted_volumes == [{
         'name': 'nfs',
         'sub_path': 'sample_project',

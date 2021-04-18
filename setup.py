@@ -43,6 +43,10 @@ DEV = [
     'twine',
     # to validate argo specs
     'argo-workflows-dsl',
+    # for some reason, the env running in github actions does not have
+    # this making test_dist.py (error when calling
+    # "python setup.py bdist_wheel")
+    'wheel',
 ]
 
 DESCRIPTION = ''

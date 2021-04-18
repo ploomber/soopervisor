@@ -19,7 +19,7 @@ def faker():
     return Faker()
 
 
-@pytest.fixture()
+@pytest.fixture
 def tmp_empty(tmp_path):
     old = os.getcwd()
     os.chdir(str(tmp_path))
@@ -27,7 +27,7 @@ def tmp_empty(tmp_path):
     os.chdir(old)
 
 
-@pytest.fixture()
+@pytest.fixture
 def tmp_sample_project(tmp_path):
     relative_path_project = "assets/sample_project"
     old = os.getcwd()
@@ -42,7 +42,7 @@ def tmp_sample_project(tmp_path):
     os.chdir(old)
 
 
-@pytest.fixture()
+@pytest.fixture
 def tmp_packaged_project(tmp_path):
     relative_path_project = "assets/my_project"
     old = os.getcwd()
@@ -57,7 +57,7 @@ def tmp_packaged_project(tmp_path):
     os.chdir(old)
 
 
-@pytest.fixture()
+@pytest.fixture
 def tmp_sample_project_in_subdir(tmp_sample_project):
     """
     Sample as tmp_sample_project but moves all contents to a subdirectory
@@ -89,10 +89,7 @@ def tmp_callables(tmp_path):
     os.chdir(old)
 
 
-# FIXME: this fixture has scope='session' but changes the working directory
-# this breaks tests that assume the project' roots directory is the current
-# directory - we currently don't have any but we should still fix this
-@pytest.fixture(scope='session')
+@pytest.fixture
 def session_sample_project(tmp_path_factory):
     """
     Similar to tmp_directory but tasks should not modify content, since
@@ -118,10 +115,7 @@ def git_hash(monkeypatch):
     monkeypatch.setattr(GitRepo, "get_git_hash", lambda *args: 'GIT-HASH')
 
 
-# FIXME: this fixture has scope='session' but changes the working directory
-# this breaks tests that assume the project' roots directory is the current
-# directory - we currently don't have any but we should still fix this
-@pytest.fixture(scope='session')
+@pytest.fixture
 def tmp_projects(tmpdir_factory):
     old = os.getcwd()
     tmp_path = tmpdir_factory.mktemp('projects')

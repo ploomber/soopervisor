@@ -10,7 +10,7 @@ unserializer: my_project.io.unserialize
 
 tasks:
   - source: my_project.tasks.raw.get
-    product: "{{cwd}}/products/raw/get.parquet"
+    product: "{{cwd}}/products/raw/get.csv"
   
   - source: notebooks/fit.py
     product:

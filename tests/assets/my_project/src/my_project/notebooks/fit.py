@@ -13,7 +13,7 @@ upstream = ['features']
 product = None
 # -
 
-df = pd.read_parquet(str(upstream['features']))
+df = pd.read_csv(str(upstream['features']))
 X = df.drop('target', axis='columns')
 y = df.target
 

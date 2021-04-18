@@ -57,7 +57,7 @@ def test_defult_values_with_storage_enable(session_sample_project,
     assert config.storage.path == 'runs/2020-01-01T00:00:00'
 
 
-def test_initialize_from_empty_project():
+def test_initialize_from_empty_project(session_sample_project):
     # must initialize with default values
     assert ScriptConfig.from_project('.') == ScriptConfig()
 
