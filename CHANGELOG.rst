@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+0.3.5dev
+--------
+
 0.3.4 (2021-04-18)
 ------------------
 * Export projects compatible with `ploomber.OnlineModel` to AWS Lambda
