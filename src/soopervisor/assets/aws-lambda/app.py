@@ -7,8 +7,6 @@ import {{package_name}}
 
 model = OnlineModel({{package_name}})
 
-# TODO: support for OnlineDAG
-
 
 def handler(event, context):
     body = json.loads(event['body'])

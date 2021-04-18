@@ -110,6 +110,7 @@ def main():
     # TODO: build is required to run this, perhaps use python setup.py bdist?
     # TODO: warn if deploying from a dirty commit, maybe ask for confirmation
     # and show the version?
+    # TODO: support for OnlineDAG in app.py
 
     with ScriptExecutor() as e:
         e.create_if_not_exists('tasks.py')

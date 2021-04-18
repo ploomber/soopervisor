@@ -1,0 +1,4 @@
+include CHANGELOG.rst
+include README.rst
+graft src/soopervisor/assets
+global-exclude *.pyc
