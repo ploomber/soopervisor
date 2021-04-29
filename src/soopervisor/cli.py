@@ -5,7 +5,7 @@ from soopervisor.build import build_project
 from soopervisor.argo.config import ArgoConfig
 from soopervisor.airflow import export as export_airflow_module
 from soopervisor.argo import export as export_argo
-from soopervisor.aws import lambda_
+from soopervisor.aws import lambda_, batch
 
 
 @click.group()
@@ -93,6 +93,14 @@ def export_aws_lambda():
     Export to AWS Lambda for online inference
     """
     lambda_.main()
+
+
+@cli.command()
+def submit_aws_batch():
+    """
+    Submit workflow to AWS batch
+    """
+    batch.main()
 
 
 if __name__ == '__main__':
