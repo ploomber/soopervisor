@@ -1,3 +1,7 @@
+import json
+from pathlib import Path
+
+import yaml
 import click
 
 from soopervisor import __version__
@@ -5,7 +9,8 @@ from soopervisor.build import build_project
 from soopervisor.argo.config import ArgoConfig
 from soopervisor.airflow import export as export_airflow_module
 from soopervisor.argo import export as export_argo
-from soopervisor.aws import lambda_
+from soopervisor.aws import lambda_, batch
+from soopervisor import config
 
 
 @click.group()
@@ -88,11 +93,56 @@ def export_airflow(output, root):
 
 
 @cli.command()
-def export_aws_lambda():
+@click.argument('name')
+@click.option('--backend',
+              '-b',
+              type=click.Choice(['aws-lambda', 'aws-batch']),
+              required=True)
+def add(name, backend):
+    """Add an environment
     """
-    Export to AWS Lambda for online inference
+    if Path('soopervisor.yaml').exists():
+        cfg = yaml.load(Path('soopervisor.yaml').read_text())
+
+        if name in cfg:
+            raise click.ClickException(f'A {name!r} section in the '
+                                       'soopervisor.yaml configuration file '
+                                       'already exists. Choose another name.')
+
+    if not Path('setup.py').exists():
+        raise click.ClickException('Only packages with a setup.py file are '
+                                   'supported. Tip: run "ploomber scaffold" '
+                                   'to create a base project')
+
+    if Path(name).exists():
+        raise click.ClickException(f'{name!r} already exists. '
+                                   'Select a different name.')
+
+    if backend == 'aws-batch':
+        batch.add(name=name)
+    else:
+        lambda_.main(until=until)
+
+
+@cli.command()
+@click.argument('name')
+@click.option('--until-build',
+              '-ub',
+              is_flag=True,
+              help='Only build docker image')
+def submit(name, until_build):
     """
-    lambda_.main()
+    Submit an environment for execution/deployment
+    """
+    until = None
+
+    if until_build:
+        until = 'build'
+
+    backend = config.get_backend(name)
+
+    if backend == 'aws-batch':
+        batch.submit(name=name, until=until)
 
 
 if __name__ == '__main__':
