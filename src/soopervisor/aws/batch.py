@@ -12,13 +12,24 @@ from ploomber.spec import DAGSpec
 
 from soopervisor import name_format
 from soopervisor.aws.util import ScriptExecutor
+from soopervisor.aws.config import AWSBatchConfig
 
 _env = Environment(loader=PackageLoader('soopervisor', 'assets'),
                    undefined=StrictUndefined)
 _env.filters['to_pascal_case'] = name_format.to_pascal_case
 
+# TODO:
+# optionally call "ploomber status" after building image
+# what's the best way to specify config files? using sdist?
+# how to manage configs? env.dev.yaml, env.prod.yaml
 
-def main():
+
+def main(until=None):
+    cfg = AWSBatchConfig.from_file_with_root_key('soopervisor.yaml',
+                                                 'aws-batch')
+
+    # try to load dag here, to raise an error if there isn't any
+
     if not Path('setup.py').exists():
         raise ValueError
 
@@ -35,6 +46,8 @@ def main():
     pkg_name = default.find_package_name()
     version = importlib.import_module(pkg_name).__version__
 
+    # TODO check if image already exists locally or remotely and skip...
+
     with ScriptExecutor() as e:
         # e.create_if_not_exists('tasks.py')
         e.inline('rm', '-rf', 'dist/', ' build/', 'aws-batch/')
@@ -43,6 +56,10 @@ def main():
         filename = os.listdir('dist')[0]
         basename = filename.replace('.tar.gz', '')
 
+        # TODO: maybe use dockerfile if it exists? this way users can
+        # customize it. otherwise just keep it temporarily and delete it
+        # after building. there should also be a way to generate one a leave it
+        # there
         e.copy_template('aws-batch/Dockerfile',
                         filename=filename,
                         basename=basename)
@@ -51,64 +68,41 @@ def main():
         # e.append('aws-batch/tasks.py', 'tasks.py')
         e.cd('aws-batch')
 
-        name = f'{pkg_name}:{version}'
-        target = f'433232308104.dkr.ecr.us-east-1.amazonaws.com/{name}'
+        local_name = f'{pkg_name}:{version}'
+        # maybe repository should include the type of export?
+        # ml-online-aws-batch. or maybe ask at the beginning and save it
+        # to soopervisor.yaml if it doesn't exist
+        remote_name = f'{cfg.repository}/{pkg_name}:{version}'
+        e.inline('docker', 'build', '.', '--tag', local_name)
 
-        e.inline('docker', 'build', '.', '--tag', name)
-        e.inline('docker', 'tag', name, target)
-        e.inline('docker', 'push', target)
+        if until == 'build':
+            return
 
-        submit(job_def=name, target=target)
+        e.inline('docker', 'tag', local_name, remote_name)
+        e.inline('docker', 'push', remote_name)
+
+        if until == 'push':
+            return
+
+        submit(job_def=f'{pkg_name}-{version}'.replace('.', '_'),
+               remote_name=remote_name,
+               job_queue=cfg.job_queue,
+               container_properties=cfg.container_properties)
 
     print('Done. Files generated at aws-batch/. '
           'See aws-batch/README.md for details')
     print('Added submit command: invoke aws-batch-submit')
 
-    # TODO:
-    # test image after calling docker build by running ploomber status
 
-    # to have dev prod parity, it's best to package as source distribution
-    # that way we can include the requirements.txt file as top-level file
-    # but then it becomes ambiguous if static files should go inside or out
-    # the src/ or be top-level. at least the model and pipeline ahve to go
-    # inside src/ to be able to load them using importlib resources. the other
-    # ones (env.yaml) become a problem because if they are searched recursively
-    # but when running in prod, the package is not installed in editable mode,
-    # hence env.yaml at the root are not parents of the package. I need to
-    # ensure that if the recursive srategy fails, the next thing is to
-    # try to locate the root project directory, if none of this works, then
-    # use the current directory. although the same strategy could be
-    # applied to the model.joblib and pipeline.yaml to locate them
-    # outside the pacakge
-
-    # there is some mismatch in behavior when running from source and from a
-    # package. for example, it might not be possible to find the root if
-    # there is no requirementsx.txt or environment.yml
-
-    # it's also kind of odd how to configure lcients inside the package
-    # since relative paths are so to the file that contains them instead
-    # of the current working directory
-
-    # how do I make them behave in the same way? The idea is that if the
-    # package (installed in editable mode) works locally, it should work
-    # when installed as a package
-
-    # another thing that might break is the non-existence of product parents,
-    # the current implementation will break. perhaps we should generate
-    # this on render? and also when downloading from cloud storage?
-
-
-def submit(job_def, target):
+def submit(job_def, remote_name, job_queue, container_properties):
     client = boto3.client("batch", region_name='us-east-1')
+
+    container_properties['image'] = remote_name
 
     print('submitting job definition...')
     client.register_job_definition(jobDefinitionName=job_def,
                                    type='container',
-                                   containerProperties={
-                                       "image": target,
-                                       "memory": 2048,
-                                       "vcpus": 2,
-                                   })
+                                   containerProperties=container_properties)
 
     dag = DAGSpec.find().to_dag()
 
@@ -118,7 +112,7 @@ def submit(job_def, target):
     for name, task in dag.items():
         response = client.submit_job(
             jobName=name,
-            jobQueue='ev2-queue-2',
+            jobQueue=job_queue,
             jobDefinition=job_def,
             dependsOn=[{
                 "jobId": job_ids[name]
