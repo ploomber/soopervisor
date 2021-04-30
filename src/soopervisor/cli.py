@@ -88,11 +88,20 @@ def export_airflow(output, root):
 
 
 @cli.command()
-def export_aws_lambda():
+@click.option('--until-build',
+              '-ub',
+              is_flag=True,
+              help='Only build docker image')
+def export_aws_lambda(until_build):
     """
     Export to AWS Lambda for online inference
     """
-    lambda_.main()
+    until = None
+
+    if until_build:
+        until = 'build'
+
+    lambda_.main(until=until)
 
 
 @cli.command()

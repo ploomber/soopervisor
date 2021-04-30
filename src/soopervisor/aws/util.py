@@ -7,8 +7,3 @@ def warn_if_not_installed(name):
     if not shutil.which(name):
         print(f'It appears you don\'t have {name} CLI installed, you need it '
               'to execute "invoke aws-lambda build"')
-
-
-def declares_name(path, name):
-    m = ast.parse(Path(path).read_text())
-    return name in [getattr(node, 'name', None) for node in m.body]

@@ -49,21 +49,13 @@ def main(until=None):
     with Commander(workspace='aws-batch',
                    templates_path=('soopervisor', 'assets')) as e:
         # e.create_if_not_exists('tasks.py')
-        e.run('rm -rf dist/  build/', description='Cleaning up')
+        e.rm('dist', 'build')
         e.run('python -m build --sdist', description='Packaging')
 
-        filename = os.listdir('dist')[0]
-        basename = filename.replace('.tar.gz', '')
+        e.copy_template('aws-batch/Dockerfile')
 
-        # TODO: maybe use dockerfile if it exists? this way users can
-        # customize it. otherwise just keep it temporarily and delete it
-        # after building. there should also be a way to generate one a leave it
-        # there
-        e.copy_template('aws-batch/Dockerfile',
-                        filename=filename,
-                        basename=basename)
-
-        e.cp('dist', 'aws-batch/dist')
+        # TODO: remote second arg, and make it equal to the workspace
+        e.cp('dist', 'aws-batch')
         e.cp('environment.lock.yml', 'aws-batch')
 
         e.cd('aws-batch')

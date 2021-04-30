@@ -7,7 +7,10 @@ RUN pip install git+https://github.com/ploomber/ploomber@aws-batch --no-deps
 
 COPY dist/* project/
 WORKDIR /project/
-# we need to get the config file with credentials
-RUN tar --strip-components=1 -zxvf {{filename}}
-RUN pip install {{filename}} --no-deps
+
+# extract to get any config files at the root
+RUN tar --strip-components=1 -zxvf *.tar.gz
+
+# install from the source distribution
+RUN pip install *.tar.gz --no-deps
 

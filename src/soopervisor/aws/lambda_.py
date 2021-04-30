@@ -1,23 +1,13 @@
 """
 Online DAG deployment using AWS Lambda
 """
-from pathlib import Path
-
 from ploomber.util import default
 from ploomber.io._commander import Commander
 
-from soopervisor.aws.util import (declares_name, warn_if_not_installed)
+from soopervisor.aws.util import warn_if_not_installed
 
 
-def main():
-    if Path('aws-lambda').exists():
-        raise FileExistsError('aws-lambda already exists, Rename or delete '
-                              'to continue.')
-
-    if declares_name('tasks.py', 'aws_lambda_build'):
-        raise RuntimeError('tasks.py already has a "aws_lambda_build" '
-                           'function. Rename or delete to continue.')
-
+def main(until=None):
     print('Generating files to export to AWS Lambda...')
     # TODO: validate project structure: src/*/model.*, etc...
     pkg_name = default.find_package_name()
@@ -32,10 +22,34 @@ def main():
         e.create_if_not_exists('tasks.py')
         e.copy_template('aws-lambda/README.md')
         e.copy_template('aws-lambda/Dockerfile')
-        e.copy_template('aws-lambda/app.py', package_name=pkg_name)
+
+        e.copy_template('aws-lambda/test_aws_lambda.py',
+                        requires_manual_edit=True)
+        e.copy_template('aws-lambda/app.py',
+                        requires_manual_edit=True,
+                        package_name=pkg_name)
+
         e.copy_template('aws-lambda/template.yaml', package_name=pkg_name)
-        e.copy_template('aws-lambda/test_aws_lambda.py')
-        e.append('aws-lambda/tasks.py', 'tasks.py')
+        # ensure user has pytest
+        e.run('pytest aws-lambda', description='Testing')
+
+        e.rm('dist', 'build')
+        e.run('python -m build --wheel .', description='Packaging')
+
+        e.cp('dist', 'aws-lambda')
+        e.cp('requirements.lock.txt', 'aws-lambda')
+
+        e.cd('aws-lambda')
+        e.run('sam build', description='Building Docker image')
+
+        if until == 'build':
+            e.tw.write('Done. Run "docker images" to see your image.')
+            return
+
+        # TODO: guided only when the config  does not exist
+        e.run('sam deploy --guided', description='Deploying')
+
+        e.tw.sep('=', 'Deployed to AWS Lambda', green=True)
 
     print('Done. Files generated at aws-lambda/. '
           'See aws-lambda/README.md for details')
