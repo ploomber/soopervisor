@@ -6,17 +6,11 @@ import importlib
 from pathlib import Path
 import boto3
 
-from jinja2 import Environment, PackageLoader, StrictUndefined
 from ploomber.util import default
 from ploomber.spec import DAGSpec
+from ploomber.io._commander import Commander
 
-from soopervisor import name_format
-from soopervisor.aws.util import Commander
 from soopervisor.aws.config import AWSBatchConfig
-
-_env = Environment(loader=PackageLoader('soopervisor', 'assets'),
-                   undefined=StrictUndefined)
-_env.filters['to_pascal_case'] = name_format.to_pascal_case
 
 # TODO:
 # optionally call "ploomber status" after building image
@@ -55,14 +49,6 @@ def main(until=None):
     if not Path('setup.py').exists():
         raise ValueError
 
-    # if Path('aws-batch').exists():
-    #     raise FileExistsError('aws-batch already exists, Rename or delete '
-    #                           'to continue.')
-
-    # if declares_name('tasks.py', 'aws_lambda_submit'):
-    #     raise RuntimeError('tasks.py already has a "aws_lambda_submit" '
-    #                        'function. Rename or delete to continue.')
-
     # check setup.py exists in the current dfolder
 
     pkg_name = default.find_package_name()
@@ -70,7 +56,8 @@ def main(until=None):
 
     # TODO check if image already exists locally or remotely and skip...
 
-    with Commander('aws-batch') as e:
+    with Commander(workspace='aws-batch',
+                   templates_path=('soopervisor', 'assets')) as e:
         # e.create_if_not_exists('tasks.py')
         e.run('rm -rf dist/  build/', description='Cleaning up')
         e.run('python -m build --sdist', description='Packaging')
@@ -109,20 +96,25 @@ def main(until=None):
             description='h',
             capture_output=True)
 
-        if out == b'False\n':
+        # TODO: change, this is no loner bytes but a str obj
+        if out == 'False\n':
             raise RuntimeError(
                 'Missing client for Files in Docker build. '
                 'Ensure a client for Files is properly configured '
                 'in pipeline.yaml')
 
         if until == 'build':
+            e.tw.write('Done. Run "docker images" to see your image.')
             return
 
         e.run(f'docker tag {local_name} {remote_name}', description='Tagging')
         e.run(f'docker push {remote_name}', description='Pushing image')
 
         if until == 'push':
+            e.tw.write('Done. Image pushed to repository.')
             return
+
+        e.tw.sep('=', 'Submitting jobs to AWS Batch', blue=True)
 
         submit(dag=dag,
                job_def=f'{pkg_name}-{version}'.replace('.', '_'),
@@ -130,9 +122,7 @@ def main(until=None):
                job_queue=cfg.job_queue,
                container_properties=cfg.container_properties)
 
-    print('Done. Files generated at aws-batch/. '
-          'See aws-batch/README.md for details')
-    print('Added submit command: invoke aws-batch-submit')
+        e.tw.sep('=', 'Submitted to AWS Batch', green=True)
 
 
 def submit(dag, job_def, remote_name, job_queue, container_properties):
@@ -140,14 +130,12 @@ def submit(dag, job_def, remote_name, job_queue, container_properties):
 
     container_properties['image'] = remote_name
 
-    print('submitting job definition...')
     client.register_job_definition(jobDefinitionName=job_def,
                                    type='container',
                                    containerProperties=container_properties)
 
     job_ids = dict()
 
-    print('Submitting jobs...')
     for name, task in dag.items():
         response = client.submit_job(
             jobName=name,
@@ -159,5 +147,3 @@ def submit(dag, job_def, remote_name, job_queue, container_properties):
             containerOverrides={"command": ['ploomber', 'task', name]})
 
         job_ids[name] = response["jobId"]
-
-    print('Done.')
