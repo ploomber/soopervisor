@@ -96,11 +96,20 @@ def export_aws_lambda():
 
 
 @cli.command()
-def submit_aws_batch():
+@click.option('--until-build',
+              '-ub',
+              is_flag=True,
+              help='Only build docker image')
+def submit_aws_batch(until_build):
     """
     Submit workflow to AWS batch
     """
-    batch.main()
+    until = None
+
+    if until_build:
+        until = 'build'
+
+    batch.main(until=until)
 
 
 if __name__ == '__main__':

@@ -3,13 +3,61 @@ import shutil
 import os
 import subprocess
 from pathlib import Path
+import shlex
 
 from jinja2 import Environment, PackageLoader, StrictUndefined
 from soopervisor import name_format
+from ploomber.io import TerminalWriter
 
 _env = Environment(loader=PackageLoader('soopervisor', 'assets'),
                    undefined=StrictUndefined)
 _env.filters['to_pascal_case'] = name_format.to_pascal_case
+
+
+class Commander:
+    def __init__(self, workspace=None):
+        self.tw = TerminalWriter()
+        self.workspace = Path(workspace).resolve()
+
+    def run(self, cmd, description, capture_output=False):
+        self.tw.sep('=', f'{description}: {cmd}', blue=True)
+
+        # py 3.6 compatibility: cannot use subprocess.run directly
+        # because the check_output arg was included until version 3.7
+        if not capture_output:
+            return subprocess.check_call(shlex.split(cmd))
+        else:
+            return subprocess.check_output(shlex.split(cmd))
+
+    def __enter__(self):
+        if self.workspace:
+            Path(self.workspace).mkdir()
+        return self
+
+    def __exit__(self, *exc):
+        if self.workspace:
+            shutil.rmtree(self.workspace)
+
+    def copy_template(self, path, **render_kwargs):
+        path = Path(path)
+        path.parent.mkdir(exist_ok=True, parents=True)
+        content = _env.get_template(str(path)).render(**render_kwargs)
+        path.write_text(content)
+
+    def cd(self, dir_):
+        os.chdir(dir_)
+
+    def cp(self, src, dst):
+        path = Path(src)
+
+        if not path.exists():
+            raise FileNotFoundError(
+                f'Missing {src} file. Add it to your root folder.')
+
+        if path.is_file():
+            shutil.copy(src, dst)
+        else:
+            shutil.copytree(src, dst)
 
 
 class ScriptExecutor:
