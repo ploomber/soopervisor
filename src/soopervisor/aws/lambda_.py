@@ -4,9 +4,9 @@ Online DAG deployment using AWS Lambda
 from pathlib import Path
 
 from ploomber.util import default
+from ploomber.io._commander import Commander
 
-from soopervisor.aws.util import (declares_name, ScriptExecutor,
-                                  warn_if_not_installed)
+from soopervisor.aws.util import (declares_name, warn_if_not_installed)
 
 
 def main():
@@ -27,7 +27,8 @@ def main():
     # and show the version?
     # TODO: support for OnlineDAG in app.py
 
-    with ScriptExecutor() as e:
+    with Commander(workspace='aws-lambda',
+                   templates_path=('soopervisor', 'assets')) as e:
         e.create_if_not_exists('tasks.py')
         e.copy_template('aws-lambda/README.md')
         e.copy_template('aws-lambda/Dockerfile')
@@ -35,7 +36,6 @@ def main():
         e.copy_template('aws-lambda/template.yaml', package_name=pkg_name)
         e.copy_template('aws-lambda/test_aws_lambda.py')
         e.append('aws-lambda/tasks.py', 'tasks.py')
-        e.cd('aws-lambda')
 
     print('Done. Files generated at aws-lambda/. '
           'See aws-lambda/README.md for details')

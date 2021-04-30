@@ -13,28 +13,18 @@ from ploomber.io._commander import Commander
 from soopervisor.aws.config import AWSBatchConfig
 
 # TODO:
-# optionally call "ploomber status" after building image
-
-# what's the best way to specify config files? using sdist and MANIFEST.in?
-
 # how to manage configs? env.dev.yaml, env.prod.yaml
-
-# make a distinction between config (env.yaml, soopervisor.yaml,
-# environment.yml) and non-config (pipeline.yaml) static files. config
-# goes into the root folder, non-config inside src/
-
-# simplify client configuration when clients.py is inside src/
-# another potential error: parents of products do not exist
-
 # warn on large distribution artifacts - there might be data files
-
 # make explicit that some errors are happening inside docker
 
 # if pkg is installed --editable, then files inside src/ can find the
-# root project without issues but if the flag disappears they can't,
+# root project without issues but if not they can't,
 # perhaps if not project root is found, use the current working directory?
 
-# perhaps scan project for files that are potentially config files?
+# perhaps scan project for files that are potentially config files and are missing from MANIFEST.in?
+
+# how to help users when they've added depedencies via pip/conda but they
+# did not add them to setup.py? perhaps export env and look for differences?
 
 
 def main(until=None):
