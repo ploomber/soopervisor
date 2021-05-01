@@ -31,23 +31,23 @@ def main(until=None):
 
         e.copy_template('aws-lambda/template.yaml', package_name=pkg_name)
         # ensure user has pytest
-        e.run('pytest aws-lambda', description='Testing')
+        e.run('pytest', 'aws-lambda', description='Testing')
 
         e.rm('dist', 'build')
-        e.run('python -m build --wheel .', description='Packaging')
+        e.run('python', '-m', 'build', '--wheel', '.', description='Packaging')
 
         e.cp('dist', 'aws-lambda')
         e.cp('requirements.lock.txt', 'aws-lambda')
 
         e.cd('aws-lambda')
-        e.run('sam build', description='Building Docker image')
+        e.run('sam', 'build', description='Building Docker image')
 
         if until == 'build':
             e.tw.write('Done. Run "docker images" to see your image.')
             return
 
         # TODO: guided only when the config  does not exist
-        e.run('sam deploy --guided', description='Deploying')
+        e.run('sam', 'deploy', '--guided', description='Deploying')
 
         e.tw.sep('=', 'Deployed to AWS Lambda', green=True)
 

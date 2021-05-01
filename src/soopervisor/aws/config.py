@@ -9,6 +9,7 @@ class YAMLConfig(BaseModel):
         with open(path) as f:
             d = yaml.safe_load(f)
 
+        # TODO: include link to documentation with schema
         if root_key not in d:
             raise KeyError(f'Missing {root_key!r} section in {path}')
 

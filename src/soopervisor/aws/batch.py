@@ -1,7 +1,6 @@
 """
 Online DAG deployment using AWS Lambda
 """
-import os
 import importlib
 from pathlib import Path
 import boto3
@@ -50,7 +49,7 @@ def main(until=None):
                    templates_path=('soopervisor', 'assets')) as e:
         # e.create_if_not_exists('tasks.py')
         e.rm('dist', 'build')
-        e.run('python -m build --sdist', description='Packaging')
+        e.run('python', '-m', 'build', '--sdist', description='Packaging')
 
         e.copy_template('aws-batch/Dockerfile')
 
@@ -65,18 +64,31 @@ def main(until=None):
         # ml-online-aws-batch. or maybe ask at the beginning and save it
         # to soopervisor.yaml if it doesn't exist
         remote_name = f'{cfg.repository}/{pkg_name}:{version}'
-        e.run(f'docker build . --tag {local_name}',
+        # how to allows passing --no-cache?
+        e.run('docker',
+              'build',
+              '.',
+              '--tag',
+              local_name,
               description='Building image...')
 
-        e.run(f'docker run {local_name} ploomber status',
+        e.run('docker',
+              'run',
+              local_name,
+              'ploomber',
+              'status',
               description='Testing')
 
-        out = e.run(
-            f'docker run {local_name} python -c '
-            '"from ploomber.spec import DAGSpec; '
-            'print(\'File\' in DAGSpec.find().to_dag().clients)"',
-            description='h',
-            capture_output=True)
+        test_cmd = ('from ploomber.spec import DAGSpec; '
+                    'print("File" in DAGSpec.find().to_dag().clients)')
+        out = e.run('docker',
+                    'run',
+                    local_name,
+                    'python',
+                    '-c',
+                    test_cmd,
+                    description='h',
+                    capture_output=True)
 
         # TODO: change, this is no loner bytes but a str obj
         if out == 'False\n':
@@ -89,8 +101,8 @@ def main(until=None):
             e.tw.write('Done. Run "docker images" to see your image.')
             return
 
-        e.run(f'docker tag {local_name} {remote_name}', description='Tagging')
-        e.run(f'docker push {remote_name}', description='Pushing image')
+        e.run('docker', 'tag', local_name, remote_name, description='Tagging')
+        e.run('docker', 'push', remote_name, description='Pushing image')
 
         if until == 'push':
             e.tw.write('Done. Image pushed to repository.')
