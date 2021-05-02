@@ -12,7 +12,6 @@ from ploomber.io._commander import Commander
 from soopervisor.aws.config import AWSBatchConfig
 
 # TODO:
-# how to manage configs? env.dev.yaml, env.prod.yaml
 # warn on large distribution artifacts - there might be data files
 # make explicit that some errors are happening inside docker
 
@@ -20,7 +19,8 @@ from soopervisor.aws.config import AWSBatchConfig
 # root project without issues but if not they can't,
 # perhaps if not project root is found, use the current working directory?
 
-# perhaps scan project for files that are potentially config files and are missing from MANIFEST.in?
+# perhaps scan project for files that are potentially config files and are
+# missing from MANIFEST.in?
 
 # how to help users when they've added depedencies via pip/conda but they
 # did not add them to setup.py? perhaps export env and look for differences?
@@ -49,7 +49,7 @@ def main(until=None):
                    templates_path=('soopervisor', 'assets')) as e:
         # e.create_if_not_exists('tasks.py')
         e.rm('dist', 'build')
-        e.run('python', '-m', 'build', '--sdist', description='Packaging')
+        e.run('python', '-m', 'build', '--sdist', description='Packaging code')
 
         e.copy_template('aws-batch/Dockerfile')
 
@@ -70,25 +70,32 @@ def main(until=None):
               '.',
               '--tag',
               local_name,
-              description='Building image...')
+              description='Building image')
 
         e.run('docker',
               'run',
               local_name,
               'ploomber',
               'status',
-              description='Testing')
+              description='Testing image',
+              error_message='Error while testing your docker image',
+              hint=f'Hint: Use "docker run -it {local_name} /bin/bash" to '
+              'start an interactive session to debug your image')
 
         test_cmd = ('from ploomber.spec import DAGSpec; '
                     'print("File" in DAGSpec.find().to_dag().clients)')
-        out = e.run('docker',
-                    'run',
-                    local_name,
-                    'python',
-                    '-c',
-                    test_cmd,
-                    description='h',
-                    capture_output=True)
+        out = e.run(
+            'docker',
+            'run',
+            local_name,
+            'python',
+            '-c',
+            test_cmd,
+            description='Testing image',
+            error_message='Error while checking File client configuration',
+            hint=f'Hint: Use "docker run -it {local_name} /bin/bash" to '
+            'start an interactive session to debug your image',
+            capture_output=True)
 
         # TODO: change, this is no loner bytes but a str obj
         if out == 'False\n':
@@ -98,17 +105,17 @@ def main(until=None):
                 'in pipeline.yaml')
 
         if until == 'build':
-            e.tw.write('Done. Run "docker images" to see your image.')
+            e.print('Done. Run "docker images" to see your image.')
             return
 
         e.run('docker', 'tag', local_name, remote_name, description='Tagging')
         e.run('docker', 'push', remote_name, description='Pushing image')
 
         if until == 'push':
-            e.tw.write('Done. Image pushed to repository.')
+            e.print('Done. Image pushed to repository.')
             return
 
-        e.tw.sep('=', 'Submitting jobs to AWS Batch', blue=True)
+        e.info('Submitting jobs to AWS Batch')
 
         submit(dag=dag,
                job_def=f'{pkg_name}-{version}'.replace('.', '_'),
@@ -116,11 +123,11 @@ def main(until=None):
                job_queue=cfg.job_queue,
                container_properties=cfg.container_properties)
 
-        e.tw.sep('=', 'Submitted to AWS Batch', green=True)
+        e.success('Submitted to AWS Batch')
 
 
 def submit(dag, job_def, remote_name, job_queue, container_properties):
-    client = boto3.client("batch", region_name='us-east-1')
+    client = boto3.client('batch')
 
     container_properties['image'] = remote_name
 
