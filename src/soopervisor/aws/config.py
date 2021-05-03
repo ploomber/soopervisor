@@ -31,5 +31,7 @@ class AWSBatchConfig(YAMLConfig):
     }
     job_queue: str
 
+    region_name: str
+
     class Config:
         extra = 'forbid'

@@ -1,0 +1,4 @@
+aws-batch:
+  repository: some_ecr_repository
+  job_queue: some_job_queue
+  region_name: us-east-1

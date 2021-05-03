@@ -1,3 +1,5 @@
+import importlib
+import tempfile
 import sys
 import subprocess
 from faker import Faker
@@ -5,6 +7,7 @@ import os
 import shutil
 from pathlib import Path
 
+import my_project
 import pytest
 
 from soopervisor.git_handler import GitRepo
@@ -55,6 +58,31 @@ def tmp_packaged_project(tmp_path):
     yield tmp
 
     os.chdir(old)
+
+
+@pytest.fixture
+def backup_packaged_project():
+    old = os.getcwd()
+
+    backup = tempfile.mkdtemp()
+    root = Path(my_project.__file__).parents[2]
+
+    # sanity check, in case we change the structure
+    assert root.name == 'my_project'
+
+    shutil.copytree(str(root), str(Path(backup, 'my_project')))
+
+    pkg_root = str(
+        Path(importlib.util.find_spec('my_project').origin).parents[2])
+    os.chdir(str(pkg_root))
+
+    yield
+
+    os.chdir(old)
+
+    shutil.rmtree(str(root))
+    shutil.copytree(str(Path(backup, 'my_project')), str(root))
+    shutil.rmtree(backup)
 
 
 @pytest.fixture

@@ -78,31 +78,25 @@ def main(until=None):
               'ploomber',
               'status',
               description='Testing image',
-              error_message='Error while testing your docker image',
-              hint=f'Hint: Use "docker run -it {local_name} /bin/bash" to '
+              error_message='Error while testing your docker image with',
+              hint=f'Use "docker run -it {local_name} /bin/bash" to '
               'start an interactive session to debug your image')
 
         test_cmd = ('from ploomber.spec import DAGSpec; '
                     'print("File" in DAGSpec.find().to_dag().clients)')
-        out = e.run(
-            'docker',
-            'run',
-            local_name,
-            'python',
-            '-c',
-            test_cmd,
-            description='Testing image',
-            error_message='Error while checking File client configuration',
-            hint=f'Hint: Use "docker run -it {local_name} /bin/bash" to '
-            'start an interactive session to debug your image',
-            capture_output=True)
-
-        # TODO: change, this is no loner bytes but a str obj
-        if out == 'False\n':
-            raise RuntimeError(
-                'Missing client for Files in Docker build. '
-                'Ensure a client for Files is properly configured '
-                'in pipeline.yaml')
+        e.run('docker',
+              'run',
+              local_name,
+              'python',
+              '-c',
+              test_cmd,
+              description='Testing image',
+              error_message='Error while checking File client configuration',
+              hint=f'Use "docker run -it {local_name} /bin/bash" to '
+              'start an interactive session to debug your image and ensure a '
+              'File client is properly configured',
+              capture_output=True,
+              expected_output='True\n')
 
         if until == 'build':
             e.print('Done. Run "docker images" to see your image.')
@@ -121,19 +115,22 @@ def main(until=None):
                job_def=f'{pkg_name}-{version}'.replace('.', '_'),
                remote_name=remote_name,
                job_queue=cfg.job_queue,
-               container_properties=cfg.container_properties)
+               container_properties=cfg.container_properties,
+               region_name=cfg.region_name)
 
         e.success('Submitted to AWS Batch')
 
 
-def submit(dag, job_def, remote_name, job_queue, container_properties):
-    client = boto3.client('batch')
+def submit(dag, job_def, remote_name, job_queue, container_properties,
+           region_name):
+    client = boto3.client('batch', region_name=region_name)
 
     container_properties['image'] = remote_name
 
-    client.register_job_definition(jobDefinitionName=job_def,
-                                   type='container',
-                                   containerProperties=container_properties)
+    jd = client.register_job_definition(
+        jobDefinitionName=job_def,
+        type='container',
+        containerProperties=container_properties)
 
     job_ids = dict()
 
@@ -141,10 +138,18 @@ def submit(dag, job_def, remote_name, job_queue, container_properties):
         response = client.submit_job(
             jobName=name,
             jobQueue=job_queue,
-            jobDefinition=job_def,
+            jobDefinition=jd['jobDefinitionArn'],
             dependsOn=[{
                 "jobId": job_ids[name]
             } for name in task.upstream],
             containerOverrides={"command": ['ploomber', 'task', name]})
 
         job_ids[name] = response["jobId"]
+
+
+# https://github.com/spulec/moto/issues/1793
+# moto==1.3.7 breaks with docker
+# moto==1.3.14 ok. newer versions break
+# boto==2.49.0
+# boto3==1.17.62
+# botocore==1.20.62

@@ -32,7 +32,11 @@ REQUIRES = [
     'ploomber>=0.9.3',
 ]
 
-EXTRAS = ['docker', 'boxsdk']
+EXTRAS = [
+    'docker',
+    'boxsdk',
+    'boto3',
+]
 
 DEV = [
     'pytest',
