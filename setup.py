@@ -51,6 +51,9 @@ DEV = [
     # this making test_dist.py (error when calling
     # "python setup.py bdist_wheel")
     'wheel',
+    # for testing aws
+    'moto',
+    'ipython',
 ]
 
 DESCRIPTION = ''

@@ -1,5 +1,5 @@
 """
-Online DAG deployment using AWS Lambda
+Running pipelines on AWS Batch
 """
 import importlib
 from pathlib import Path
@@ -26,45 +26,54 @@ from soopervisor.aws.config import AWSBatchConfig
 # did not add them to setup.py? perhaps export env and look for differences?
 
 
-def main(until=None):
-    cfg = AWSBatchConfig.from_file_with_root_key('soopervisor.yaml',
-                                                 'aws-batch')
+def add(name):
+    with Commander(workspace=name,
+                   templates_path=('soopervisor', 'assets')) as e:
+        e.copy_template('aws-batch/Dockerfile')
+        e.append('aws-batch/soopervisor.yaml',
+                 'soopervisor.yaml',
+                 env_name=name)
+        e.success(f'Done. Fill in the configuration in the {name!r} '
+                  'section in soopervisor.yaml then submit to AWS Batch with: '
+                  f'soopervisor submit {name}')
+
+
+def submit(name, until=None):
+    cfg = AWSBatchConfig.from_file_with_root_key('soopervisor.yaml', name)
 
     dag = DAGSpec.find().to_dag()
 
     # warn if missing client (only warn cause the config might configure
     # it when building the docker image)
 
-    if not Path('setup.py').exists():
-        raise ValueError
-
-    # check setup.py exists in the current dfolder
-
     pkg_name = default.find_package_name()
-    version = importlib.import_module(pkg_name).__version__
+
+    # if using versioneer, the version may contain "+"
+    version = importlib.import_module(pkg_name).__version__.replace(
+        '+', '-plus-')
 
     # TODO check if image already exists locally or remotely and skip...
 
-    with Commander(workspace='aws-batch',
+    with Commander(workspace=name,
                    templates_path=('soopervisor', 'assets')) as e:
-        # e.create_if_not_exists('tasks.py')
+        e.cp('environment.lock.yml')
+
+        # generate source distribution
+        # TODO: delete egg-info
         e.rm('dist', 'build')
         e.run('python', '-m', 'build', '--sdist', description='Packaging code')
+        e.cp('dist')
 
-        e.copy_template('aws-batch/Dockerfile')
-
-        # TODO: remote second arg, and make it equal to the workspace
-        e.cp('dist', 'aws-batch')
-        e.cp('environment.lock.yml', 'aws-batch')
-
-        e.cd('aws-batch')
+        e.cd(name)
 
         local_name = f'{pkg_name}:{version}'
         # maybe repository should include the type of export?
         # ml-online-aws-batch. or maybe ask at the beginning and save it
         # to soopervisor.yaml if it doesn't exist
-        remote_name = f'{cfg.repository}/{pkg_name}:{version}'
-        # how to allows passing --no-cache?
+        # TODO: validate format of cfg.repository
+        remote_name = f'{cfg.repository}:{version}'
+
+        # how to allow passing --no-cache?
         e.run('docker',
               'build',
               '.',
@@ -111,18 +120,18 @@ def main(until=None):
 
         e.info('Submitting jobs to AWS Batch')
 
-        submit(dag=dag,
-               job_def=f'{pkg_name}-{version}'.replace('.', '_'),
-               remote_name=remote_name,
-               job_queue=cfg.job_queue,
-               container_properties=cfg.container_properties,
-               region_name=cfg.region_name)
+        submit_dag(dag=dag,
+                   job_def=f'{pkg_name}-{version}'.replace('.', '_'),
+                   remote_name=remote_name,
+                   job_queue=cfg.job_queue,
+                   container_properties=cfg.container_properties,
+                   region_name=cfg.region_name)
 
         e.success('Submitted to AWS Batch')
 
 
-def submit(dag, job_def, remote_name, job_queue, container_properties,
-           region_name):
+def submit_dag(dag, job_def, remote_name, job_queue, container_properties,
+               region_name):
     client = boto3.client('batch', region_name=region_name)
 
     container_properties['image'] = remote_name
@@ -145,11 +154,3 @@ def submit(dag, job_def, remote_name, job_queue, container_properties,
             containerOverrides={"command": ['ploomber', 'task', name]})
 
         job_ids[name] = response["jobId"]
-
-
-# https://github.com/spulec/moto/issues/1793
-# moto==1.3.7 breaks with docker
-# moto==1.3.14 ok. newer versions break
-# boto==2.49.0
-# boto3==1.17.62
-# botocore==1.20.62

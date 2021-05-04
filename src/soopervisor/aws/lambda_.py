@@ -23,11 +23,8 @@ def main(until=None):
         e.copy_template('aws-lambda/README.md')
         e.copy_template('aws-lambda/Dockerfile')
 
-        e.copy_template('aws-lambda/test_aws_lambda.py',
-                        requires_manual_edit=True)
-        e.copy_template('aws-lambda/app.py',
-                        requires_manual_edit=True,
-                        package_name=pkg_name)
+        e.copy_template('aws-lambda/test_aws_lambda.py')
+        e.copy_template('aws-lambda/app.py', package_name=pkg_name)
 
         e.copy_template('aws-lambda/template.yaml', package_name=pkg_name)
         # ensure user has pytest

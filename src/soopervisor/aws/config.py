@@ -4,6 +4,8 @@ from collections.abc import Mapping
 
 
 class YAMLConfig(BaseModel):
+    backend: str
+
     @classmethod
     def from_file_with_root_key(cls, path, root_key):
         with open(path) as f:

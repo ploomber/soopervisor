@@ -1,9 +1,18 @@
+"""
+https://github.com/spulec/moto/issues/1793
+moto==1.3.7 breaks with docker
+moto==1.3.14 ok. newer versions break
+boto==2.49.0
+boto3==1.17.62
+botocore==1.20.62
+"""
 import os
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 import json
 from pathlib import Path
 import subprocess
 
+import yaml
 import pytest
 import moto
 import boto3
@@ -111,7 +120,7 @@ def mock_batch(aws_credentials, iam_resource, batch_client, vpc):
         serviceRole=role.arn,
         state='ENABLED')
 
-    batch_client.create_job_queue(jobQueueName='some_job_queue',
+    batch_client.create_job_queue(jobQueueName='your-job-queue',
                                   priority=1,
                                   computeEnvironmentOrder=[
                                       {
@@ -137,7 +146,28 @@ class CommanderTester:
             return self._return_value[cmd]
 
 
-def test_submit_to_aws_batch(mock_batch, monkeypatch, backup_packaged_project):
+def test_add(backup_packaged_project):
+
+    batch.add(name='train')
+
+    with open('soopervisor.yaml') as f:
+        d = yaml.safe_load(f)
+
+    assert d['train'] == {
+        'backend': 'aws-batch',
+        'repository': 'your-repository-url/name',
+        'job_queue': 'your-job-queue',
+        'region_name': 'your-region-name',
+        'container_properties': {
+            'memory': 16384,
+            'vcpus': 8
+        }
+    }
+
+    assert Path('train', 'Dockerfile').exists()
+
+
+def test_submit(mock_batch, monkeypatch, backup_packaged_project):
     cmd = 'from ploomber.spec import DAGSpec; print("File" in DAGSpec.find().to_dag().clients)'
     tester = CommanderTester(
         run=[
@@ -157,37 +187,56 @@ def test_submit_to_aws_batch(mock_batch, monkeypatch, backup_packaged_project):
     monkeypatch.setattr(batch.boto3, 'client',
                         lambda name, region_name: boto3_mock)
 
-    batch.main()
+    batch.add(name='train')
 
-    jobs = mock_batch.list_jobs(jobQueue='some_job_queue')['jobSummaryList']
+    batch.submit(name='train')
+
+    jobs = mock_batch.list_jobs(jobQueue='your-job-queue')['jobSummaryList']
 
     jobs_info = mock_batch.describe_jobs(jobs=[job['jobId']
                                                for job in jobs])['jobs']
 
-    # moto currently ignores some of the parameters
-    boto3_mock.submit_job.call_args_list
+    assert {j['jobName']
+            for j in jobs_info
+            } == {'features', 'fit', 'get', 'petal-area', 'sepal-area'}
 
+    def process_call(call):
+        kw = call.kwargs
+        return {
+            kw['jobName']: {
+                'dependsOn': [dep['jobId'] for dep in kw['dependsOn']],
+                'containerOverrides': kw['containerOverrides']
+            }
+        }
 
-def test_package_project(monkeypatch, backup_packaged_project):
-    def run(cmd):
-        # from IPython import embed
-        # embed()
-        if cmd == ('docker', 'build', '.', '--tag', 'my_project:0.1dev'):
-            pass
-        elif cmd == ('docker', 'run', 'my_project:0.1dev', 'ploomber',
-                     'status'):
-            raise subprocess.CalledProcessError(2, 'cmd')
+    calls = [process_call(c) for c in boto3_mock.submit_job.call_args_list]
+    calls = {k: v for d in calls for k, v in d.items()}
+
+    def process_dict(d, index_by, include_keys):
+        if isinstance(include_keys, str):
+            return {d[index_by]: d[include_keys]}
         else:
-            return subprocess.check_call(cmd)
+            return {d[index_by]: {k: d[k] for k in include_keys}}
 
-    # commander = MagicMock()
-    # commander.__enter__.return_value = commander
-    # commander.run.side_effect = run
-    # Commander = Mock(return_value=commander)
-    # monkeypatch.setattr(batch, 'Commander', Commander)
+    def merge_dicts(dicts):
+        return {k: v for d in dicts for k, v in d.items()}
 
-    subprocess_mock = Mock()
-    subprocess_mock.check_call.side_effect = run
-    monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
+    id2name = merge_dicts(
+        process_dict(info, index_by='jobId', include_keys='jobName')
+        for info in jobs_info)
 
-    batch.main()
+    assert calls['get']['dependsOn'] == []
+    assert {id2name[dep]
+            for dep in calls['petal-area']['dependsOn']} == {'get'}
+    assert {id2name[dep]
+            for dep in calls['sepal-area']['dependsOn']} == {'get'}
+    assert {id2name[dep]
+            for dep in calls['features']['dependsOn']
+            } == {'get', 'sepal-area', 'petal-area'}
+    assert {id2name[dep] for dep in calls['fit']['dependsOn']} == {'features'}
+
+    names = ['features', 'fit', 'get', 'petal-area', 'sepal-area']
+    assert all([
+        calls[name]['containerOverrides']['command'] ==
+        ['ploomber', 'task', name]
+    ] for name in names)
