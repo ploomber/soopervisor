@@ -7,19 +7,11 @@ from ploomber.io._commander import Commander
 from soopervisor.aws.util import warn_if_not_installed
 
 
-def main(until=None):
-    print('Generating files to export to AWS Lambda...')
-    # TODO: validate project structure: src/*/model.*, etc...
+def add(name):
     pkg_name = default.find_package_name()
 
-    # TODO: build is required to run this, perhaps use python setup.py bdist?
-    # TODO: warn if deploying from a dirty commit, maybe ask for confirmation
-    # and show the version?
-    # TODO: support for OnlineDAG in app.py
-
-    with Commander(workspace='aws-lambda',
+    with Commander(workspace=name,
                    templates_path=('soopervisor', 'assets')) as e:
-        e.create_if_not_exists('tasks.py')
         e.copy_template('aws-lambda/README.md')
         e.copy_template('aws-lambda/Dockerfile')
 
@@ -27,16 +19,29 @@ def main(until=None):
         e.copy_template('aws-lambda/app.py', package_name=pkg_name)
 
         e.copy_template('aws-lambda/template.yaml', package_name=pkg_name)
-        # ensure user has pytest
-        e.run('pytest', 'aws-lambda', description='Testing')
+
+
+def main(name, until=None):
+    print('Generating files to export to AWS Lambda...')
+    # TODO: validate project structure: src/*/model.*, etc...
+
+    # TODO: build is required to run this, perhaps use python setup.py bdist?
+    # TODO: warn if deploying from a dirty commit, maybe ask for confirmation
+    # and show the version?
+    # TODO: support for OnlineDAG in app.py
+
+    with Commander(workspace=name,
+                   templates_path=('soopervisor', 'assets')) as e:
+        e.cp('requirements.lock.txt')
+
+        # TODO: ensure user has pytest
+        e.run('pytest', name, description='Testing')
 
         e.rm('dist', 'build')
         e.run('python', '-m', 'build', '--wheel', '.', description='Packaging')
+        e.cp('dist')
 
-        e.cp('dist', 'aws-lambda')
-        e.cp('requirements.lock.txt', 'aws-lambda')
-
-        e.cd('aws-lambda')
+        e.cd(name)
         e.run('sam', 'build', description='Building Docker image')
 
         if until == 'build':

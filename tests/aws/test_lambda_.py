@@ -2,8 +2,6 @@ import json
 from pathlib import Path
 import subprocess
 
-import pytest
-
 from soopervisor.aws import lambda_
 
 body = {
@@ -30,29 +28,26 @@ def replace_line(path, line, value):
     path.write_text('\n'.join(lines))
 
 
-@pytest.fixture
-def setup_my_project(tmp_packaged_project):
-    subprocess.run(['pip', 'install', '--editable', '.'], check=True)
+def test_add(backup_packaged_project):
+    lambda_.add(name='serve')
 
-    yield
+    assert Path('serve', 'Dockerfile').exists()
+    assert Path('serve', 'app.py').exists()
+    assert Path('serve', 'README.md').exists()
+    assert Path('serve', 'template.yaml').exists()
+    assert Path('serve', 'test_aws_lambda.py').exists()
 
-    subprocess.run(['pip', 'uninstall', 'my_project', '--yes'], check=True)
 
-
-def test_package_project(setup_my_project):
-
+def test_submit(backup_packaged_project):
     subprocess.run(['ploomber', 'build'], check=True)
     subprocess.run(
         ['cp', 'products/model.pickle', 'src/my_project/model.pickle'],
         check=True)
-
-    lambda_.main()
-
-    erase_lines('aws-lambda/app.py', from_=14, to=15)
-
-    erase_lines('aws-lambda/test_aws_lambda.py', from_=10, to=12)
-    replace_line('aws-lambda/test_aws_lambda.py',
+    lambda_.add(name='serve')
+    erase_lines('serve/app.py', from_=14, to=15)
+    erase_lines('serve/test_aws_lambda.py', from_=10, to=12)
+    replace_line('serve/test_aws_lambda.py',
                  line=15,
                  value=f'    body = {json.dumps(body)}')
 
-    subprocess.run(['invoke', 'aws-lambda-build'], check=True)
+    lambda_.main(name='serve')

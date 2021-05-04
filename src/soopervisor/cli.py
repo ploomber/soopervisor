@@ -121,7 +121,7 @@ def add(name, backend):
     if backend == 'aws-batch':
         batch.add(name=name)
     else:
-        lambda_.main(until=until)
+        lambda_.add(name=name)
 
 
 @cli.command()
