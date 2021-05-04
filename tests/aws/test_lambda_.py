@@ -39,6 +39,7 @@ def test_add(backup_packaged_project):
 
 
 def test_submit(backup_packaged_project):
+    Path('requirements.lock.txt').touch()
     subprocess.run(['ploomber', 'build'], check=True)
     subprocess.run(
         ['cp', 'products/model.pickle', 'src/my_project/model.pickle'],
