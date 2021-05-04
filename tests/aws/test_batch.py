@@ -1,11 +1,3 @@
-"""
-https://github.com/spulec/moto/issues/1793
-moto==1.3.7 breaks with docker
-moto==1.3.14 ok. newer versions break
-boto==2.49.0
-boto3==1.17.62
-botocore==1.20.62
-"""
 import os
 from unittest.mock import Mock
 import json
@@ -201,7 +193,13 @@ def test_submit(mock_batch, monkeypatch, backup_packaged_project):
             } == {'features', 'fit', 'get', 'petal-area', 'sepal-area'}
 
     def process_call(call):
-        kw = call.kwargs
+        try:
+            # py 3.6, 3.7
+            kw = call[1]
+        except KeyError:
+            # py >3.7
+            kw = call.kwargs
+
         return {
             kw['jobName']: {
                 'dependsOn': [dep['jobId'] for dep in kw['dependsOn']],

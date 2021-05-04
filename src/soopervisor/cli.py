@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 
 import yaml
@@ -121,7 +120,7 @@ def add(name, backend):
     if backend == 'aws-batch':
         batch.add(name=name)
     else:
-        lambda_.main(until=until)
+        lambda_.add(name=name)
 
 
 @cli.command()
@@ -143,6 +142,8 @@ def submit(name, until_build):
 
     if backend == 'aws-batch':
         batch.submit(name=name, until=until)
+    else:
+        lambda_.submit(name=name, until=until)
 
 
 if __name__ == '__main__':

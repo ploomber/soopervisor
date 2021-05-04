@@ -11,7 +11,8 @@ model = OnlineModel({{package_name}})
 def handler(event, context):
     body = json.loads(event['body'])
 
-    raise NotImplementedError('Missing implementation in aws-lambda/app.py. '
+    raise NotImplementedError('Missing implementation '
+                              'in {{package_name}}/app.py. '
                               'Add input parsing logic.')
 
     # NOTE: example implementation for a pipeline that expects a data frame

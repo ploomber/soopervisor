@@ -35,8 +35,9 @@ REQUIRES = [
 EXTRAS = [
     'docker',
     'boxsdk',
-    'boto3',
 ]
+
+AWS = ['boto3']
 
 DEV = [
     'pytest',
@@ -51,8 +52,9 @@ DEV = [
     # this making test_dist.py (error when calling
     # "python setup.py bdist_wheel")
     'wheel',
-    # for testing aws
-    'moto',
+    # for testing aws (newer versions break)
+    # see: https://github.com/spulec/moto/issues/1793
+    'moto==1.3.14',
     'ipython',
 ]
 
@@ -90,8 +92,11 @@ setup(
     ],
     install_requires=REQUIRES,
     extras_require={
-        'dev': EXTRAS + DEV,
-        'all': EXTRAS
+        # for users
+        'aws': AWS,
+        'all': EXTRAS,
+        # for development and testing
+        'dev': EXTRAS + DEV + AWS,
     },
     setup_requires=[],
     entry_points={

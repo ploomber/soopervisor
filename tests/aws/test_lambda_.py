@@ -1,10 +1,14 @@
 import json
 from pathlib import Path
 import subprocess
+from unittest.mock import Mock
 
-import pytest
+import yaml
+from click.testing import CliRunner
+from soopervisor import cli
 
 from soopervisor.aws import lambda_
+from ploomber.io import _commander
 
 body = {
     "sepal length (cm)": 5.1,
@@ -30,29 +34,53 @@ def replace_line(path, line, value):
     path.write_text('\n'.join(lines))
 
 
-@pytest.fixture
-def setup_my_project(tmp_packaged_project):
-    subprocess.run(['pip', 'install', '--editable', '.'], check=True)
+def test_add(backup_packaged_project):
+    lambda_.add(name='serve')
 
-    yield
+    with open('soopervisor.yaml') as f:
+        d = yaml.safe_load(f)
 
-    subprocess.run(['pip', 'uninstall', 'my_project', '--yes'], check=True)
+    assert d['serve'] == {'backend': 'aws-lambda'}
+
+    assert Path('serve', 'Dockerfile').exists()
+    assert Path('serve', 'app.py').exists()
+    assert Path('serve', 'README.md').exists()
+    assert Path('serve', 'template.yaml').exists()
+    assert Path('serve', 'test_aws_lambda.py').exists()
 
 
-def test_package_project(setup_my_project):
+class PassCall:
+    def __init__(self, *args):
+        self.args = args
+        self.called = False
 
+    def __call__(self, cmd):
+        if cmd == self.args:
+            self.called = True
+        else:
+            return subprocess.run(cmd, check=True)
+
+
+def test_submit(backup_packaged_project, monkeypatch):
+
+    # mock call to: sam deploy --guided
+    pass_call = PassCall('sam', 'deploy', '--guided')
+    monkeypatch.setattr(_commander.subprocess, 'check_call', pass_call)
+
+    Path('requirements.lock.txt').touch()
     subprocess.run(['ploomber', 'build'], check=True)
     subprocess.run(
         ['cp', 'products/model.pickle', 'src/my_project/model.pickle'],
         check=True)
-
-    lambda_.main()
-
-    erase_lines('aws-lambda/app.py', from_=14, to=15)
-
-    erase_lines('aws-lambda/test_aws_lambda.py', from_=10, to=12)
-    replace_line('aws-lambda/test_aws_lambda.py',
+    lambda_.add(name='serve')
+    erase_lines('serve/app.py', from_=14, to=16)
+    erase_lines('serve/test_aws_lambda.py', from_=10, to=12)
+    replace_line('serve/test_aws_lambda.py',
                  line=15,
                  value=f'    body = {json.dumps(body)}')
 
-    subprocess.run(['invoke', 'aws-lambda-build'], check=True)
+    runner = CliRunner()
+    result = runner.invoke(cli.submit, ['serve'], catch_exceptions=False)
+
+    assert pass_call.called
+    assert result.exit_code == 0
