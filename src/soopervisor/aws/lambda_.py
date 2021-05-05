@@ -1,6 +1,7 @@
 """
 Online DAG deployment using AWS Lambda
 """
+from pathlib import Path
 from ploomber.util import default
 from ploomber.io._commander import Commander
 
@@ -28,6 +29,9 @@ def add(name):
                   f'add the input parsing logic to {name}/app.py '
                   f'then submit to AWS Lambda with: soopervisor submit {name}')
 
+        for name in ['docker', 'aws', 'sam']:
+            warn_if_not_installed(name)
+
 
 def submit(name, until=None):
     # TODO: validate project structure: src/*/model.*, etc...
@@ -52,17 +56,19 @@ def submit(name, until=None):
         e.run('sam', 'build', description='Building Docker image')
 
         if until == 'build':
-            e.tw.write('Done. Run "docker images" to see your image.')
+            e.tw.write('Done.\nRun "docker images" to see your image.'
+                       '\nRun "sam local start-api" to test your API locally')
             return
 
-        # TODO: guided only when the config  does not exist
-        e.run('sam', 'deploy', '--guided', description='Deploying')
+        args = ['sam', 'deploy']
+
+        if Path('samconfig.toml').exists():
+            e.warn('samconfig.toml already exists. Skipping '
+                   'guided deployment...')
+            args.append('--guided')
+        else:
+            e.info('Starting guided deployment...')
+
+        e.run(*args, description='Deploying')
 
         e.tw.sep('=', 'Deployed to AWS Lambda', green=True)
-
-    print('Done. Files generated at aws-lambda/. '
-          'See aws-lambda/README.md for details')
-    print('Added build command: invoke aws-lambda-build')
-
-    for name in ['docker', 'aws', 'sam']:
-        warn_if_not_installed(name)

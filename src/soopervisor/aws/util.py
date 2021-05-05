@@ -1,6 +1,4 @@
-import ast
 import shutil
-from pathlib import Path
 
 
 def warn_if_not_installed(name):
