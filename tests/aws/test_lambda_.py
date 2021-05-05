@@ -2,6 +2,10 @@ import json
 from pathlib import Path
 import subprocess
 
+import yaml
+from click.testing import CliRunner
+from soopervisor import cli
+
 from soopervisor.aws import lambda_
 
 body = {
@@ -31,6 +35,11 @@ def replace_line(path, line, value):
 def test_add(backup_packaged_project):
     lambda_.add(name='serve')
 
+    with open('soopervisor.yaml') as f:
+        d = yaml.safe_load(f)
+
+    assert d['serve'] == {'backend': 'aws-lambda'}
+
     assert Path('serve', 'Dockerfile').exists()
     assert Path('serve', 'app.py').exists()
     assert Path('serve', 'README.md').exists()
@@ -39,6 +48,7 @@ def test_add(backup_packaged_project):
 
 
 def test_submit(backup_packaged_project):
+
     Path('requirements.lock.txt').touch()
     subprocess.run(['ploomber', 'build'], check=True)
     subprocess.run(
@@ -51,4 +61,7 @@ def test_submit(backup_packaged_project):
                  line=15,
                  value=f'    body = {json.dumps(body)}')
 
-    lambda_.main(name='serve')
+    runner = CliRunner()
+    result = runner.invoke(cli.submit, ['serve'], catch_exceptions=False)
+
+    assert result.exit_code == 0

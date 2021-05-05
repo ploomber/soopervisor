@@ -15,14 +15,21 @@ def add(name):
         e.copy_template('aws-lambda/README.md')
         e.copy_template('aws-lambda/Dockerfile')
 
-        e.copy_template('aws-lambda/test_aws_lambda.py')
+        e.copy_template('aws-lambda/test_aws_lambda.py', package_name=pkg_name)
         e.copy_template('aws-lambda/app.py', package_name=pkg_name)
 
         e.copy_template('aws-lambda/template.yaml', package_name=pkg_name)
 
+        e.append('aws-lambda/soopervisor.yaml',
+                 'soopervisor.yaml',
+                 env_name=name)
+        e.success('Done. Fill the input example in '
+                  f'{name}/test_aws_lambda.py and '
+                  f'add the input parsing logic to {name}/app.py '
+                  f'then submit to AWS Lambda with: soopervisor submit {name}')
 
-def main(name, until=None):
-    print('Generating files to export to AWS Lambda...')
+
+def submit(name, until=None):
     # TODO: validate project structure: src/*/model.*, etc...
 
     # TODO: build is required to run this, perhaps use python setup.py bdist?

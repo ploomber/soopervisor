@@ -143,6 +143,8 @@ def submit(name, until_build):
 
     if backend == 'aws-batch':
         batch.submit(name=name, until=until)
+    else:
+        lambda_.submit(name=name, until=until)
 
 
 if __name__ == '__main__':

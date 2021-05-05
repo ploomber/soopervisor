@@ -7,9 +7,9 @@ import app
 
 @pytest.fixture
 def apigw_event():
-    raise NotImplementedError(
-        "Missing implementation in aws-lambda/test_aws_lambda.py. "
-        "Assign an example input to the body variable.")
+    raise NotImplementedError("Missing implementation in "
+                              "{{package_name}}/test_aws_lambda.py. "
+                              "Assign an example input to the body variable.")
 
     # assign a valid sample input here
     body = None
