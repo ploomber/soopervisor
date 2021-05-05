@@ -40,6 +40,7 @@ def submit(name, until=None):
     # TODO: warn if deploying from a dirty commit, maybe ask for confirmation
     # and show the version?
     # TODO: support for OnlineDAG in app.py
+    # TODO: check if OnlineModel can be initialized from the package
 
     with Commander(workspace=name,
                    templates_path=('soopervisor', 'assets')) as e:
@@ -53,6 +54,9 @@ def submit(name, until=None):
         e.cp('dist')
 
         e.cd(name)
+
+        # TODO: template.yaml with version number
+
         e.run('sam', 'build', description='Building Docker image')
 
         if until == 'build':
@@ -71,4 +75,4 @@ def submit(name, until=None):
 
         e.run(*args, description='Deploying')
 
-        e.tw.sep('=', 'Deployed to AWS Lambda', green=True)
+        e.success('Deployed to AWS Lambda')

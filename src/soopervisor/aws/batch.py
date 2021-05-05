@@ -2,7 +2,6 @@
 Running pipelines on AWS Batch
 """
 import importlib
-from pathlib import Path
 import boto3
 
 from ploomber.util import default
@@ -25,6 +24,13 @@ from soopervisor.aws.config import AWSBatchConfig
 # how to help users when they've added depedencies via pip/conda but they
 # did not add them to setup.py? perhaps export env and look for differences?
 
+# document that only EC2 environments are supported
+
+# TODO: warn if configured client does not have an ID. this means
+# artifacts can overwrite if the dag is run more than once at the same time
+
+# add a way to skip tests when submitting
+
 
 def add(name):
     with Commander(workspace=name,
@@ -33,9 +39,12 @@ def add(name):
         e.append('aws-batch/soopervisor.yaml',
                  'soopervisor.yaml',
                  env_name=name)
-        e.success(f'Done. Fill in the configuration in the {name!r} '
-                  'section in soopervisor.yaml then submit to AWS Batch with: '
-                  f'soopervisor submit {name}')
+        e.success('Done')
+        e.print(f'Fill in the configuration in the {name!r} '
+                'section in soopervisor.yaml then submit to AWS Batch with: '
+                f'soopervisor submit {name}')
+
+        # TODO: run dag checks: client configured, ploomber status
 
 
 def submit(name, until=None):
@@ -67,9 +76,7 @@ def submit(name, until=None):
         e.cd(name)
 
         local_name = f'{pkg_name}:{version}'
-        # maybe repository should include the type of export?
-        # ml-online-aws-batch. or maybe ask at the beginning and save it
-        # to soopervisor.yaml if it doesn't exist
+
         # TODO: validate format of cfg.repository
         remote_name = f'{cfg.repository}:{version}'
 
@@ -121,27 +128,30 @@ def submit(name, until=None):
         e.info('Submitting jobs to AWS Batch')
 
         submit_dag(dag=dag,
-                   job_def=f'{pkg_name}-{version}'.replace('.', '_'),
+                   job_def=pkg_name,
                    remote_name=remote_name,
                    job_queue=cfg.job_queue,
                    container_properties=cfg.container_properties,
-                   region_name=cfg.region_name)
+                   region_name=cfg.region_name,
+                   cmdr=e)
 
-        e.success('Submitted to AWS Batch')
+        e.success('Done. Submitted to AWS Batch')
 
 
 def submit_dag(dag, job_def, remote_name, job_queue, container_properties,
-               region_name):
+               region_name, cmdr):
     client = boto3.client('batch', region_name=region_name)
-
     container_properties['image'] = remote_name
 
+    cmdr.info(f'Registering {job_def!r} job definition...')
     jd = client.register_job_definition(
         jobDefinitionName=job_def,
         type='container',
         containerProperties=container_properties)
 
     job_ids = dict()
+
+    cmdr.info('Submitting jobs...')
 
     for name, task in dag.items():
         response = client.submit_job(
