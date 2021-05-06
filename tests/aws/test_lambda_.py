@@ -55,7 +55,7 @@ def test_submit(backup_packaged_project):
         ['cp', 'products/model.pickle', 'src/my_project/model.pickle'],
         check=True)
     lambda_.add(name='serve')
-    erase_lines('serve/app.py', from_=14, to=15)
+    erase_lines('serve/app.py', from_=14, to=16)
     erase_lines('serve/test_aws_lambda.py', from_=10, to=12)
     replace_line('serve/test_aws_lambda.py',
                  line=15,

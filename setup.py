@@ -52,8 +52,9 @@ DEV = [
     # this making test_dist.py (error when calling
     # "python setup.py bdist_wheel")
     'wheel',
-    # for testing aws
-    'moto',
+    # for testing aws (newer versions break)
+    # see: https://github.com/spulec/moto/issues/1793
+    'moto==1.3.14',
     'ipython',
 ]
 

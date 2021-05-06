@@ -1,7 +1,4 @@
 """
-https://github.com/spulec/moto/issues/1793
-moto==1.3.7 breaks with docker
-moto==1.3.14 ok. newer versions break
 boto==2.49.0
 boto3==1.17.62
 botocore==1.20.62
