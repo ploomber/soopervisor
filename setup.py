@@ -91,9 +91,11 @@ setup(
     ],
     install_requires=REQUIRES,
     extras_require={
-        'dev': EXTRAS + DEV,
-        'all': EXTRAS,
+        # for users
         'aws': AWS,
+        'all': EXTRAS,
+        # for development and testing
+        'dev': EXTRAS + DEV + AWS,
     },
     setup_requires=[],
     entry_points={
