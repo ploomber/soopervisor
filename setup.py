@@ -35,8 +35,9 @@ REQUIRES = [
 EXTRAS = [
     'docker',
     'boxsdk',
-    'boto3',
 ]
+
+AWS = ['boto3']
 
 DEV = [
     'pytest',
@@ -91,7 +92,8 @@ setup(
     install_requires=REQUIRES,
     extras_require={
         'dev': EXTRAS + DEV,
-        'all': EXTRAS
+        'all': EXTRAS,
+        'aws': AWS,
     },
     setup_requires=[],
     entry_points={
