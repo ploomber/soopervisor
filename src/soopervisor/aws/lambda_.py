@@ -24,10 +24,11 @@ def add(name):
         e.append('aws-lambda/soopervisor.yaml',
                  'soopervisor.yaml',
                  env_name=name)
-        e.success('Done. Fill the input example in '
-                  f'{name}/test_aws_lambda.py and '
-                  f'add the input parsing logic to {name}/app.py '
-                  f'then submit to AWS Lambda with: soopervisor submit {name}')
+        e.success('Done.')
+        e.print('Next steps:\n1. Add an input example to '
+                f'{name}/test_aws_lambda.py\n'
+                f'2. Add the input parsing logic to {name}/app.py\n'
+                f'3. Submit to AWS Lambda with: soopervisor submit {name}')
 
         for name in ['docker', 'aws', 'sam']:
             warn_if_not_installed(name)
@@ -69,8 +70,8 @@ def submit(name, until=None):
         if Path('samconfig.toml').exists():
             e.warn('samconfig.toml already exists. Skipping '
                    'guided deployment...')
-            args.append('--guided')
         else:
+            args.append('--guided')
             e.info('Starting guided deployment...')
 
         e.run(*args, description='Deploying')
