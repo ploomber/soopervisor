@@ -24,8 +24,6 @@ jobs:
         pip install flake8 invoke
         pip install -e tests/assets/my_project
         pip install ".[dev]"
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
