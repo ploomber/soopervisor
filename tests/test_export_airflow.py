@@ -56,15 +56,16 @@ def test_export_airflow_custom_args(monkeypatch, tmp_sample_project,
                                     no_sys_modules_cache):
     Path('soopervisor.yaml').write_text('args: --some-arg')
 
+    # export project
     export.project(project_root='.', output_path='exported')
+
+    # load exported dag
     monkeypatch.syspath_prepend('exported/dags')
     airflow_home = Path(tmp_sample_project, 'exported').resolve()
     monkeypatch.setenv('AIRFLOW_HOME', airflow_home)
     mod = importlib.import_module('sample_project')
     dag = mod.dag
 
-    print(dag.task_dict['raw'].bash_command)
-    raise ValueError(dag.task_dict['raw'].bash_command)
     assert 'ploomber task raw --some-arg' in dag.task_dict['raw'].bash_command
     assert 'ploomber task clean --some-arg' in dag.task_dict[
         'clean'].bash_command
