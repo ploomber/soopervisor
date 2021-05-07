@@ -194,9 +194,10 @@ def test_submit(mock_batch, monkeypatch, backup_packaged_project):
 
     def process_call(call):
         try:
-            # py 3.6
+            # py 3.6, 3.7
             kw = call[1]
         except KeyError:
+            # py >3.7
             kw = call.kwargs
 
         return {
