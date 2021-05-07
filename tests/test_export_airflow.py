@@ -61,7 +61,7 @@ def test_export_airflow_custom_args(monkeypatch, tmp_sample_project,
 
     # load exported dag
     monkeypatch.syspath_prepend('exported/dags')
-    airflow_home = Path(tmp_sample_project, 'exported').resolve()
+    airflow_home = str(Path(tmp_sample_project, 'exported').resolve())
     monkeypatch.setenv('AIRFLOW_HOME', airflow_home)
     mod = importlib.import_module('sample_project')
     dag = mod.dag
