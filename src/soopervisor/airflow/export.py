@@ -12,7 +12,7 @@ from soopervisor.airflow.config import AirflowConfig
 from soopervisor.base.config import ScriptConfig
 
 
-def project(project_root, output_path=None):
+def project(name, project_root, output_path=None):
     """Export Ploomber project to Airflow
 
     Calling this function generates an Airflow DAG definition at
@@ -37,7 +37,9 @@ def project(project_root, output_path=None):
     project_root = Path(project_root).resolve()
 
     # validate the project passses soopervisor checks
-    AirflowConfig.from_project(project_root)
+    AirflowConfig.from_file_with_root_key(Path(project_root,
+                                               'soopervisor.yaml'),
+                                          root_key=name)
 
     # use airflow-home to know where to save the Airflow dag definition
     if output_path is None:
@@ -56,7 +58,8 @@ def project(project_root, output_path=None):
     project_root_airflow.mkdir(exist_ok=True, parents=True)
 
     out = template.render(project_root=project_root_airflow,
-                          project_name=project_name)
+                          project_name=project_name,
+                          env_name=name)
 
     if project_root_airflow.exists():
         print(f'Removing existing project at {project_root_airflow}')
@@ -106,7 +109,7 @@ def project(project_root, output_path=None):
     print('Saved Airflow DAG definition to: ', path_out)
 
 
-def spec_to_airflow(project_root, dag_name, airflow_default_args):
+def spec_to_airflow(project_root, dag_name, env_name, airflow_default_args):
     """Initialize a Soopervisor project DAG and convert it to Airflow
 
     Notes
@@ -114,7 +117,10 @@ def spec_to_airflow(project_root, dag_name, airflow_default_args):
     This function is called by the DAG definition parsed by Airflow in
     {AIRFLOW_HOME}/dags
     """
-    script_cfg = ScriptConfig.from_project(project_root)
+    script_cfg = ScriptConfig.from_file_with_root_key(
+        Path(project_root, 'soopervisor.yaml'),
+        root_key=env_name,
+    )
 
     # NOTE: we use lazy_import=True here because this runs in the
     # airflow host and we should never expect that environment to have

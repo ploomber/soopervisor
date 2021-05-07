@@ -23,8 +23,7 @@ def setup(c, version='3.8'):
 def test_no_docker(c):
     """Run all tests except the ones that use Docker
     """
-    c.run('pytest tests --ignore tests/test_docker_executor.py --verbose',
-          pty=True)
+    c.run('pytest tests --ignore tests/test_docker_executor.py', pty=True)
 
 
 @task

@@ -128,14 +128,27 @@ def git_hash(monkeypatch):
     monkeypatch.setattr(GitRepo, "get_git_hash", lambda *args: 'GIT-HASH')
 
 
-@pytest.fixture
-def tmp_projects(tmpdir_factory):
+@pytest.fixture(scope='session')
+def download_projects(tmpdir_factory):
     old = os.getcwd()
     tmp_path = tmpdir_factory.mktemp('projects')
-    os.chdir(str(tmp_path))
-    subprocess.run(['git', 'clone', 'https://github.com/ploomber/projects'],
+    subprocess.run([
+        'git',
+        'clone',
+        'https://github.com/ploomber/projects',
+        str(tmp_path),
+    ],
                    check=True)
     yield str(Path(tmp_path).resolve())
+
+
+@pytest.fixture
+def tmp_projects(download_projects, tmp_path):
+    old = os.getcwd()
+    target = tmp_path / 'projects'
+    shutil.copytree(download_projects, target)
+    os.chdir(str(target))
+    yield str(Path(target).resolve())
     os.chdir(old)
 
 
