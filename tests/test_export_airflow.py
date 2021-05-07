@@ -63,6 +63,8 @@ def test_export_airflow_custom_args(monkeypatch, tmp_sample_project,
     mod = importlib.import_module('sample_project')
     dag = mod.dag
 
+    print(dag.task_dict['raw'].bash_command)
+    raise ValueError(dag.task_dict['raw'].bash_command)
     assert 'ploomber task raw --some-arg' in dag.task_dict['raw'].bash_command
     assert 'ploomber task clean --some-arg' in dag.task_dict[
         'clean'].bash_command
