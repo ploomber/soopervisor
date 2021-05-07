@@ -1,12 +1,14 @@
 import json
 from pathlib import Path
 import subprocess
+from unittest.mock import Mock
 
 import yaml
 from click.testing import CliRunner
 from soopervisor import cli
 
 from soopervisor.aws import lambda_
+from ploomber.io import _commander
 
 body = {
     "sepal length (cm)": 5.1,
@@ -47,7 +49,23 @@ def test_add(backup_packaged_project):
     assert Path('serve', 'test_aws_lambda.py').exists()
 
 
-def test_submit(backup_packaged_project):
+class PassCall:
+    def __init__(self, *args):
+        self.args = args
+        self.called = False
+
+    def __call__(self, cmd):
+        if cmd == self.args:
+            self.called = True
+        else:
+            return subprocess.run(cmd, check=True)
+
+
+def test_submit(backup_packaged_project, monkeypatch):
+
+    # mock call to: sam deploy --guided
+    pass_call = PassCall('sam', 'deploy', '--guided')
+    monkeypatch.setattr(_commander.subprocess, 'check_call', pass_call)
 
     Path('requirements.lock.txt').touch()
     subprocess.run(['ploomber', 'build'], check=True)
@@ -64,4 +82,5 @@ def test_submit(backup_packaged_project):
     runner = CliRunner()
     result = runner.invoke(cli.submit, ['serve'], catch_exceptions=False)
 
+    assert pass_call.called
     assert result.exit_code == 0
