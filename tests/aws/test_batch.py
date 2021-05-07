@@ -192,7 +192,13 @@ def test_submit(mock_batch, monkeypatch, backup_packaged_project):
             for j in jobs_info
             } == {'features', 'fit', 'get', 'petal-area', 'sepal-area'}
 
-    def process_call(kw):
+    def process_call(call):
+        try:
+            # py 3.6
+            kw = call[1]
+        except KeyError:
+            kw = call.kwargs
+
         return {
             kw['jobName']: {
                 'dependsOn': [dep['jobId'] for dep in kw['dependsOn']],
@@ -200,9 +206,7 @@ def test_submit(mock_batch, monkeypatch, backup_packaged_project):
             }
         }
 
-    calls = [
-        process_call(c.kwargs) for c in boto3_mock.submit_job.call_args_list
-    ]
+    calls = [process_call(c) for c in boto3_mock.submit_job.call_args_list]
     calls = {k: v for d in calls for k, v in d.items()}
 
     def process_dict(d, index_by, include_keys):
