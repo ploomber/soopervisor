@@ -15,6 +15,8 @@ class EnumContains(EnumMeta):
 class Backend(Enum, metaclass=EnumContains):
     aws_batch = 'aws-batch'
     aws_lambda = 'aws-lambda'
+    argo_workflows = 'argo-workflows'
+    airflow = 'airflow'
 
     @classmethod
     def __contains__(cls, item):

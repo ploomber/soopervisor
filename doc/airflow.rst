@@ -95,9 +95,9 @@ uploading to Google Cloud Storage,
 `click here <https://github.com/ploomber/projects/blob/master/ml-basic/pipeline.yaml>`_ to see an example.
 
 If all tasks execute in the same machine, this is optional. If you're using
-a distributed executor (e.g. celery), storing your pipeline alrtifacts
+a distributed executor (e.g., celery), storing your pipeline artifacts
 guarantees that downstream tasks have access to their inputs (which are the
-outputs from upstrem tasks).
+outputs from upstream tasks).
 
 
 Optional: Parametrizing your pipeline

@@ -1,3 +1,4 @@
+import os
 import subprocess
 from pathlib import Path
 import importlib
@@ -12,24 +13,29 @@ from soopervisor.base.config import ScriptConfig
 
 @pytest.mark.parametrize(
     'name',
-    ['ml-intermediate', 'etl', 'ml-online'],
+    [
+        'ml-intermediate',
+        'etl',
+        'ml-online',
+    ],
 )
 def test_generate_valid_airflow_dags(name, tmp_projects):
     if name == 'ml-online':
         subprocess.run(['pip', 'uninstall', 'ml-online', '--yes'], check=True)
-        subprocess.run(['pip', 'install', 'projects/ml-online'], check=True)
+        subprocess.run(['pip', 'install', 'ml-online/'], check=True)
+
+    os.chdir(name)
 
     subprocess.run([
         'soopervisor',
-        'export-airflow',
-        '--root',
-        f'projects/{name}',
-        '--output',
-        '.',
+        'add',
+        'serve',
+        '--backend',
+        'airflow',
     ],
                    check=True)
 
-    subprocess.run(['python', f'dags/{name}.py'], check=True)
+    subprocess.run(['python', f'serve/dags/{name}.py'], check=True)
 
 
 def test_export_airflow_sample_project(monkeypatch, tmp_sample_project,

@@ -10,6 +10,7 @@ from soopervisor.airflow import export as export_airflow_module
 from soopervisor.argo import export as export_argo
 from soopervisor.aws import lambda_, batch
 from soopervisor import config
+from soopervisor.enum import Backend
 
 
 @click.group()
@@ -71,35 +72,16 @@ def export(upload, root):
 
 
 @cli.command()
-@click.option('--output',
-              '-o',
-              type=str,
-              help='Output path, if empty looks for env var AIRFLOW_HOME, '
-              'if undefined, uses ~/airflow',
-              default=None)
-@click.option(
-    '--root',
-    '-r',
-    type=str,
-    help="Project's root path, defaults to current working directory",
-    default='.')
-def export_airflow(output, root):
-    """
-    Export to Apache Airflow
-    """
-    click.echo('Exporting to Airflow...')
-    export_airflow_module.project(project_root=root, output_path=output)
-
-
-@cli.command()
 @click.argument('name')
 @click.option('--backend',
               '-b',
-              type=click.Choice(['aws-lambda', 'aws-batch']),
+              type=click.Choice(Backend.__members__),
               required=True)
 def add(name, backend):
     """Add an environment
     """
+    backend = Backend(backend)
+
     if Path('soopervisor.yaml').exists():
         cfg = yaml.load(Path('soopervisor.yaml').read_text())
 
@@ -108,19 +90,25 @@ def add(name, backend):
                                        'soopervisor.yaml configuration file '
                                        'already exists. Choose another name.')
 
-    if not Path('setup.py').exists():
+    if not Path('setup.py').exists() and backend in {
+            Backend.aws_batch, Backend.aws_lambda
+    }:
         raise click.ClickException('Only packages with a setup.py file are '
-                                   'supported. Tip: run "ploomber scaffold" '
+                                   f'supported when using {backend!r}. '
+                                   'Suggestion: run "ploomber scaffold" '
                                    'to create a base project')
 
     if Path(name).exists():
         raise click.ClickException(f'{name!r} already exists. '
                                    'Select a different name.')
 
-    if backend == 'aws-batch':
+    if backend == Backend.aws_batch:
         batch.add(name=name)
-    else:
+    elif backend == Backend.aws_lambda:
         lambda_.add(name=name)
+    elif backend == Backend.airflow:
+        click.echo('Exporting to Airflow...')
+        export_airflow_module.project(project_root='.', output_path=name)
 
 
 @cli.command()
@@ -138,12 +126,17 @@ def submit(name, until_build):
     if until_build:
         until = 'build'
 
-    backend = config.get_backend(name)
+    backend = Backend(config.get_backend(name))
 
-    if backend == 'aws-batch':
+    if backend == Backend.aws_batch:
         batch.submit(name=name, until=until)
-    else:
+    elif backend == Backend.aws_lambda:
         lambda_.submit(name=name, until=until)
+    elif backend == Backend.airflow:
+        raise click.ClickException(
+            f'Submitting environments with {backend} backend is not '
+            'supported, you must copy the exported environment to AIRFLOW_HOME'
+        )
 
 
 if __name__ == '__main__':
