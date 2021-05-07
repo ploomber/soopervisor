@@ -26,3 +26,7 @@ class Backend(Enum, metaclass=EnumContains):
             return False
         else:
             return True
+
+    @classmethod
+    def get_values(cls):
+        return [v.value for v in cls.__members__.values()]

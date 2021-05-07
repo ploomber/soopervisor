@@ -1,3 +1,4 @@
+import os
 import subprocess
 from pathlib import Path
 from copy import copy
@@ -6,9 +7,11 @@ import yaml
 import pytest
 from argo.workflows.dsl import Workflow
 from ploomber.spec import DAGSpec
+from click.testing import CliRunner
 
 from soopervisor.argo.config import ArgoConfig
 from soopervisor.argo import export
+from soopervisor import cli
 
 
 def test_argo_spec(tmp_sample_project):
@@ -88,21 +91,27 @@ def test_argo_output_yaml(tmp_sample_project, config):
 
 @pytest.mark.parametrize(
     'name',
-    ['ml-intermediate', 'etl', 'ml-online'],
+    [
+        'ml-intermediate',
+        'etl',
+        'ml-online',
+    ],
 )
 def test_generate_valid_argo_specs(name, tmp_projects):
     if name == 'ml-online':
         subprocess.run(['pip', 'uninstall', 'ml-online', '--yes'], check=True)
-        subprocess.run(['pip', 'install', 'projects/ml-online'], check=True)
+        subprocess.run(['pip', 'install', 'ml-online/'], check=True)
 
-    subprocess.run([
-        'soopervisor',
-        'export',
-        '--root',
-        f'projects/{name}',
-    ],
-                   check=True)
+    os.chdir(name)
 
+    runner = CliRunner()
+    result = runner.invoke(
+        cli.add,
+        ['serve', '--backend', 'argo-workflows'],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
     # validate argo workflow
-    content = Path('projects', name, 'argo.yaml').read_text()
+    content = Path('argo.yaml').read_text()
     assert Workflow.from_dict(yaml.safe_load(content))

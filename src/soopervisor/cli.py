@@ -45,37 +45,10 @@ def build(clean_products_path, dry_run, load_dag):
 
 
 @cli.command()
-@click.option('--upload',
-              '-u',
-              is_flag=True,
-              help='Upload code, assumes "kubectl" is properly configured')
-@click.option(
-    '--root',
-    '-r',
-    type=str,
-    help="Project's root path, defaults to current working directory",
-    default='.')
-def export(upload, root):
-    """
-    Export to Argo (Kubernetes)
-    """
-    config = ArgoConfig.from_project(project_root=root)
-
-    if upload:
-        export_argo.upload_code(config)
-
-    click.echo('Generating argo spec from project...')
-    export_argo.project(config)
-    click.echo('Done. Saved argo spec to "argo.yaml"')
-
-    click.echo('Submit your workflow with: argo submit -n argo argo.yaml')
-
-
-@cli.command()
 @click.argument('name')
 @click.option('--backend',
               '-b',
-              type=click.Choice(Backend.__members__),
+              type=click.Choice(Backend.get_values()),
               required=True)
 def add(name, backend):
     """Add an environment
@@ -104,8 +77,21 @@ def add(name, backend):
 
     if backend == Backend.aws_batch:
         batch.add(name=name)
+
     elif backend == Backend.aws_lambda:
         lambda_.add(name=name)
+
+    elif backend == Backend.argo_workflows:
+        config = ArgoConfig.from_project(project_root='.')
+
+        # TODO: re-enable support for upload
+        # export_argo.upload_code(config)
+
+        click.echo('Generating argo spec from project...')
+        export_argo.project(config)
+        click.echo('Done. Saved argo spec to "argo.yaml"')
+        click.echo('Submit your workflow with: argo submit -n argo argo.yaml')
+
     elif backend == Backend.airflow:
         click.echo('Exporting to Airflow...')
         export_airflow_module.project(project_root='.', output_path=name)
@@ -137,6 +123,10 @@ def submit(name, until_build):
             f'Submitting environments with {backend} backend is not '
             'supported, you must copy the exported environment to AIRFLOW_HOME'
         )
+    elif backend == Backend.argo_workflows:
+        raise click.ClickException(
+            f'Submitting environments with {backend} backend is not '
+            'supported, submit your workflow using the "argo submit" command')
 
 
 if __name__ == '__main__':
