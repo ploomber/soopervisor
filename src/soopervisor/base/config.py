@@ -18,6 +18,7 @@ from soopervisor.base import validate as validate_base
 from soopervisor.base.abstract import AbstractBaseModel, AbstractConfig
 
 
+# TODO: delete, sotrage logic moved to ploomber
 class StorageConfig(AbstractBaseModel):
     """Store pipeline products after execution
 

@@ -46,20 +46,4 @@ echo 'Executing pipeline...'
 ploomber build{{ ' '+config.args if config.args else ''}}
 {% endif -%}
 
-{% if config.storage.provider %}
-# ploomber ci should also be installed in the project's env
-python -c "import soopervisor" || soopervisor_INSTALLED=$?
-if [[ $soopervisor_INSTALLED -ne 0 ]];
-then
-    echo "soopervisor is not installed, consider adding it to your environment.yml file. Installing..."
-    # TODO: install soopervisor at the beginning and check that if storage
-    # is configured, the env variables (depending on the service) are defined,
-    # before even running the pipeline
-    pip install soopervisor
-fi
-
-# upload products
-python -m soopervisor.upload {{config.paths.products}} {{config.storage.path}}
-{% endif -%}
-
 echo 'Done!'
