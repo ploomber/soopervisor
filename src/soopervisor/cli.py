@@ -94,7 +94,9 @@ def add(name, backend):
 
     elif backend == Backend.airflow:
         click.echo('Exporting to Airflow...')
-        export_airflow_module.project(project_root='.', output_path=name)
+        export_airflow_module.project(name=name,
+                                      project_root='.',
+                                      output_path=name)
 
 
 @cli.command()

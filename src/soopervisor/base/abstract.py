@@ -53,7 +53,7 @@ class AbstractConfig(AbstractBaseModel):
     an example
     """
     @abc.abstractclassmethod
-    def from_project(cls, project_root):
+    def from_file_with_root_key(cls):
         """
         Public API to interface with other modules, it loads the YAML file
         from soopervisor.yaml, renders the model and validates the project

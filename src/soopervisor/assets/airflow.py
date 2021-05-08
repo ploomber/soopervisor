@@ -14,4 +14,5 @@ project_root = str(
 
 dag = spec_to_airflow(project_root=project_root,
                       dag_name='{{project_name}}',
+                      env_name='{{env_name}}',
                       airflow_default_args=default_args)

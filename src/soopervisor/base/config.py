@@ -222,31 +222,32 @@ class ScriptConfig(AbstractConfig):
 
     @classmethod
     # FIXME: remove parameters we are no longer using
-    def from_project(cls,
-                     project_root,
-                     validate=True,
-                     return_dag=False,
-                     load_dag=True):
+    def from_file_with_root_key(cls,
+                                path,
+                                root_key,
+                                validate=True,
+                                return_dag=False,
+                                load_dag=True):
         """
         Initializes a ScriptConfig from a project. Looks for a
-        project/soopervisor.yaml file, if it doesn't exist, it just
-        initializes with default values, except by paths.project, which is set
-        to ``project``
-
-        Parameters
-        ----------
-        project_root : str or pathlib.Path
-            The project's location
+        soopervisor.yaml file, if it doesn't exist, it just
+        initializes with default values
         """
-        path = Path(project_root, 'soopervisor.yaml')
+        path = Path(path)
+        project_root = Path('.').resolve()
 
         if path.exists():
             with open(str(path)) as f:
                 d = yaml.safe_load(f)
 
-            # allow initialization with empty file
-            if d is None:
+            # make this logic common across backends
+            if root_key not in d:
+                # TODO: create content based on some defaults
+                original = Path(path).read_text()
+                Path(path).write_text(original + '\n' + f'{root_key}: null\n')
                 d = dict()
+            else:
+                d = d[root_key] or dict()
 
             # TODO: validate d is a dictionary, if empty, yaml.safe_load
             # returns None, and it can also returns lists
