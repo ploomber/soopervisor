@@ -24,7 +24,7 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
     CONFIG_CLASS = ArgoConfig
 
     @staticmethod
-    def validate(cfg, dag, env_name):
+    def _validate(cfg, dag, env_name):
         pass
 
     @staticmethod

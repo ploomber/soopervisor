@@ -128,7 +128,6 @@ class ScriptConfig(AbstractConfig):
     def from_file_with_root_key(cls,
                                 path_to_config,
                                 env_name,
-                                validate=True,
                                 return_dag=False,
                                 load_dag=True):
         """
@@ -176,6 +175,7 @@ class ScriptConfig(AbstractConfig):
             config = cls(paths=dict(project=str(project_root)))
 
         # NOTE: move this to the abstract class to unify validation
+        validate = True
         if validate:
             dag = validate_base.project(config, load_dag=load_dag)
         else:

@@ -59,8 +59,7 @@ def test_initialize_from_custom_path(config, tmp_sample_project_in_subdir):
              'soopervisor.yaml').write_text(yaml.dump({'some_env': config}))
 
     config = ScriptConfig.from_file_with_root_key('subdir/soopervisor.yaml',
-                                                  env_name='some_env',
-                                                  validate=False)
+                                                  env_name='some_env')
     assert config.paths.project == str(Path('subdir').resolve())
 
 
@@ -71,8 +70,7 @@ def test_error_if_custom_path_and_absolute_path_in_config(
 
     with pytest.raises(ValueError) as excinfo:
         ScriptConfig.from_file_with_root_key('subdir/soopervisor.yaml',
-                                             env_name='some_env',
-                                             validate=False)
+                                             env_name='some_env')
 
     error = (
         "Relative paths in paths.project are not allowed when "
@@ -160,8 +158,7 @@ def test_environment_name(prefix, expected, tmp_sample_project):
             'environment_prefix': prefix
         }}))
     config = ScriptConfig.from_file_with_root_key('soopervisor.yaml',
-                                                  env_name='some_env',
-                                                  validate=False)
+                                                  env_name='some_env')
     assert config.environment_name == expected
 
 
@@ -173,8 +170,7 @@ def test_conda_activate_line_in_script(prefix, expected, tmp_sample_project):
     d = {'environment_prefix': prefix}
     Path('soopervisor.yaml').write_text(yaml.dump({'some_env': d}))
     config = ScriptConfig.from_file_with_root_key('soopervisor.yaml',
-                                                  env_name='some_env',
-                                                  validate=False)
+                                                  env_name='some_env')
     script = config.to_script()
 
     assert f'conda activate {expected}' in script

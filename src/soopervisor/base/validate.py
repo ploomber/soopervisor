@@ -7,6 +7,7 @@ from pathlib import Path
 from ploomber.spec import DAGSpec
 
 
+# TODO migrate this to exporter
 def project(config, load_dag=True):
     """
     Verify project has the right structure before running the script.
@@ -18,8 +19,6 @@ def project(config, load_dag=True):
                 config.paths.environment))
 
     # TODO: warn if the environment file does not have pinned versions
-    # TODO: warn if the setup.py dependencies (if any), does not have pinned
-    # versions
 
     if config.environment_name is None:
         raise ValueError('Failed to extract the environment name from the '

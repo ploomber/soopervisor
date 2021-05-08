@@ -112,7 +112,7 @@ class AirflowExporter(abc.AbstractExporter):
         print('Saved Airflow DAG definition to: ', path_out)
 
     @staticmethod
-    def validate(cfg, dag, env_name):
+    def _validate(cfg, dag, env_name):
         """
         Validates a project before exporting as an Airflow DAG.
         This runs as a sanity check in the development machine

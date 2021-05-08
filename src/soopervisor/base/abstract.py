@@ -3,6 +3,7 @@ import abc
 from pydantic import BaseModel
 
 
+# TODO: delete
 class AbstractBaseModel(BaseModel):
     class Config:
         extra = 'forbid'
