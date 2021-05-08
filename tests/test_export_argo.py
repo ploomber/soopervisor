@@ -15,7 +15,9 @@ from soopervisor import cli
 
 
 def test_argo_spec(tmp_sample_project):
-    d = export.project(ArgoConfig.from_project(project_root='.'))
+    d = export.project(
+        ArgoConfig.from_file_with_root_key(root_key='serve',
+                                           path='soopervisor.yaml'))
 
     run_task_template = d['spec']['templates'][0]
     tasks = d['spec']['templates'][1]['dag']['tasks']
@@ -68,8 +70,10 @@ def test_argo_spec(tmp_sample_project):
 
 
 def test_custom_args(tmp_sample_project):
-    Path('soopervisor.yaml').write_text('args: --some-arg')
-    spec = export.project(ArgoConfig.from_project(project_root='.'))
+    Path('soopervisor.yaml').write_text('serve:\n    args: --some-arg')
+    spec = export.project(
+        ArgoConfig.from_file_with_root_key(root_key='serve',
+                                           path='soopervisor.yaml'))
     cmd = 'ploomber task {{inputs.parameters.task_name}} --force --some-arg'
     assert cmd in spec['spec']['templates'][0]['script']['source']
 
@@ -82,7 +86,9 @@ def test_argo_output_yaml(tmp_sample_project, config):
     if config:
         Path('soopervisor.yaml').write_text(config)
 
-    export.project(ArgoConfig.from_project(project_root='.'))
+    export.project(
+        ArgoConfig.from_file_with_root_key(root_key='serve',
+                                           path='soopervisor.yaml'))
     yaml_str = Path('argo.yaml').read_text()
     # make sure the "source" key is represented in literal style
     # (https://yaml-multiline.info/) to make the generated script more readable

@@ -82,7 +82,8 @@ def add(name, backend):
         lambda_.add(name=name)
 
     elif backend == Backend.argo_workflows:
-        config = ArgoConfig.from_project(project_root='.')
+        config = ArgoConfig.from_file_with_root_key(Path('soopervisor.yaml'),
+                                                    root_key=name)
 
         # TODO: re-enable support for upload
         # export_argo.upload_code(config)
