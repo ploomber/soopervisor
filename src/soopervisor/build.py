@@ -1,4 +1,3 @@
-from pathlib import Path
 from soopervisor.base.config import ScriptConfig
 from soopervisor.executors.LocalExecutor import LocalExecutor
 

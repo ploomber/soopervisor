@@ -60,7 +60,8 @@ class AirflowExporter(abc.AbstractExporter):
 
         print('Processing project: ', project_root)
 
-        # copy project-root to airflow-home (create a folder with the same name)
+        # copy project-root to airflow-home (create a folder with the same
+        # name)
         # TODO: what to exclude?
         project_name = Path(project_root).name
         project_root_airflow = Path(output_path, 'ploomber', project_name)

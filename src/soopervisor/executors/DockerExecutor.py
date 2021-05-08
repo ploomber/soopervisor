@@ -34,7 +34,7 @@ class DockerExecutor(Executor):
     def execute(self):
         self.script_config.save_script()
 
-        project_root = self.project_root.replace(" ", "\ ")
+        project_root = self.project_root.replace(" ", "\\ ")
 
         self.client.containers.run(
             self.image,

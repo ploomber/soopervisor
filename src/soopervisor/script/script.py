@@ -4,8 +4,10 @@ Command line interface
 Steps:
 
 1. Copy project_root to workspace
-2. Look for a conda's environment.yml file, install dependencies (assume conda is installed)
-3. Run `ploomber pipeline pipeline.yaml` (assume al output is saved in ./output)
+2. Look for a conda's environment.yml file, install dependencies (assume conda
+is installed)
+3. Run `ploomber pipeline pipeline.yaml` (assume al output is saved in
+./output)
 4. Install this package
 5. Upload 'output/ to box' (read credentials from ~/.box)
 
@@ -37,9 +39,7 @@ def generate_script(config, command):
 
 def __scape_spaces_on_paths(config):
     config["paths"]["environment"] = config["paths"]["environment"].replace(
-        " ", "\ ")
-    config["paths"]["products"] = config["paths"]["products"].replace(
-        " ", "\ ")
-    config["paths"]["project"] = config["paths"]["project"].replace(" ", "\ ")
+        " ", "\\ ")
+    config["paths"]["project"] = config["paths"]["project"].replace(" ", "\\ ")
 
     return config

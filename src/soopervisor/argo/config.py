@@ -124,10 +124,6 @@ class ArgoConfig(ScriptConfig):
 
     lazy_import: bool = True
 
-    # TODO: support for secrets https://argoproj.github.io/argo/examples/#secrets
-    # NOTE: the storage option is useful here, add support for uploading to
-    # google cloud storage
-
     mounted_volumes: List[ArgoMountedVolume] = [
         ArgoMountedVolume(
             name='nfs',

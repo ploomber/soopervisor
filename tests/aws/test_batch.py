@@ -160,7 +160,8 @@ def test_add(backup_packaged_project):
 
 
 def test_submit(mock_batch, monkeypatch, backup_packaged_project):
-    cmd = 'from ploomber.spec import DAGSpec; print("File" in DAGSpec.find().to_dag().clients)'
+    cmd = ('from ploomber.spec import '
+           'DAGSpec; print("File" in DAGSpec.find().to_dag().clients)')
     tester = CommanderTester(
         run=[
             ('python', '-m', 'build', '--sdist'),

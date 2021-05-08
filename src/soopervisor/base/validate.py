@@ -48,7 +48,8 @@ def project(config, load_dag=True):
         try:
             # NOTE: should lazy_import be an option from config?
             dag = DAGSpec(pipeline_yaml, lazy_import=True).to_dag()
-            # forcing makes it faster because we don't have to check task status
+            # forcing makes it faster because we don't have to check task
+            # status
             dag.render(force=True, show_progress=False)
         except Exception as e:
             raise RuntimeError(

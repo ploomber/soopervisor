@@ -2,7 +2,6 @@
 Configuration objects declare the schema for the configuration file, perform
 schema validation, compute some attributes dynamically and render placeholders
 """
-import shutil
 from pathlib import Path
 from typing import Optional
 
@@ -62,7 +61,6 @@ class Paths(AbstractBaseModel):
     def __str__(self):
         return ('Paths:'
                 f'\n  * Project root: {self.project}'
-                f'\n  * Products: {self.products}'
                 f'\n  * Environment: {self.environment}')
 
 
@@ -105,9 +103,6 @@ class ScriptConfig(AbstractConfig):
         pipeline without having to setup an environment that has all
         dependencies required to import dotted paths
     """
-    # NOTE: should args be "--force" by defauult, when using soopervisor,
-    # we are in production mode so it doesn't make sense to do incremental
-    # builds
     # TODO: Create env again only if environment.yml has changed
     cache_env: Optional[bool] = False
     executor: Optional[str] = 'local'
