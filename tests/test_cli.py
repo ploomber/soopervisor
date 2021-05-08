@@ -5,24 +5,11 @@ import pytest
 from click.testing import CliRunner
 
 from soopervisor.cli import cli
-from soopervisor.script.cli import _make_script
-from soopervisor.executors.LocalExecutor import LocalExecutor
 from soopervisor.argo import export as argo_export
 
 
 def null_execute(self):
     pass
-
-
-@pytest.mark.parametrize('args', [
-    ['build'],
-    ['build', '--clean-products-path'],
-])
-def test_build(args, monkeypatch, tmp_sample_project, git_hash):
-    monkeypatch.setattr(LocalExecutor, 'execute', null_execute)
-    runner = CliRunner()
-    result = runner.invoke(cli, args, catch_exceptions=False)
-    assert result.exit_code == 0
 
 
 @pytest.mark.parametrize('args', [
@@ -88,22 +75,4 @@ def test_export_with_upload(monkeypatch, tmp_sample_project):
     ])
 
     assert m.call_count == 2
-    assert result.exit_code == 0
-
-
-@pytest.mark.xfail
-def test_export_with_upload_missing_code_pod(tmp_sample_project):
-    runner = CliRunner()
-    result = runner.invoke(cli, ['export', '--upload'], catch_exceptions=False)
-
-    assert isinstance(result.exception, ValueError)
-    assert '"code_pod" section in the configuration file' in str(
-        result.exception)
-    assert result.exit_code == 1
-
-
-def test_make_script(tmp_sample_project):
-    runner = CliRunner()
-    result = runner.invoke(_make_script, ['ploomber build'],
-                           catch_exceptions=False)
     assert result.exit_code == 0
