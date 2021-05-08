@@ -34,7 +34,7 @@ class AbstractExporter(abc.ABC):
         )
         self._env_name = env_name
 
-        self.validate(self._cfg, self._dag)
+        self.validate(self._cfg, self._dag, self._env_name)
 
     def add(self):
         path = Path(self._env_name)

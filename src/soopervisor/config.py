@@ -29,3 +29,20 @@ def get_backend(name):
             f'not a valid backend. backend must be one of: {valid}')
 
     return backend
+
+
+def replace_env(env_name, target_dir):
+    """
+    For a given target directory, renames env.{env_name}.yaml to env.yaml
+    """
+    env = Path(target_dir, f'env.{env_name}.yaml')
+
+    if env.exists():
+        env_general = Path(target_dir / 'env.yaml')
+
+        if env_general.exists():
+            env_general.unlink()
+
+            env.rename(env_general)
+        else:
+            print(f'No {env} found...')
