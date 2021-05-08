@@ -98,7 +98,8 @@ def test_argo_config_defaults(session_sample_project):
 
 
 def test_sample_project_from_path(session_sample_project):
-    cfg = ArgoConfig.from_project('.')
+    cfg = ArgoConfig.from_file_with_root_key('soopervisor.yaml',
+                                             env_name='env')
 
     assert cfg.image == 'continuumio/miniconda3'
     assert cfg.mounted_volumes == [{
