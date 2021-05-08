@@ -8,6 +8,7 @@ from soopervisor.build import build_project
 from soopervisor.argo.config import ArgoConfig
 from soopervisor.airflow import export as export_airflow_module
 from soopervisor.argo.export import ArgoWorkflowsExporter
+from soopervisor.airflow.export import AirflowExporter
 from soopervisor.aws import lambda_, batch
 from soopervisor import config
 from soopervisor.enum import Backend
@@ -89,9 +90,8 @@ def add(name, backend):
 
     elif backend == Backend.airflow:
         click.echo('Exporting to Airflow...')
-        export_airflow_module.project(name=name,
-                                      project_root='.',
-                                      output_path=name)
+        exporter = AirflowExporter('soopervisor.yaml', env_name=name)
+        exporter.add()
 
 
 @cli.command()

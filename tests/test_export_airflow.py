@@ -7,7 +7,7 @@ from airflow import DAG
 from airflow.operators.bash import BashOperator
 import pytest
 
-from soopervisor.airflow import export
+from soopervisor.airflow.export import AirflowExporter
 from soopervisor.base.config import ScriptConfig
 
 
@@ -43,9 +43,12 @@ def test_generate_valid_airflow_dags(name, tmp_projects):
 
 def test_export_airflow_sample_project(monkeypatch, tmp_sample_project,
                                        no_sys_modules_cache):
-    export.project(name='serve', project_root='.', output_path='exported')
-    monkeypatch.syspath_prepend('exported/dags')
-    airflow_home = Path(tmp_sample_project, 'exported').resolve()
+    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
+                               env_name='serve')
+    exporter.add()
+
+    monkeypatch.syspath_prepend('serve/dags')
+    airflow_home = Path(tmp_sample_project, 'serve').resolve()
     monkeypatch.setenv('AIRFLOW_HOME', airflow_home)
     mod = importlib.import_module('sample_project')
     dag = mod.dag
@@ -66,11 +69,13 @@ def test_export_airflow_custom_args(monkeypatch, tmp_sample_project,
     Path('soopervisor.yaml').write_text('serve:\n    args: --some-arg')
 
     # export project
-    export.project(name='serve', project_root='.', output_path='exported')
+    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
+                               env_name='serve')
+    exporter.add()
 
     # load exported dag
-    monkeypatch.syspath_prepend('exported/dags')
-    airflow_home = str(Path(tmp_sample_project, 'exported').resolve())
+    monkeypatch.syspath_prepend('serve/dags')
+    airflow_home = str(Path(tmp_sample_project, 'serve').resolve())
     monkeypatch.setenv('AIRFLOW_HOME', airflow_home)
     mod = importlib.import_module('sample_project')
     dag = mod.dag
@@ -83,16 +88,20 @@ def test_export_airflow_custom_args(monkeypatch, tmp_sample_project,
 
 
 def test_export_airflow_callables(monkeypatch, tmp_callables):
-    export.project(name='serve', project_root='.', output_path='exported')
-    monkeypatch.syspath_prepend('exported/dags')
-    airflow_home = Path(tmp_callables, 'exported').resolve()
+    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
+                               env_name='serve')
+    exporter.add()
+
+    monkeypatch.syspath_prepend('serve/dags')
+    airflow_home = Path(tmp_callables, 'serve').resolve()
     monkeypatch.setenv('AIRFLOW_HOME', airflow_home)
     mod = importlib.import_module('callables')
     dag = mod.dag
 
     # generate scripts to compare them to the ones in airflow
     script_cfg = ScriptConfig.from_file_with_root_key(
-        path='exported/ploomber/callables/soopervisor.yaml', root_key='serve')
+        path_to_config='serve/ploomber/callables/soopervisor.yaml',
+        env_name='serve')
     scripts = {
         t: script_cfg.to_script(command=f'ploomber task {t}')
         for t in dag.task_dict
@@ -121,7 +130,10 @@ def test_export_airflow_callables(monkeypatch, tmp_callables):
 
 def test_export_airflow_no_airflow_env(tmp_callables, capsys):
     Path('env.airflow.yaml').unlink()
-    export.project(name='serve', project_root='.', output_path='exported')
+
+    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
+                               env_name='serve')
+    exporter.add()
 
     assert 'No env.airflow.yaml found...' in capsys.readouterr().out
 

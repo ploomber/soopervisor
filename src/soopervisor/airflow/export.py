@@ -5,108 +5,120 @@ import os
 import shutil
 from pathlib import Path
 
+import click
 from jinja2 import Environment, PackageLoader, StrictUndefined
 from ploomber.spec import DAGSpec
 
 from soopervisor.airflow.config import AirflowConfig
 from soopervisor.base.config import ScriptConfig
+from soopervisor import abc
 
 
-def project(name, project_root, output_path=None):
-    """Export Ploomber project to Airflow
+class AirflowExporter(abc.AbstractExporter):
+    CONFIG_CLASS = AirflowConfig
 
-    Calling this function generates an Airflow DAG definition at
-    {airflow-home}/dags/{project-name}.py and copies the project's source code
-    to {airflow-home}/ploomber/{project-name}. The exported Airflow DAG is
-    composed of BashOperator tasks, one per task in the Ploomber DAG.
+    @staticmethod
+    def _add(cfg, env_name):
+        """Export Ploomber project to Airflow
 
-    Parameters
-    ----------
-    project_root : str
-        Project's root folder (pipeline.yaml parent)
+        Calling this function generates an Airflow DAG definition at
+        {airflow-home}/dags/{project-name}.py and copies the project's source
+        code
+        to {airflow-home}/ploomber/{project-name}. The exported Airflow DAG is
+        composed of BashOperator tasks, one per task in the Ploomber DAG.
 
-    output_path : str, optional
-        Output folder. If None, it looks up the value in the
-        AIRFLOW_HOME environment variable. If the variable isn't set, it
-        defaults to ~/airflow
-    """
-    env = Environment(loader=PackageLoader('soopervisor', 'assets'),
-                      undefined=StrictUndefined)
-    template = env.get_template('airflow.py')
+        Parameters
+        ----------
+        project_root : str
+            Project's root folder (pipeline.yaml parent)
 
-    project_root = Path(project_root).resolve()
+        output_path : str, optional
+            Output folder. If None, it looks up the value in the
+            AIRFLOW_HOME environment variable. If the variable isn't set, it
+            defaults to ~/airflow
+        """
+        click.echo('Exporting to Airflow...')
+        project_root = '.'
+        output_path = env_name
 
-    # validate the project passses soopervisor checks
-    AirflowConfig.from_file_with_root_key(Path(project_root,
-                                               'soopervisor.yaml'),
-                                          root_key=name)
+        env = Environment(loader=PackageLoader('soopervisor', 'assets'),
+                          undefined=StrictUndefined)
+        template = env.get_template('airflow.py')
 
-    # use airflow-home to know where to save the Airflow dag definition
-    if output_path is None:
-        output_path = os.environ.get('AIRFLOW_HOME', '~/airflow')
+        project_root = Path(project_root).resolve()
 
-    output_path = str(Path(output_path).expanduser())
+        # use airflow-home to know where to save the Airflow dag definition
+        if output_path is None:
+            output_path = os.environ.get('AIRFLOW_HOME', '~/airflow')
 
-    Path(output_path).mkdir(exist_ok=True, parents=True)
+        output_path = str(Path(output_path).expanduser())
 
-    print('Processing project: ', project_root)
+        Path(output_path).mkdir(exist_ok=True, parents=True)
 
-    # copy project-root to airflow-home (create a folder with the same name)
-    # TODO: what to exclude?
-    project_name = Path(project_root).name
-    project_root_airflow = Path(output_path, 'ploomber', project_name)
-    project_root_airflow.mkdir(exist_ok=True, parents=True)
+        print('Processing project: ', project_root)
 
-    out = template.render(project_root=project_root_airflow,
-                          project_name=project_name,
-                          env_name=name)
+        # copy project-root to airflow-home (create a folder with the same name)
+        # TODO: what to exclude?
+        project_name = Path(project_root).name
+        project_root_airflow = Path(output_path, 'ploomber', project_name)
+        project_root_airflow.mkdir(exist_ok=True, parents=True)
 
-    if project_root_airflow.exists():
-        print(f'Removing existing project at {project_root_airflow}')
-        shutil.rmtree(project_root_airflow)
+        out = template.render(project_root=project_root_airflow,
+                              project_name=project_name,
+                              env_name=env_name)
 
-    print('Exporting...')
+        if project_root_airflow.exists():
+            print(f'Removing existing project at {project_root_airflow}')
+            shutil.rmtree(project_root_airflow)
 
-    # make sure this works if copying everything in a project root
-    # sub-directory
-    try:
-        rel = project_root_airflow.resolve().relative_to(project_root)
-        sub_dir = rel.parts[0]
-        is_sub_dir = True
-    except ValueError:
-        is_sub_dir = False
-        sub_dir = None
+        print('Exporting...')
 
-    if is_sub_dir:
+        # make sure this works if copying everything in a project root
+        # sub-directory
+        try:
+            rel = project_root_airflow.resolve().relative_to(project_root)
+            sub_dir = rel.parts[0]
+            is_sub_dir = True
+        except ValueError:
+            is_sub_dir = False
+            sub_dir = None
 
-        def ignore(src, names):
-            dir_name = Path(src).resolve().relative_to(project_root)
-            return names if str(dir_name).startswith(sub_dir) else []
+        if is_sub_dir:
 
-        shutil.copytree(project_root, dst=project_root_airflow, ignore=ignore)
-    else:
-        shutil.copytree(project_root, dst=project_root_airflow)
+            def ignore(src, names):
+                dir_name = Path(src).resolve().relative_to(project_root)
+                return names if str(dir_name).startswith(sub_dir) else []
 
-    # delete env.yaml and rename env.airflow.yaml
-    env_airflow = Path(project_root_airflow / 'env.airflow.yaml')
+            shutil.copytree(project_root,
+                            dst=project_root_airflow,
+                            ignore=ignore)
+        else:
+            shutil.copytree(project_root, dst=project_root_airflow)
 
-    if env_airflow.exists():
-        env_yaml = Path(project_root_airflow / 'env.yaml')
+        # delete env.yaml and rename env.airflow.yaml
+        env_airflow = Path(project_root_airflow / 'env.airflow.yaml')
 
-        if env_yaml.exists():
-            env_yaml.unlink()
+        if env_airflow.exists():
+            env_yaml = Path(project_root_airflow / 'env.yaml')
 
-        env_airflow.rename(env_yaml)
-    else:
-        print('No env.airflow.yaml found...')
+            if env_yaml.exists():
+                env_yaml.unlink()
 
-    # generate script that exposes the DAG airflow
-    path_out = Path(output_path, 'dags', project_name + '.py')
-    path_out.parent.mkdir(exist_ok=True, parents=True)
-    path_out.write_text(out)
+            env_airflow.rename(env_yaml)
+        else:
+            print('No env.airflow.yaml found...')
 
-    print('Copied project source code to: ', project_root_airflow)
-    print('Saved Airflow DAG definition to: ', path_out)
+        # generate script that exposes the DAG airflow
+        path_out = Path(output_path, 'dags', project_name + '.py')
+        path_out.parent.mkdir(exist_ok=True, parents=True)
+        path_out.write_text(out)
+
+        print('Copied project source code to: ', project_root_airflow)
+        print('Saved Airflow DAG definition to: ', path_out)
+
+    @staticmethod
+    def _submit():
+        raise NotImplementedError
 
 
 def spec_to_airflow(project_root, dag_name, env_name, airflow_default_args):
@@ -119,7 +131,7 @@ def spec_to_airflow(project_root, dag_name, env_name, airflow_default_args):
     """
     script_cfg = ScriptConfig.from_file_with_root_key(
         Path(project_root, 'soopervisor.yaml'),
-        root_key=env_name,
+        env_name=env_name,
     )
 
     # NOTE: we use lazy_import=True here because this runs in the
