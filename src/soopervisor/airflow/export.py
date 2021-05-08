@@ -161,8 +161,10 @@ class AirflowExporter(abc.AbstractExporter):
 
         if products_invalid:
             products_invalid_ = '\n'.join(products_invalid)
+            # TODO: replace {env} if None, must print the location of the
+            # loaded env
             raise ValueError(
-                f'The initialized DAG with "{spec.env}" is '
+                f'The initialized DAG with "{env}" is '
                 'invalid. Some products are located under '
                 'the project\'s root folder, which is not allowed when '
                 'deploying '
