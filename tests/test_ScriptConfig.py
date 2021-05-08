@@ -1,7 +1,5 @@
 from pathlib import Path
 from io import StringIO
-from datetime import datetime
-from unittest.mock import Mock
 
 import yaml
 import pytest
@@ -23,7 +21,6 @@ def test_default_values(session_sample_project):
     config = ScriptConfig()
 
     assert config.paths.project == session_sample_project
-    assert config.paths.products == str(Path(session_sample_project, 'output'))
     assert config.paths.environment == str(
         Path(session_sample_project, 'environment.yml'))
     assert not config.lazy_import
@@ -36,7 +33,6 @@ def test_init_from_empty_file(tmp_sample_project):
                                                   env_name='some_env')
 
     assert config.paths.project == str(tmp_sample_project)
-    assert config.paths.products == str(Path(tmp_sample_project, 'output'))
     assert config.paths.environment == str(
         Path(tmp_sample_project, 'environment.yml'))
     assert not config.lazy_import
@@ -55,7 +51,6 @@ def test_initialize_from_empty_project(session_sample_project):
         False,
         # soopervisor.yaml with this content
         dict(paths=dict(project='.')),
-        dict(paths=dict(products='output')),
         dict(cache_env=False),
     ])
 def test_initialize_from_custom_path(config, tmp_sample_project_in_subdir):
@@ -92,20 +87,8 @@ def test_change_project_root(session_sample_project):
     config_new = config.with_project_root('/mnt/volume/project')
 
     assert config_new.paths.project == '/mnt/volume/project'
-    assert config_new.paths.products == '/mnt/volume/project/output'
     assert (
         config_new.paths.environment == '/mnt/volume/project/environment.yml')
-
-
-def test_initialize_with_config_file(tmp_empty):
-    d = {'env_name': {'paths': {'products': 'some/directory/'}}}
-    Path('soopervisor.yaml').write_text(yaml.dump(d))
-
-    config = ScriptConfig.from_file_with_root_key('soopervisor.yaml',
-                                                  'env_name',
-                                                  validate=False)
-
-    assert Path(config.paths.products) == Path('some/directory/').resolve()
 
 
 def test_save_script(tmp_sample_project, monkeypatch):
@@ -128,33 +111,6 @@ def test_custom_command(session_sample_project):
     config = ScriptConfig()
     assert 'some custom command' in config.to_script(
         command='some custom command')
-
-
-@pytest.mark.parametrize('create_directory', [False, True])
-def test_clean_products(create_directory, tmp_sample_project):
-    config = ScriptConfig()
-
-    if create_directory:
-        Path(config.paths.products).mkdir()
-
-    config.clean_products()
-
-
-@pytest.mark.parametrize('project_root, product_root, expected', [
-    ['/', 'output', '/output'],
-    ['/project', '/path/to/output', '/path/to/output'],
-])
-def test_converts_product_root_to_absolute(project_root, product_root,
-                                           expected, monkeypatch):
-    def _open(path):
-        return StringIO(yaml.dump({'name': 'some-env'}))
-
-    monkeypatch.setattr(base_config, 'open', _open, raising=False)
-
-    config = ScriptConfig(
-        paths=dict(project=project_root, products=product_root))
-
-    assert config.paths.products == expected
 
 
 @pytest.mark.parametrize('project_root, path_to_environment, expected', [

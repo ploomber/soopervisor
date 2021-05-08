@@ -23,26 +23,12 @@ class Paths(AbstractBaseModel):
     project : str, default='.'
         Project's root folder
 
-    products : str, default='output'
-        Project product's root. Anything inside this folder is considered
-        a  product upon pipeline execution. If relative, it is so to the
-        project's root, not to the current working directory. Every file on
-        this folder will be uploaded if "storage" is configured.
-
     environment : str, default='environment.yml'
         Path to conda environment YAML spec. A virtual environment is created
         using this file before executing the pipeline. If relative, it is so to
         the project's root, not to the current working directory.
     """
     project: Optional[str] = '.'
-    # this only used by storage, maybe move to Storage then.
-    # although we need it for airflow when running in docker/kubernetes
-    # because we need to make sure all products will be generated in a
-    # single folder so we know what to mount - we have to think this,
-    # cause there is some overlap but in the end, exporting is a different
-    # operation than product storage
-    # NOTE: support for a glob pattern would be useful
-    products: Optional[str] = 'output'
     environment: Optional[str] = 'environment.yml'
 
     def __init__(self, **data) -> None:
@@ -66,7 +52,6 @@ class Paths(AbstractBaseModel):
 
     def render(self):
         self.environment = self._resolve_path(self.environment)
-        self.products = self._resolve_path(self.products)
 
     def _resolve_path(self, path):
         if Path(path).is_absolute():
@@ -241,12 +226,6 @@ class ScriptConfig(AbstractConfig):
         path_to_script.write_text(script)
         return str(path_to_script)
 
-    # TODO: remove, config objects should not implement this logic
-    def clean_products(self):
-        if Path(self.paths.products).exists():
-            shutil.rmtree(self.paths.products)
-            Path(self.paths.products).mkdir()
-
     # TODO: make this a computed field
     @property
     def project_name(self):
@@ -269,8 +248,6 @@ class ScriptConfig(AbstractConfig):
         root_old = d['paths']['project']
 
         d['paths']['project'] = project_root
-        d['paths']['products'] = d['paths']['products'].replace(
-            root_old, project_root)
         d['paths']['environment'] = d['paths']['environment'].replace(
             root_old, project_root)
 
