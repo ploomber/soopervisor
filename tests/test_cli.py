@@ -13,8 +13,8 @@ def null_execute(self):
 
 
 @pytest.mark.parametrize('args', [
-    ['add', 'training', '--backend', 'argo-workflows'],
-    ['add', 'training', '--backend', 'airflow'],
+    ['add', 'serve', '--backend', 'argo-workflows'],
+    ['add', 'serve', '--backend', 'airflow'],
 ])
 def test_export_sample_project(args, tmp_sample_project):
     runner = CliRunner()
@@ -23,8 +23,8 @@ def test_export_sample_project(args, tmp_sample_project):
 
 
 @pytest.mark.parametrize('args', [
-    ['add', 'training', '--backend', 'argo-workflows'],
-    ['add', 'training', '--backend', 'airflow'],
+    ['add', 'serve', '--backend', 'argo-workflows'],
+    ['add', 'serve', '--backend', 'airflow'],
 ])
 def test_export_callables(args, tmp_callables):
     runner = CliRunner()
