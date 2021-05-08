@@ -43,6 +43,7 @@ DEV = [
     'pytest',
     'Faker',
     'yapf',
+    'flake8',
     'sphinx',
     'apache-airflow',
     'twine',

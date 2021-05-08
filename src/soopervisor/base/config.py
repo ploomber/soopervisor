@@ -223,8 +223,8 @@ class ScriptConfig(AbstractConfig):
     @classmethod
     # FIXME: remove parameters we are no longer using
     def from_file_with_root_key(cls,
-                                path,
-                                root_key,
+                                path_to_config,
+                                env_name,
                                 validate=True,
                                 return_dag=False,
                                 load_dag=True):
@@ -233,7 +233,7 @@ class ScriptConfig(AbstractConfig):
         soopervisor.yaml file, if it doesn't exist, it just
         initializes with default values
         """
-        path = Path(path)
+        path = Path(path_to_config)
         project_root = Path('.').resolve()
 
         if path.exists():
@@ -241,13 +241,13 @@ class ScriptConfig(AbstractConfig):
                 d = yaml.safe_load(f)
 
             # make this logic common across backends
-            if root_key not in d:
+            if env_name not in d:
                 # TODO: create content based on some defaults
                 original = Path(path).read_text()
-                Path(path).write_text(original + '\n' + f'{root_key}: null\n')
+                Path(path).write_text(original + '\n' + f'{env_name}: null\n')
                 d = dict()
             else:
-                d = d[root_key] or dict()
+                d = d[env_name] or dict()
 
             # TODO: validate d is a dictionary, if empty, yaml.safe_load
             # returns None, and it can also returns lists

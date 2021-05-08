@@ -9,13 +9,14 @@ from argo.workflows.dsl import Workflow
 from ploomber.spec import DAGSpec
 from click.testing import CliRunner
 
-from soopervisor.argo.config import ArgoConfig
-from soopervisor.argo import export
+from soopervisor.argo.export import ArgoWorkflowsExporter
 from soopervisor import cli
 
 
 def test_argo_spec(tmp_sample_project):
-    d = export.project(ArgoConfig.from_project(project_root='.'))
+    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
+                                     env_name='serve')
+    d = exporter.add()
 
     run_task_template = d['spec']['templates'][0]
     tasks = d['spec']['templates'][1]['dag']['tasks']
@@ -68,8 +69,10 @@ def test_argo_spec(tmp_sample_project):
 
 
 def test_custom_args(tmp_sample_project):
-    Path('soopervisor.yaml').write_text('args: --some-arg')
-    spec = export.project(ArgoConfig.from_project(project_root='.'))
+    Path('soopervisor.yaml').write_text('serve:\n    args: --some-arg')
+    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
+                                     env_name='serve')
+    spec = exporter.add()
     cmd = 'ploomber task {{inputs.parameters.task_name}} --force --some-arg'
     assert cmd in spec['spec']['templates'][0]['script']['source']
 
@@ -82,8 +85,11 @@ def test_argo_output_yaml(tmp_sample_project, config):
     if config:
         Path('soopervisor.yaml').write_text(config)
 
-    export.project(ArgoConfig.from_project(project_root='.'))
-    yaml_str = Path('argo.yaml').read_text()
+    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
+                                     env_name='serve')
+    exporter.add()
+
+    yaml_str = Path('serve', 'argo.yaml').read_text()
     # make sure the "source" key is represented in literal style
     # (https://yaml-multiline.info/) to make the generated script more readable
     assert 'source: |' in yaml_str
@@ -113,5 +119,5 @@ def test_generate_valid_argo_specs(name, tmp_projects):
 
     assert result.exit_code == 0
     # validate argo workflow
-    content = Path('argo.yaml').read_text()
+    content = Path('serve', 'argo.yaml').read_text()
     assert Workflow.from_dict(yaml.safe_load(content))
