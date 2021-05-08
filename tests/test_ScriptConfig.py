@@ -34,9 +34,10 @@ def test_default_values(session_sample_project):
 
 
 def test_init_from_empty_file(tmp_sample_project):
-    Path('soopervisor.yaml').touch()
+    Path('soopervisor.yaml').write_text('some_env:')
 
-    config = ScriptConfig.from_project('.')
+    config = ScriptConfig.from_file_with_root_key('soopervisor.yaml',
+                                                  env_name='some_env')
 
     assert config.paths.project == str(tmp_sample_project)
     assert config.paths.products == str(Path(tmp_sample_project, 'output'))
@@ -59,7 +60,8 @@ def test_defult_values_with_storage_enable(session_sample_project,
 
 def test_initialize_from_empty_project(session_sample_project):
     # must initialize with default values
-    assert ScriptConfig.from_project('.') == ScriptConfig()
+    assert ScriptConfig.from_file_with_root_key(
+        'soopervisor.yaml', env_name='some_env') == ScriptConfig()
 
 
 @pytest.mark.parametrize(
@@ -74,19 +76,24 @@ def test_initialize_from_empty_project(session_sample_project):
     ])
 def test_initialize_from_custom_path(config, tmp_sample_project_in_subdir):
     if config:
-        Path('subdir', 'soopervisor.yaml').write_text(yaml.dump(config))
+        Path('subdir',
+             'soopervisor.yaml').write_text(yaml.dump({'some_env': config}))
 
-    config = ScriptConfig.from_project('subdir', validate=False)
-    assert config.paths.project == str(Path('subdir').resolve())
+    config = ScriptConfig.from_file_with_root_key('subdir/soopervisor.yaml',
+                                                  env_name='some_env',
+                                                  validate=False)
+    assert config.paths.project == str(Path('.').resolve())
 
 
 def test_error_if_custom_path_and_absolute_path_in_config(
         tmp_sample_project_in_subdir):
-    config = dict(paths=dict(project='/absolute/path'))
+    config = dict(some_env=dict(paths=dict(project='/absolute/path')))
     Path('subdir', 'soopervisor.yaml').write_text(yaml.dump(config))
 
     with pytest.raises(ValueError) as excinfo:
-        ScriptConfig.from_project('subdir', validate=False)
+        ScriptConfig.from_file_with_root_key('subdir/soopervisor.yaml',
+                                             env_name='some_env',
+                                             validate=False)
 
     error = (
         "Relative paths in paths.project are not allowed when "
@@ -108,17 +115,21 @@ def test_change_project_root(session_sample_project):
 
 def test_initialize_with_config_file(git_hash, tmp_empty):
     d = {
-        'paths': {
-            'products': 'some/directory/'
-        },
-        'storage': {
-            'provider': 'local',
-            'path': 'dir-name/{{git}}'
+        'env_name': {
+            'paths': {
+                'products': 'some/directory/'
+            },
+            'storage': {
+                'provider': 'local',
+                'path': 'dir-name/{{git}}'
+            }
         }
     }
     Path('soopervisor.yaml').write_text(yaml.dump(d))
 
-    config = ScriptConfig.from_project('.', validate=False)
+    config = ScriptConfig.from_file_with_root_key('soopervisor.yaml',
+                                                  'env_name',
+                                                  validate=False)
 
     assert Path(config.paths.products) == Path('some/directory/').resolve()
     assert config.storage.path == 'dir-name/GIT-HASH'
@@ -216,8 +227,12 @@ def test_converts_environment_prefix_to_absolute(project_root, prefix,
 ])
 def test_environment_name(prefix, expected, tmp_sample_project):
     Path('soopervisor.yaml').write_text(
-        yaml.dump({'environment_prefix': prefix}))
-    config = ScriptConfig.from_project('.')
+        yaml.dump({'env_name': {
+            'environment_prefix': prefix
+        }}))
+    config = ScriptConfig.from_file_with_root_key('soopervisor.yaml',
+                                                  env_name='some_env',
+                                                  validate=False)
     assert config.environment_name == expected
 
 
@@ -227,31 +242,10 @@ def test_environment_name(prefix, expected, tmp_sample_project):
 ])
 def test_conda_activate_line_in_script(prefix, expected, tmp_sample_project):
     d = {'environment_prefix': prefix}
-    Path('soopervisor.yaml').write_text(yaml.dump(d))
-    config = ScriptConfig.from_project('.', validate=False)
+    Path('soopervisor.yaml').write_text(yaml.dump({'some_env': d}))
+    config = ScriptConfig.from_file_with_root_key('soopervisor.yaml',
+                                                  env_name='some_env',
+                                                  validate=False)
     script = config.to_script()
 
     assert f'conda activate {expected}' in script
-
-
-def test_script_does_not_upload_if_empty_provider(tmp_sample_project):
-    d = {'storage': {'provider': None}}
-    Path('soopervisor.yaml').write_text(yaml.dump(d))
-    config = ScriptConfig.from_project('.', validate=False)
-    script = config.to_script()
-    assert 'soopervisor upload' not in script
-
-
-@pytest.mark.parametrize('provider', ['local', 'box'])
-def test_script_uploads_if_provider(provider, tmp_sample_project):
-    d = {'storage': {'provider': provider}}
-    Path('soopervisor.yaml').write_text(yaml.dump(d))
-    config = ScriptConfig.from_project('.', validate=False)
-    script = config.to_script()
-    assert 'python -m soopervisor.upload' in script
-
-
-@pytest.mark.xfail
-def test_error_if_missing_environment_yml():
-    # TODO: add custom errror when missing conda spec file
-    raise NotImplementedError
