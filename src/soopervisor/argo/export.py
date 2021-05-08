@@ -24,6 +24,10 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
     CONFIG_CLASS = ArgoConfig
 
     @staticmethod
+    def validate(cfg, dag, env_name):
+        pass
+
+    @staticmethod
     def _add(cfg, env_name):
         """Export Argo YAML spec from Ploomber project to argo.yaml
         """

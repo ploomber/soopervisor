@@ -235,13 +235,15 @@ class ScriptConfig(AbstractConfig):
         initializes with default values
         """
         path = Path(path_to_config)
-        project_root = Path('.').resolve()
+        project_root = path.parent.resolve()
 
         if path.exists():
             with open(str(path)) as f:
                 d = yaml.safe_load(f)
 
             # make this logic common across backends
+            # maybe raise an error if the key doesn't exist?
+            # only allow it to be empty when creating the env
             if env_name not in d:
                 # TODO: create content based on some defaults
                 original = Path(path).read_text()
@@ -271,6 +273,7 @@ class ScriptConfig(AbstractConfig):
         else:
             config = cls(paths=dict(project=str(project_root)))
 
+        # NOTE: move this to the abstract class to unify validation
         if validate:
             dag = validate_base.project(config, load_dag=load_dag)
         else:

@@ -82,7 +82,7 @@ def test_initialize_from_custom_path(config, tmp_sample_project_in_subdir):
     config = ScriptConfig.from_file_with_root_key('subdir/soopervisor.yaml',
                                                   env_name='some_env',
                                                   validate=False)
-    assert config.paths.project == str(Path('.').resolve())
+    assert config.paths.project == str(Path('subdir').resolve())
 
 
 def test_error_if_custom_path_and_absolute_path_in_config(
@@ -227,7 +227,7 @@ def test_converts_environment_prefix_to_absolute(project_root, prefix,
 ])
 def test_environment_name(prefix, expected, tmp_sample_project):
     Path('soopervisor.yaml').write_text(
-        yaml.dump({'env_name': {
+        yaml.dump({'some_env': {
             'environment_prefix': prefix
         }}))
     config = ScriptConfig.from_file_with_root_key('soopervisor.yaml',

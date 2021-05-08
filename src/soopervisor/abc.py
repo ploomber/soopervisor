@@ -13,12 +13,6 @@ class AbstractConfig:
         pass
 
 
-class AbstractValidator:
-    """Validate project before execution
-    """
-    pass
-
-
 class AbstractExporter(abc.ABC):
     """
 
@@ -31,12 +25,16 @@ class AbstractExporter(abc.ABC):
         Environment name
     """
     CONFIG_CLASS = None
-    VALIDATOR_CLASS = None
 
     def __init__(self, path_to_config, env_name):
-        self._cfg = self.CONFIG_CLASS.from_file_with_root_key(
-            path_to_config=path_to_config, env_name=env_name)
+        self._cfg, self._dag = self.CONFIG_CLASS.from_file_with_root_key(
+            path_to_config=path_to_config,
+            env_name=env_name,
+            return_dag=True,
+        )
         self._env_name = env_name
+
+        self.validate(self._cfg, self._dag, self._env_name)
 
     def add(self):
         path = Path(self._env_name)
@@ -55,6 +53,13 @@ class AbstractExporter(abc.ABC):
 
     def submit(self):
         return self._submit(cfg=self._cfg, env_name=self._env_name)
+
+    @staticmethod
+    @abc.abstractmethod
+    def validate(cfg, dag):
+        """Validate project before generating exported files
+        """
+        pass
 
     @staticmethod
     @abc.abstractmethod

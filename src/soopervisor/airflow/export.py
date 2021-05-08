@@ -4,13 +4,16 @@ Export a Ploomber DAG to Airflow
 import os
 import shutil
 from pathlib import Path
+from itertools import chain
 
 import click
 from jinja2 import Environment, PackageLoader, StrictUndefined
-from ploomber.spec import DAGSpec
 
+from ploomber.spec import DAGSpec
 from soopervisor.airflow.config import AirflowConfig
 from soopervisor.base.config import ScriptConfig
+from ploomber.products import MetaProduct
+from soopervisor import config
 from soopervisor import abc
 
 
@@ -83,6 +86,7 @@ class AirflowExporter(abc.AbstractExporter):
             is_sub_dir = False
             sub_dir = None
 
+        # copy source code that will be uploadded
         if is_sub_dir:
 
             def ignore(src, names):
@@ -95,26 +99,90 @@ class AirflowExporter(abc.AbstractExporter):
         else:
             shutil.copytree(project_root, dst=project_root_airflow)
 
-        # delete env.yaml and rename env.airflow.yaml
-        env_airflow = Path(project_root_airflow / 'env.airflow.yaml')
-
-        if env_airflow.exists():
-            env_yaml = Path(project_root_airflow / 'env.yaml')
-
-            if env_yaml.exists():
-                env_yaml.unlink()
-
-            env_airflow.rename(env_yaml)
-        else:
-            print('No env.airflow.yaml found...')
-
         # generate script that exposes the DAG airflow
         path_out = Path(output_path, 'dags', project_name + '.py')
         path_out.parent.mkdir(exist_ok=True, parents=True)
         path_out.write_text(out)
 
+        # rename env.{env_name}.yaml if needed
+        config.replace_env(env_name=env_name, target_dir=project_root_airflow)
+
         print('Copied project source code to: ', project_root_airflow)
         print('Saved Airflow DAG definition to: ', path_out)
+
+    @staticmethod
+    def validate(cfg, dag, env_name):
+        """
+        Validates a project before exporting as an Airflow DAG.
+        This runs as a sanity check in the development machine
+        """
+        project_root = Path(cfg.paths.project)
+
+        env = (f'env.{env_name}.yaml'
+               if Path(f'env.{env_name}.yaml').exists() else None)
+
+        # TODO: let dagsspec figure out where to load pipeline.yaml from
+        # NOTE: should lazy_import be an option from config?
+        # check what would happen if we initialize the pipeline
+        spec = DAGSpec(project_root / 'pipeline.yaml',
+                       env=env,
+                       lazy_import=True)
+        dag_airflow = spec.to_dag()
+        dag_airflow.render()
+
+        # if factory function, check it's decorated to load from env.yaml (?)
+
+        # with the dag instance and using env.airflow.yaml, check that products
+        # are not saved inside the projects root folder
+        #  airflow continuously scans $AIRFLOW_HOME/dags/ for dag definitions
+        # and
+        # any extra files can break this process - maybe also show the products
+        # to know where things will be saved when running using airflow
+
+        # TODO: test when some products aren't files
+        products = [dag_airflow[t].product for t in dag_airflow._iter()]
+        products = chain(*([p] if not isinstance(p, MetaProduct) else list(p)
+                           for p in products))
+
+        # TODO: improve error message by showing task names for each invalid
+        # product
+
+        def resolve_product(product):
+            """Converts a File product to str with absolute path
+            """
+            return str(Path(str(product)).resolve())
+
+        products_invalid = [
+            # products cannot be inside project root, convert to absolute
+            # otherwise /../../ might cause false positives
+            str(p) for p in products
+            if resolve_product(p).startswith(str(project_root))
+        ]
+
+        if products_invalid:
+            products_invalid_ = '\n'.join(products_invalid)
+            # TODO: replace {env} if None, must print the location of the
+            # loaded env
+            raise ValueError(
+                f'The initialized DAG with "{env}" is '
+                'invalid. Some products are located under '
+                'the project\'s root folder, which is not allowed when '
+                'deploying '
+                'to Airflow. Modify your pipeline so all products are saved '
+                f'outside the project\'s root folder "{project_root}". Fix '
+                f'the following products:\n{products_invalid_}')
+
+        # TODO: ignore non-files
+        # TODO: also raise if relative paths - because we don't know where
+        # the dag will be executed from
+
+        # maybe instantiate with env.yaml and env.airflow.yaml to make sure
+        # products don't clash?
+
+        # check all products are prefixed with products root - this implies
+        # that files should be absolute paths otherwise it's ambiguous -
+        # should then we raise an arror if any product if defined with relative
+        # paths?
 
     @staticmethod
     def _submit():
