@@ -10,8 +10,6 @@ from pathlib import Path
 import my_project
 import pytest
 
-from soopervisor.git_handler import GitRepo
-
 
 def _path_to_tests():
     return Path(__file__).absolute().parent
@@ -123,14 +121,8 @@ def session_sample_project(tmp_path_factory):
     os.chdir(old)
 
 
-@pytest.fixture
-def git_hash(monkeypatch):
-    monkeypatch.setattr(GitRepo, "get_git_hash", lambda *args: 'GIT-HASH')
-
-
 @pytest.fixture(scope='session')
 def download_projects(tmpdir_factory):
-    old = os.getcwd()
     tmp_path = tmpdir_factory.mktemp('projects')
     subprocess.run([
         'git',

@@ -5,82 +5,14 @@ schema validation, compute some attributes dynamically and render placeholders
 import shutil
 from pathlib import Path
 from typing import Optional
-from datetime import datetime
 
 from pydantic import validator, Field
-from jinja2 import Template, meta
 import yaml
 
 from ploomber.util import default
 from soopervisor.script.script import generate_script
-from soopervisor.git_handler import GitRepo
 from soopervisor.base import validate as validate_base
 from soopervisor.base.abstract import AbstractBaseModel, AbstractConfig
-
-
-# TODO: delete, storage logic moved to ploomber
-class StorageConfig(AbstractBaseModel):
-    """Store pipeline products after execution
-
-    Parameters
-    ----------
-    provider : str, default=None
-        'box' for uploading files to box or 'local' to just copy files
-        to a local directory. None to disable
-
-    path : str, default='runs/{{now}}'
-        Path where the files will be moved, defaults to runs/{{now}},
-        where {{now}} will be replaced by the current timestamp in ISO 8601
-        format. {{git}} is also available, it's replaced by the current git
-        hash, requires the project to be in a git repository.
-
-    credentials : str, default=None
-        Credentials for the storage provider, only required if provider
-        is not 'local'
-    """
-    provider: Optional[str] = None
-    path: Optional[str] = 'runs/{{now}}'
-    credentials: Optional[str] = None
-
-    # this is not a field, but a reference to the paths section
-    paths: Optional[str]
-
-    def __init__(self, *, paths, **data) -> None:
-        super().__init__(**data)
-        self.paths = paths
-        self.render()
-
-    @validator('provider', always=True)
-    def validate_provider(cls, v):
-        valid = {'box', 'local', None}
-        if v not in valid:
-            raise ValueError(f'Provider must be one of: {valid}')
-        return v
-
-    def render(self):
-        # only expand if storage is enabled
-        if self.provider:
-            template = Template(self.path)
-            env = template.environment
-            vars_ = meta.find_undeclared_variables(env.parse(self.path))
-            available = {'git', 'now'}
-            extra = vars_ - available
-
-            if extra:
-                raise ValueError(f'Got unrecognized placeholders: {extra}')
-
-            to_pass = {}
-
-            if 'git' in vars_:
-                to_pass['git'] = GitRepo(self.paths.project).get_git_hash()
-
-            if 'now' in vars_:
-                to_pass['now'] = datetime.now().isoformat(timespec='seconds')
-
-            self.path = template.render(**to_pass)
-
-            # TODO: we should do some validation here, to prevent raising
-            # errors at runtime
 
 
 class Paths(AbstractBaseModel):
@@ -178,9 +110,6 @@ class ScriptConfig(AbstractConfig):
     paths : dict
         Section to configure project paths, see Paths for schema
 
-    storage : dict
-        Section to configure product's upload after execution, see
-        StorageConfig for schema
 
     lazy_import : bool, default=False
         When processing your project, the DAG is initialized to run a few
@@ -206,19 +135,12 @@ class ScriptConfig(AbstractConfig):
 
     # sub sections
     paths: Optional[Paths] = Field(default_factory=Paths)
-    storage: StorageConfig = None
 
     # COMPUTED FIELDS
     environment_name: Optional[str] = None
 
     def __init__(self, **data) -> None:
-        if 'storage' in data:
-            storage = data.pop('storage')
-        else:
-            storage = {}
-
         super().__init__(**data)
-        self.storage = StorageConfig(paths=self.paths, **storage)
         self.render()
 
     @classmethod
@@ -341,11 +263,8 @@ class ScriptConfig(AbstractConfig):
 
         d = dict(self)
         d_path = dict(d['paths'])
-        d_storage = dict(d['storage'])
-        del d_storage['paths']
 
         d['paths'] = d_path
-        d['storage'] = d_storage
 
         root_old = d['paths']['project']
 

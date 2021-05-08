@@ -8,16 +8,12 @@ import pytest
 from pydantic import ValidationError
 
 import soopervisor.base.config as base_config
-from soopervisor.base.config import ScriptConfig, StorageConfig, Paths
+from soopervisor.base.config import ScriptConfig, Paths
 
 
-@pytest.mark.parametrize('class_', [ScriptConfig, StorageConfig, Paths])
+@pytest.mark.parametrize('class_', [ScriptConfig, Paths])
 def test_models_fail_when_passing_extra_args(class_):
     kwargs = dict(extra=1)
-
-    # special case, StorageConfig needs a paths arg
-    if class_ is StorageConfig:
-        kwargs['paths'] = None
 
     with pytest.raises(ValidationError):
         class_(**kwargs)
@@ -44,18 +40,6 @@ def test_init_from_empty_file(tmp_sample_project):
     assert config.paths.environment == str(
         Path(tmp_sample_project, 'environment.yml'))
     assert not config.lazy_import
-
-
-def test_defult_values_with_storage_enable(session_sample_project,
-                                           monkeypatch):
-
-    mock_datetime = Mock()
-    mock_datetime.now.return_value = datetime(2020, 1, 1)
-    monkeypatch.setattr(base_config, 'datetime', mock_datetime)
-
-    config = ScriptConfig(storage={'provider': 'local'})
-
-    assert config.storage.path == 'runs/2020-01-01T00:00:00'
 
 
 def test_initialize_from_empty_project(session_sample_project):
@@ -113,18 +97,8 @@ def test_change_project_root(session_sample_project):
         config_new.paths.environment == '/mnt/volume/project/environment.yml')
 
 
-def test_initialize_with_config_file(git_hash, tmp_empty):
-    d = {
-        'env_name': {
-            'paths': {
-                'products': 'some/directory/'
-            },
-            'storage': {
-                'provider': 'local',
-                'path': 'dir-name/{{git}}'
-            }
-        }
-    }
+def test_initialize_with_config_file(tmp_empty):
+    d = {'env_name': {'paths': {'products': 'some/directory/'}}}
     Path('soopervisor.yaml').write_text(yaml.dump(d))
 
     config = ScriptConfig.from_file_with_root_key('soopervisor.yaml',
@@ -132,7 +106,6 @@ def test_initialize_with_config_file(git_hash, tmp_empty):
                                                   validate=False)
 
     assert Path(config.paths.products) == Path('some/directory/').resolve()
-    assert config.storage.path == 'dir-name/GIT-HASH'
 
 
 def test_save_script(tmp_sample_project, monkeypatch):

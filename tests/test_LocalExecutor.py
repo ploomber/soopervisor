@@ -9,7 +9,7 @@ from soopervisor.base.config import ScriptConfig
 from soopervisor.executors.LocalExecutor import LocalExecutor
 
 
-def test_run_script(git_hash, monkeypatch, tmp_sample_project):
+def test_run_script(monkeypatch, tmp_sample_project):
     script_config = ScriptConfig(paths={'project': str(tmp_sample_project)})
     executor = LocalExecutor(script_config)
 
@@ -30,7 +30,7 @@ def test_run_script(git_hash, monkeypatch, tmp_sample_project):
         ['bash', str(expected_location)], check=True)
 
 
-def test_error_run_script(git_hash, monkeypatch, tmp_sample_project):
+def test_error_run_script(monkeypatch, tmp_sample_project):
     script_config = ScriptConfig()
     executor = LocalExecutor(script_config)
     expected_location = Path(tmp_sample_project, 'script.sh')
