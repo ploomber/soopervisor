@@ -60,7 +60,8 @@ class AirflowExporter(abc.AbstractExporter):
 
         print('Processing project: ', project_root)
 
-        # copy project-root to airflow-home (create a folder with the same name)
+        # copy project-root to airflow-home (create a folder with the same
+        # name)
         # TODO: what to exclude?
         project_name = Path(project_root).name
         project_root_airflow = Path(output_path, 'ploomber', project_name)
@@ -111,7 +112,7 @@ class AirflowExporter(abc.AbstractExporter):
         print('Saved Airflow DAG definition to: ', path_out)
 
     @staticmethod
-    def validate(cfg, dag, env_name):
+    def _validate(cfg, dag, env_name):
         """
         Validates a project before exporting as an Airflow DAG.
         This runs as a sanity check in the development machine

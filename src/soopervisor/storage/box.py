@@ -251,7 +251,7 @@ class BoxUploader(AbstractUploader):
                     uploaded_part = upload_session.upload_part_bytes(
                         chunk, part_num * upload_session.part_size, file_size)
                     part_array.append(uploaded_part)
-                    updated_sha1 = sha1.update(chunk)
+                    sha1.update(chunk)
 
                 content_sha1 = sha1.digest()
                 uploaded_file = upload_session.commit(

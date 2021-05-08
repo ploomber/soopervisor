@@ -2,85 +2,15 @@
 Configuration objects declare the schema for the configuration file, perform
 schema validation, compute some attributes dynamically and render placeholders
 """
-import shutil
 from pathlib import Path
 from typing import Optional
-from datetime import datetime
 
 from pydantic import validator, Field
-from jinja2 import Template, meta
 import yaml
 
 from ploomber.util import default
 from soopervisor.script.script import generate_script
-from soopervisor.git_handler import GitRepo
-from soopervisor.base import validate as validate_base
 from soopervisor.base.abstract import AbstractBaseModel, AbstractConfig
-
-
-# TODO: delete, storage logic moved to ploomber
-class StorageConfig(AbstractBaseModel):
-    """Store pipeline products after execution
-
-    Parameters
-    ----------
-    provider : str, default=None
-        'box' for uploading files to box or 'local' to just copy files
-        to a local directory. None to disable
-
-    path : str, default='runs/{{now}}'
-        Path where the files will be moved, defaults to runs/{{now}},
-        where {{now}} will be replaced by the current timestamp in ISO 8601
-        format. {{git}} is also available, it's replaced by the current git
-        hash, requires the project to be in a git repository.
-
-    credentials : str, default=None
-        Credentials for the storage provider, only required if provider
-        is not 'local'
-    """
-    provider: Optional[str] = None
-    path: Optional[str] = 'runs/{{now}}'
-    credentials: Optional[str] = None
-
-    # this is not a field, but a reference to the paths section
-    paths: Optional[str]
-
-    def __init__(self, *, paths, **data) -> None:
-        super().__init__(**data)
-        self.paths = paths
-        self.render()
-
-    @validator('provider', always=True)
-    def validate_provider(cls, v):
-        valid = {'box', 'local', None}
-        if v not in valid:
-            raise ValueError(f'Provider must be one of: {valid}')
-        return v
-
-    def render(self):
-        # only expand if storage is enabled
-        if self.provider:
-            template = Template(self.path)
-            env = template.environment
-            vars_ = meta.find_undeclared_variables(env.parse(self.path))
-            available = {'git', 'now'}
-            extra = vars_ - available
-
-            if extra:
-                raise ValueError(f'Got unrecognized placeholders: {extra}')
-
-            to_pass = {}
-
-            if 'git' in vars_:
-                to_pass['git'] = GitRepo(self.paths.project).get_git_hash()
-
-            if 'now' in vars_:
-                to_pass['now'] = datetime.now().isoformat(timespec='seconds')
-
-            self.path = template.render(**to_pass)
-
-            # TODO: we should do some validation here, to prevent raising
-            # errors at runtime
 
 
 class Paths(AbstractBaseModel):
@@ -91,26 +21,12 @@ class Paths(AbstractBaseModel):
     project : str, default='.'
         Project's root folder
 
-    products : str, default='output'
-        Project product's root. Anything inside this folder is considered
-        a  product upon pipeline execution. If relative, it is so to the
-        project's root, not to the current working directory. Every file on
-        this folder will be uploaded if "storage" is configured.
-
     environment : str, default='environment.yml'
         Path to conda environment YAML spec. A virtual environment is created
         using this file before executing the pipeline. If relative, it is so to
         the project's root, not to the current working directory.
     """
     project: Optional[str] = '.'
-    # this only used by storage, maybe move to Storage then.
-    # although we need it for airflow when running in docker/kubernetes
-    # because we need to make sure all products will be generated in a
-    # single folder so we know what to mount - we have to think this,
-    # cause there is some overlap but in the end, exporting is a different
-    # operation than product storage
-    # NOTE: support for a glob pattern would be useful
-    products: Optional[str] = 'output'
     environment: Optional[str] = 'environment.yml'
 
     def __init__(self, **data) -> None:
@@ -134,7 +50,6 @@ class Paths(AbstractBaseModel):
 
     def render(self):
         self.environment = self._resolve_path(self.environment)
-        self.products = self._resolve_path(self.products)
 
     def _resolve_path(self, path):
         if Path(path).is_absolute():
@@ -145,7 +60,6 @@ class Paths(AbstractBaseModel):
     def __str__(self):
         return ('Paths:'
                 f'\n  * Project root: {self.project}'
-                f'\n  * Products: {self.products}'
                 f'\n  * Environment: {self.environment}')
 
 
@@ -178,10 +92,6 @@ class ScriptConfig(AbstractConfig):
     paths : dict
         Section to configure project paths, see Paths for schema
 
-    storage : dict
-        Section to configure product's upload after execution, see
-        StorageConfig for schema
-
     lazy_import : bool, default=False
         When processing your project, the DAG is initialized to run a few
         validations on it. If your pipeline has any dotted paths
@@ -191,9 +101,6 @@ class ScriptConfig(AbstractConfig):
         pipeline without having to setup an environment that has all
         dependencies required to import dotted paths
     """
-    # NOTE: should args be "--force" by defauult, when using soopervisor,
-    # we are in production mode so it doesn't make sense to do incremental
-    # builds
     # TODO: Create env again only if environment.yml has changed
     cache_env: Optional[bool] = False
     executor: Optional[str] = 'local'
@@ -206,29 +113,16 @@ class ScriptConfig(AbstractConfig):
 
     # sub sections
     paths: Optional[Paths] = Field(default_factory=Paths)
-    storage: StorageConfig = None
 
     # COMPUTED FIELDS
     environment_name: Optional[str] = None
 
     def __init__(self, **data) -> None:
-        if 'storage' in data:
-            storage = data.pop('storage')
-        else:
-            storage = {}
-
         super().__init__(**data)
-        self.storage = StorageConfig(paths=self.paths, **storage)
         self.render()
 
     @classmethod
-    # FIXME: remove parameters we are no longer using
-    def from_file_with_root_key(cls,
-                                path_to_config,
-                                env_name,
-                                validate=True,
-                                return_dag=False,
-                                load_dag=True):
+    def from_file_with_root_key(cls, path_to_config, env_name):
         """
         Initializes a ScriptConfig from a project. Looks for a
         soopervisor.yaml file, if it doesn't exist, it just
@@ -273,13 +167,7 @@ class ScriptConfig(AbstractConfig):
         else:
             config = cls(paths=dict(project=str(project_root)))
 
-        # NOTE: move this to the abstract class to unify validation
-        if validate:
-            dag = validate_base.project(config, load_dag=load_dag)
-        else:
-            dag = None
-
-        return config if not return_dag else (config, dag)
+        return config
 
     # TODO: remove, config objects should not implement this logic
     def to_script(self, command=None):
@@ -319,12 +207,6 @@ class ScriptConfig(AbstractConfig):
         path_to_script.write_text(script)
         return str(path_to_script)
 
-    # TODO: remove, config objects should not implement this logic
-    def clean_products(self):
-        if Path(self.paths.products).exists():
-            shutil.rmtree(self.paths.products)
-            Path(self.paths.products).mkdir()
-
     # TODO: make this a computed field
     @property
     def project_name(self):
@@ -341,17 +223,12 @@ class ScriptConfig(AbstractConfig):
 
         d = dict(self)
         d_path = dict(d['paths'])
-        d_storage = dict(d['storage'])
-        del d_storage['paths']
 
         d['paths'] = d_path
-        d['storage'] = d_storage
 
         root_old = d['paths']['project']
 
         d['paths']['project'] = project_root
-        d['paths']['products'] = d['paths']['products'].replace(
-            root_old, project_root)
         d['paths']['environment'] = d['paths']['environment'].replace(
             root_old, project_root)
 

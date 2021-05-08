@@ -1,5 +1,4 @@
 import pytest
-from boxsdk.exception import BoxValueError, BoxAPIException
 from pathlib import Path
 from tqdm import tqdm
 
@@ -45,10 +44,10 @@ def test_upload_directory(tmpdir):
 
     progress_bar = tqdm(total=file1.size() + file2.size())
 
-    response = box._upload_directory(path=Path(tmp_dir.strpath),
-                                     parent_folder_id=tmp_directory_tests.id,
-                                     progress_bar=progress_bar,
-                                     replace_folder=True)
+    box._upload_directory(path=Path(tmp_dir.strpath),
+                          parent_folder_id=tmp_directory_tests.id,
+                          progress_bar=progress_bar,
+                          replace_folder=True)
 
     assert box._delete_folder(folder_id=tmp_directory_tests.id)
 

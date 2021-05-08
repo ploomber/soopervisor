@@ -1,4 +1,3 @@
-from pathlib import Path
 from soopervisor.base.config import ScriptConfig
 from soopervisor.executors.LocalExecutor import LocalExecutor
 
@@ -20,17 +19,13 @@ def build_project(project_root,
     clean_products_path
         Remove all files from product_root before building
     """
+    # NOTE: load dag was removed, have to load using dagspec
     config = ScriptConfig.from_file_with_root_key(project_root,
                                                   env_name,
                                                   load_dag=load_dag)
 
     print(f'Env prefix {config.environment_prefix}')
     print(config.paths)
-
-    if config.storage.provider:
-        # TODO: better message depending on box/local
-        print(
-            f'Upon execution, output will be copied to: {config.storage.path}')
 
     if clean_products_path:
         print('Cleaning product root folder...')

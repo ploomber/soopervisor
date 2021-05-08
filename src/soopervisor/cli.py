@@ -27,7 +27,7 @@ def cli():
               type=click.Choice(Backend.get_values()),
               required=True)
 def add(name, backend):
-    """Add an environment
+    """Add a new target
     """
     backend = Backend(backend)
 
@@ -77,7 +77,7 @@ def add(name, backend):
               help='Only build docker image')
 def submit(name, until_build):
     """
-    Submit an environment for execution/deployment
+    Submit a target for execution/deployment
     """
     until = None
 
