@@ -1,8 +1,13 @@
+from pathlib import Path
 from soopervisor.base.config import ScriptConfig
 from soopervisor.executors.LocalExecutor import LocalExecutor
 
 
-def build_project(project_root, clean_products_path, dry_run, load_dag=True):
+def build_project(project_root,
+                  env_name,
+                  clean_products_path,
+                  dry_run,
+                  load_dag=True):
     """
     Build a project using settings from a soopervisor.yaml file
 
@@ -15,7 +20,9 @@ def build_project(project_root, clean_products_path, dry_run, load_dag=True):
     clean_products_path
         Remove all files from product_root before building
     """
-    config = ScriptConfig.from_project(project_root, load_dag=load_dag)
+    config = ScriptConfig.from_file_with_root_key(project_root,
+                                                  env_name,
+                                                  load_dag=load_dag)
 
     print(f'Env prefix {config.environment_prefix}')
     print(config.paths)
