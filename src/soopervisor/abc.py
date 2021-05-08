@@ -8,6 +8,8 @@ import click
 import yaml
 from pydantic import BaseModel
 
+from ploomber.spec import DAGSpec
+
 
 class AbstractConfig(BaseModel, abc.ABC):
     """
@@ -18,9 +20,10 @@ class AbstractConfig(BaseModel, abc.ABC):
 
     @classmethod
     def from_file_with_root_key(cls, path_to_config, env_name):
-        data = yaml.safe_load(Path(path_to_config).read_text())
+        # write defaults, if needed
+        cls._write_defaults(path_to_config, env_name)
 
-        # write defaults
+        data = yaml.safe_load(Path(path_to_config).read_text())
 
         # check env_name in data, otherwise the env is corrupted
 
@@ -32,17 +35,21 @@ class AbstractConfig(BaseModel, abc.ABC):
 
         actual = data[env_name]['backend']
         expected = cls.get_backend_value()
+
         if actual != expected:
             raise click.ClickException(
                 f'Invalid backend key for target {env_name} in '
                 f'{path_to_config!s}. Expected {expected!r}, actual {actual!r}'
             )
 
+        del data[env_name]['backend']
+
         return cls(**data[env_name])
 
     @classmethod
-    def write_defaults(cls, path_to_config, env_name):
-        default_data = yaml.safe_dump({env_name: cls.defaults()})
+    def _write_defaults(cls, path_to_config, env_name):
+        data = cls.defaults()
+        default_data = yaml.safe_dump({env_name: data})
 
         # if no config file, write one with env_name section and defaults
         if not Path(path_to_config).exists():
@@ -56,8 +63,15 @@ class AbstractConfig(BaseModel, abc.ABC):
                 path.write_text(content + f'\n{default_data}\n')
 
     @classmethod
+    @abc.abstractmethod
+    def get_backend_value(cls):
+        pass
+
+    @classmethod
     def defaults(cls):
-        return dict(cls())
+        data = dict(cls())
+        data['backend'] = cls.get_backend_value()
+        return data
 
 
 class AbstractExporter(abc.ABC):
@@ -81,20 +95,40 @@ class AbstractExporter(abc.ABC):
 
     def __init__(self, path_to_config, env_name):
         # initialize configuration and a few checks on it
-        self._cfg, self._dag = self.CONFIG_CLASS.from_file_with_root_key(
+        self._cfg = self.CONFIG_CLASS.from_file_with_root_key(
             path_to_config=path_to_config,
             env_name=env_name,
-            return_dag=True,
         )
+
         self._env_name = env_name
 
+        # initialize dag (needed for validation)
+        # TODO: implement logic to the corresponding env.{target-name}.yaml
+        # to simulate what's going to happen
+        self._dag = DAGSpec.find(lazy_import=True).to_dag().render(
+            force=True, show_progress=False)
+
         # ensure that the project and the config make sense
+        self.validate()
 
         # validate specific details about the target
         self._validate(self._cfg, self._dag, self._env_name)
 
     def validate(self):
-        pass
+        """
+        Verify project has the right structure before running the script.
+        This runs as a sanity check in the development machine
+        """
+        if not Path(self._cfg.paths.environment).exists():
+            raise FileNotFoundError(
+                'Expected a conda "environment.yml" at: {}'.format(
+                    self._cfg.paths.environment))
+
+        # TODO: warn if the environment file does not have pinned versions
+
+        if self._cfg.environment_name is None:
+            raise ValueError('Failed to extract the environment name from the '
+                             'conda "environment.yaml"')
 
     def add(self):
         # check that env_name folder does not exist

@@ -19,6 +19,7 @@ def build_project(project_root,
     clean_products_path
         Remove all files from product_root before building
     """
+    # NOTE: load dag was removed, have to load using dagspec
     config = ScriptConfig.from_file_with_root_key(project_root,
                                                   env_name,
                                                   load_dag=load_dag)

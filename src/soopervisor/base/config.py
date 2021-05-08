@@ -10,7 +10,6 @@ import yaml
 
 from ploomber.util import default
 from soopervisor.script.script import generate_script
-from soopervisor.base import validate as validate_base
 from soopervisor.base.abstract import AbstractBaseModel, AbstractConfig
 
 
@@ -93,7 +92,6 @@ class ScriptConfig(AbstractConfig):
     paths : dict
         Section to configure project paths, see Paths for schema
 
-
     lazy_import : bool, default=False
         When processing your project, the DAG is initialized to run a few
         validations on it. If your pipeline has any dotted paths
@@ -124,12 +122,7 @@ class ScriptConfig(AbstractConfig):
         self.render()
 
     @classmethod
-    # FIXME: remove parameters we are no longer using
-    def from_file_with_root_key(cls,
-                                path_to_config,
-                                env_name,
-                                return_dag=False,
-                                load_dag=True):
+    def from_file_with_root_key(cls, path_to_config, env_name):
         """
         Initializes a ScriptConfig from a project. Looks for a
         soopervisor.yaml file, if it doesn't exist, it just
@@ -174,14 +167,7 @@ class ScriptConfig(AbstractConfig):
         else:
             config = cls(paths=dict(project=str(project_root)))
 
-        # NOTE: move this to the abstract class to unify validation
-        validate = True
-        if validate:
-            dag = validate_base.project(config, load_dag=load_dag)
-        else:
-            dag = None
-
-        return config if not return_dag else (config, dag)
+        return config
 
     # TODO: remove, config objects should not implement this logic
     def to_script(self, command=None):

@@ -7,8 +7,8 @@ import click
 import pytest
 import yaml
 
-from soopervisor.abc import AbstractExporter, AbstractConfig
-from soopervisor.airflow.config import AirflowConfig
+from soopervisor.abc import AbstractConfig
+# from soopervisor.airflow.config import AirflowConfig
 
 
 class ConcreteConfig(AbstractConfig):
@@ -19,32 +19,26 @@ class ConcreteConfig(AbstractConfig):
         return 'backend-value'
 
 
-class ConcreteExporter(AbstractExporter):
-    @staticmethod
-    def _add():
-        pass
+def test_initialize_from_empty_folder(tmp_empty):
+    ConcreteConfig.from_file_with_root_key('soopervisor.yaml', 'some_env')
 
-    @staticmethod
-    def _submit():
-        pass
-
-    @staticmethod
-    def _validate():
-        pass
+    data = yaml.safe_load(Path('soopervisor.yaml').read_text())
+    assert data['some_env']['backend'] == 'backend-value'
+    assert data['some_env']['default'] == 'value'
 
 
 # TODO: parametrize over concrete classes
 def test_creates_soopervisor_yaml_if_it_doesnt_exist(tmp_empty):
-    ConcreteConfig.write_defaults('soopervisor.yaml', 'some_env')
+    ConcreteConfig._write_defaults('soopervisor.yaml', 'some_env')
 
     cfg = yaml.safe_load(Path('soopervisor.yaml').read_text())
-    assert cfg['some_env'] == {'default': 'value'}
+    assert cfg['some_env'] == {'default': 'value', 'backend': 'backend-value'}
 
 
 def test_error_if_root_key_exists_in_soopervisor_yaml(tmp_empty):
     Path('soopervisor.yaml').write_text('another_env:\n    x: 1')
 
-    ConcreteConfig.write_defaults('soopervisor.yaml', 'some_env')
+    ConcreteConfig._write_defaults('soopervisor.yaml', 'some_env')
 
     cfg = yaml.safe_load(Path('soopervisor.yaml').read_text())
 
