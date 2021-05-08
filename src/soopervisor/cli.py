@@ -7,7 +7,7 @@ from soopervisor import __version__
 from soopervisor.build import build_project
 from soopervisor.argo.config import ArgoConfig
 from soopervisor.airflow import export as export_airflow_module
-from soopervisor.argo import export as export_argo
+from soopervisor.argo.export import ArgoWorkflowsExporter
 from soopervisor.aws import lambda_, batch
 from soopervisor import config
 from soopervisor.enum import Backend
@@ -82,15 +82,10 @@ def add(name, backend):
         lambda_.add(name=name)
 
     elif backend == Backend.argo_workflows:
-        config = ArgoConfig.from_file_with_root_key(Path('soopervisor.yaml'),
-                                                    root_key=name)
-
         # TODO: re-enable support for upload
         # export_argo.upload_code(config)
-        click.echo('Generating argo spec from project...')
-        export_argo.project(config)
-        click.echo('Done. Saved argo spec to "argo.yaml"')
-        click.echo('Submit your workflow with: argo submit -n argo argo.yaml')
+        exporter = ArgoWorkflowsExporter('soopervisor.yaml', env_name=name)
+        exporter.add()
 
     elif backend == Backend.airflow:
         click.echo('Exporting to Airflow...')
