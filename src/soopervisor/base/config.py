@@ -273,6 +273,7 @@ class ScriptConfig(AbstractConfig):
         else:
             config = cls(paths=dict(project=str(project_root)))
 
+        # NOTE: move this to the abstract class to unify validation
         if validate:
             dag = validate_base.project(config, load_dag=load_dag)
         else:
