@@ -17,7 +17,7 @@ from soopervisor.enum import Backend
 @click.version_option(version=__version__)
 def cli():
     """
-    CLI
+    soopervisor exports ploomber projects to run in other platforms
     """
     pass
 
@@ -87,7 +87,6 @@ def add(name, backend):
 
         # TODO: re-enable support for upload
         # export_argo.upload_code(config)
-
         click.echo('Generating argo spec from project...')
         export_argo.project(config)
         click.echo('Done. Saved argo spec to "argo.yaml"')

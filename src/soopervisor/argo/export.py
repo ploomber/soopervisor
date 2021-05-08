@@ -1,5 +1,5 @@
 """
-Functions for generating Argo YAML spec
+Export to Argo Workflows
 """
 import shlex
 import subprocess
@@ -39,6 +39,8 @@ yaml.add_representer(literal_str, represent_literal_str)
 
 
 def _make_argo_task(name, dependencies):
+    """Generate an Argo Task spec
+    """
     task = {
         'name': name,
         'dependencies': dependencies,
@@ -54,6 +56,8 @@ def _make_argo_task(name, dependencies):
 
 
 def upload_code(config):
+    """Upload code to code pod
+    """
 
     if config.code_pod is None:
         raise ValueError('"code_pod" section in the configuration file '
