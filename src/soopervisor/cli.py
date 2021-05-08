@@ -4,9 +4,6 @@ import yaml
 import click
 
 from soopervisor import __version__
-from soopervisor.build import build_project
-from soopervisor.argo.config import ArgoConfig
-from soopervisor.airflow import export as export_airflow_module
 from soopervisor.argo.export import ArgoWorkflowsExporter
 from soopervisor.airflow.export import AirflowExporter
 from soopervisor.aws import lambda_, batch
@@ -21,28 +18,6 @@ def cli():
     soopervisor exports ploomber projects to run in other platforms
     """
     pass
-
-
-@cli.command()
-@click.option('--clean-products-path',
-              '-c',
-              is_flag=True,
-              help='Remove all files from product_root before building')
-@click.option('--dry-run',
-              '-d',
-              is_flag=True,
-              help='Prepare execution without actually doing it')
-@click.option('--load-dag/--no-load-dag',
-              default=False,
-              help='Whether to load dag for validation purposes')
-def build(clean_products_path, dry_run, load_dag):
-    """
-    Build project
-    """
-    build_project(project_root='.',
-                  clean_products_path=clean_products_path,
-                  dry_run=dry_run,
-                  load_dag=load_dag)
 
 
 @cli.command()

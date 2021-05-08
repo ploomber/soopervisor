@@ -5,6 +5,15 @@ from soopervisor.executors.LocalExecutor import LocalExecutor
 def build_project(project_root, clean_products_path, dry_run, load_dag=True):
     """
     Build a project using settings from a soopervisor.yaml file
+
+    Parameters
+    ----------
+    dry_run
+        Prepare execution without actually doing it
+    load_dag
+        Whether to load dag for validation purposes
+    clean_products_path
+        Remove all files from product_root before building
     """
     config = ScriptConfig.from_project(project_root, load_dag=load_dag)
 
