@@ -24,8 +24,9 @@ class YAMLConfig(BaseModel):
         return cls(**cfg)
 
 
-class AWSBatchConfig(YAMLConfig):
+class AWSBatchSubmit(BaseModel):
     repository: str
+
     # must not contain "image"
     container_properties: dict = {
         "memory": 2048,
@@ -37,3 +38,7 @@ class AWSBatchConfig(YAMLConfig):
 
     class Config:
         extra = 'forbid'
+
+
+class AWSBatchConfig(YAMLConfig):
+    submit: AWSBatchSubmit

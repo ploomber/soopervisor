@@ -77,8 +77,8 @@ def submit(name, until=None):
 
         local_name = f'{pkg_name}:{version}'
 
-        # TODO: validate format of cfg.repository
-        remote_name = f'{cfg.repository}:{version}'
+        # TODO: validate format of cfg.submit.repository
+        remote_name = f'{cfg.submit.repository}:{version}'
 
         # how to allow passing --no-cache?
         e.run('docker',
@@ -130,9 +130,9 @@ def submit(name, until=None):
         submit_dag(dag=dag,
                    job_def=pkg_name,
                    remote_name=remote_name,
-                   job_queue=cfg.job_queue,
-                   container_properties=cfg.container_properties,
-                   region_name=cfg.region_name,
+                   job_queue=cfg.submit.job_queue,
+                   container_properties=cfg.submit.container_properties,
+                   region_name=cfg.submit.region_name,
                    cmdr=e)
 
         e.success('Done. Submitted to AWS Batch')

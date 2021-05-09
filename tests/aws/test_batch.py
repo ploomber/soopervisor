@@ -147,12 +147,14 @@ def test_add(backup_packaged_project):
 
     assert d['train'] == {
         'backend': 'aws-batch',
-        'repository': 'your-repository-url/name',
-        'job_queue': 'your-job-queue',
-        'region_name': 'your-region-name',
-        'container_properties': {
-            'memory': 16384,
-            'vcpus': 8
+        'submit': {
+            'repository': 'your-repository-url/name',
+            'job_queue': 'your-job-queue',
+            'region_name': 'your-region-name',
+            'container_properties': {
+                'memory': 16384,
+                'vcpus': 8
+            }
         }
     }
 
