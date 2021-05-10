@@ -14,8 +14,3 @@ Schema
 ---------------------
 
 .. autoclass:: soopervisor.base.config.Paths
-
-``storage`` sub-section
-------------------------
-
-.. autoclass:: soopervisor.base.config.StorageConfig

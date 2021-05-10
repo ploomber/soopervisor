@@ -1,5 +1,5 @@
-Running in Kubernetes
-=====================
+Kubernetes (Argo Workflows)
+===========================
 
 Soopervisor can export Ploomber projects to run in Kubernetes via
 `Argo <https://argoproj.github.io/argo/>`_.
@@ -72,7 +72,7 @@ needs.
 
 To upload the code using the cli:
 
-.. code-block::
+.. code-block:: sh
 
     soopervisor export --upload
 

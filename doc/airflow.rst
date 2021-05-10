@@ -1,5 +1,5 @@
-Running in Airfow
-=================
+Airfow
+======
 
 *This tutorial shows you how to export a Ploomber pipeline using Soopervisor.*
 

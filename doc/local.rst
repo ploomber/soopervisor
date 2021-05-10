@@ -63,8 +63,3 @@ with:
 
 
 **Note:** for this to work, Docker should be properly configured in the host.
-
-Uploading products to Box
--------------------------
-
-[Work in progress]

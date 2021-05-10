@@ -12,6 +12,8 @@ User Guide
    scheduling
    kubernetes
    airflow
+   aws-batch
+   aws-lambda
    api/index
    dev
 
