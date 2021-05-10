@@ -7,7 +7,7 @@ Description: >
 Globals:
   Function:
     Timeout: 30
-    # Important parameter to tweak, if too small ther service will always timeout
+    # Important parameter to tweak, if too small ther service may timeout
     MemorySize: 5000
 
 Resources:

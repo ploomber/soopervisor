@@ -17,17 +17,8 @@ and ``aws``.
 * `conda instructions <https://docs.conda.io/en/latest/miniconda.html>`_
 * `docker instructions <https://docs.docker.com/get-docker/>`_
 * `aws instructions <https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html>`_
+* `git <https://git-scm.com/book/en/v2/Getting-Started-Installing-Git>`_
 * Install Ploomber with ``pip install ploomber``
-
-Run the following to make sure they are working correctly:
-
-.. code-block:: sh
-
-    ploomber --help
-    docker --help
-    conda --help
-    aws --help
-
 
 ``soopervisor`` takes your pipeline, packages it, creates a Docker image,
 uploads it and submits it for execution; however, you still have to configure
