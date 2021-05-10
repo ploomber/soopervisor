@@ -22,7 +22,7 @@ Pre-requisites
 * Install Ploomber with ``pip install ploomber``
 
 Training vs. serving pipelines
------------------------------
+------------------------------
 
 When training an ML model, you may organize the pipeline in several tasks such
 as "get data", "clean data", "compute feature 1", "compute feature 2" and
