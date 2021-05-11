@@ -31,10 +31,3 @@ def test_no_error_if_products_outside_project_root(products,
     Path('env.serve.yaml').write_text(yaml.dump(env_airflow))
 
     AirflowExporter('soopervisor.yaml', env_name='serve')
-
-
-# not sure how I'll manage this subdir case in the new version
-@pytest.mark.xfail
-def test_no_error_when_validating_from_a_parent_folder(
-        tmp_sample_project_in_subdir):
-    AirflowExporter('subdir/soopervisor.yaml', env_name='serve')

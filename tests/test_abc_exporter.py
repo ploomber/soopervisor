@@ -4,7 +4,6 @@ import pytest
 from ploomber.exceptions import DAGSpecInitializationError
 
 from soopervisor.abc import AbstractExporter, AbstractConfig
-from soopervisor.base.config import ScriptConfig
 
 
 class ConcreteConfig(AbstractConfig):
@@ -16,9 +15,7 @@ class ConcreteConfig(AbstractConfig):
 
 
 class ConcreteExporter(AbstractExporter):
-    # TODO: the current validation depends on implementation details
-    # in script config, but we should remove those
-    CONFIG_CLASS = ScriptConfig
+    CONFIG_CLASS = ConcreteConfig
 
     @staticmethod
     def _add():
@@ -29,28 +26,17 @@ class ConcreteExporter(AbstractExporter):
         pass
 
     @staticmethod
-    def _validate():
+    def _validate(cfg, dag, env_name):
         pass
 
 
-def test_error_if_missing_environment_yml(tmp_sample_project):
-    Path('environment.yml').unlink()
+def test_error_if_missing_environment_lock_yml(tmp_sample_project):
+    Path('environment.lock.yml').unlink()
 
     with pytest.raises(FileNotFoundError) as excinfo:
         ConcreteExporter('soopervisor.yaml', env_name='some_env')
 
-    assert 'Expected a conda "environment.yml"' in str(excinfo.value)
-
-
-def test_error_if_missing_name_in_environment_yml(tmp_sample_project):
-    Path('environment.yml').unlink()
-    Path('environment.yml').touch()
-
-    with pytest.raises(ValueError) as excinfo:
-        ConcreteExporter('soopervisor.yaml', env_name='some_env')
-
-    assert ('Failed to extract the environment name from the '
-            'conda "environment.yaml"') == str(excinfo.value)
+    assert 'Missing \'environment.lock.yml\' file' in str(excinfo.value)
 
 
 def test_error_if_dag_fails_to_initialize(tmp_sample_project):

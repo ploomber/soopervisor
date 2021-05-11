@@ -3,18 +3,6 @@ Airfow
 
 *This tutorial shows you how to export a Ploomber pipeline using Soopervisor.*
 
-Why Ploomber?
--------------
-
-Ploomber and Airflow's main difference is that Ploomber focuses
-on the development stage. You can write your tasks
-as Python functions, Jupyter notebooks, SQL scripts, or even R scripts,
-and Ploomber will take care of converting the collection of functions/scripts into a pipeline. Furthermore, it allows you to debug and test locally, with no need for extra infrastructure.
-
-Airflow is a general-purpose tool aimed to cover more scenarios; it is an excellent tool for running workflows in production but provides little help for development.
-
-Using Ploomber for development and Airflow for production gets you the best of
-both worlds: a great development experience and a production orchestrator.
 
 Exporting a Ploomber pipeline using Soopervisor
 -----------------------------------------------

@@ -8,6 +8,7 @@ from ploomber.io._commander import Commander
 
 from soopervisor.aws.config import AWSBatchConfig
 from soopervisor.commons import docker
+from soopervisor import abc
 
 # TODO:
 # warn on large distribution artifacts - there might be data files
@@ -31,47 +32,51 @@ from soopervisor.commons import docker
 # add a way to skip tests when submitting
 
 
-def add(name):
-    with Commander(workspace=name,
-                   templates_path=('soopervisor', 'assets')) as e:
-        e.copy_template('aws-batch/Dockerfile')
-        e.append('aws-batch/soopervisor.yaml',
-                 'soopervisor.yaml',
-                 env_name=name)
-        e.success('Done')
-        e.print(f'Fill in the configuration in the {name!r} '
+class AWSBatchExporter(abc.AbstractExporter):
+    CONFIG_CLASS = AWSBatchConfig
+
+    @staticmethod
+    def _validate(cfg, dag, env_name):
+        pass
+
+    @staticmethod
+    def _add(cfg, env_name):
+        with Commander(workspace=env_name,
+                       templates_path=('soopervisor', 'assets')) as e:
+            e.copy_template('aws-batch/Dockerfile')
+            e.success('Done')
+            e.print(
+                f'Fill in the configuration in the {env_name!r} '
                 'section in soopervisor.yaml then submit to AWS Batch with: '
-                f'soopervisor submit {name}')
+                f'soopervisor submit {env_name}')
 
         # TODO: run dag checks: client configured, ploomber status
 
+    @staticmethod
+    def _submit(cfg, env_name, until):
+        dag = DAGSpec.find().to_dag()
 
-def submit(name, until=None):
-    cfg = AWSBatchConfig.from_file_with_root_key('soopervisor.yaml', name)
+        # warn if missing client (only warn cause the config might configure
+        # it when building the docker image)
 
-    dag = DAGSpec.find().to_dag()
+        # TODO check if image already exists locally or remotely and skip...
 
-    # warn if missing client (only warn cause the config might configure
-    # it when building the docker image)
+        with Commander(workspace=env_name,
+                       templates_path=('soopervisor', 'assets')) as e:
 
-    # TODO check if image already exists locally or remotely and skip...
+            pkg_name, remote_name = docker.build(e, cfg, env_name, until=until)
 
-    with Commander(workspace=name,
-                   templates_path=('soopervisor', 'assets')) as e:
+            e.info('Submitting jobs to AWS Batch')
 
-        pkg_name, remote_name = docker.build(e, cfg, name, until=until)
+            submit_dag(dag=dag,
+                       job_def=pkg_name,
+                       remote_name=remote_name,
+                       job_queue=cfg.job_queue,
+                       container_properties=cfg.container_properties,
+                       region_name=cfg.region_name,
+                       cmdr=e)
 
-        e.info('Submitting jobs to AWS Batch')
-
-        submit_dag(dag=dag,
-                   job_def=pkg_name,
-                   remote_name=remote_name,
-                   job_queue=cfg.submit.job_queue,
-                   container_properties=cfg.submit.container_properties,
-                   region_name=cfg.submit.region_name,
-                   cmdr=e)
-
-        e.success('Done. Submitted to AWS Batch')
+            e.success('Done. Submitted to AWS Batch')
 
 
 def submit_dag(dag, job_def, remote_name, job_queue, container_properties,

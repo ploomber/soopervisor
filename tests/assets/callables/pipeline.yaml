@@ -3,17 +3,15 @@ meta:
   extract_product: False
 
 tasks:
-    # tasks.get, features and join are python functions
-  - source: tasks.get
+  - source: callables_tasks.get
     product: "{{path.products}}/get.parquet"
 
-  - source: tasks.features
+  - source: callables_tasks.features
     product: "{{path.products}}/features.parquet"
 
-  - source: tasks.join
+  - source: callables_tasks.join
     product: "{{path.products}}/join.parquet"
 
-    # fit.py is a script executed as a notebook
   - source: fit.py
     product:
         nb: "{{path.products}}/nb.ipynb"

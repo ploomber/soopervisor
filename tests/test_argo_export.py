@@ -95,7 +95,7 @@ def test_custom_volumes(mock_docker_calls, backup_packaged_project):
     exporter.add()
 
     spec = yaml.safe_load(Path('soopervisor.yaml').read_text())
-    spec['serve']['submit']['mounted_volumes'] = [{
+    spec['serve']['mounted_volumes'] = [{
         'name': 'nfs',
         'sub_path': 'some_subpath',
         'spec': {
@@ -131,29 +131,30 @@ def test_custom_volumes(mock_docker_calls, backup_packaged_project):
     }]
 
 
-# @pytest.mark.parametrize(
-#     'name',
-#     [
-#         'ml-intermediate',
-#         'etl',
-#         'ml-online',
-#     ],
-# )
-# def test_generate_valid_argo_specs(name, tmp_projects):
-#     if name == 'ml-online':
-#         subprocess.run(['pip', 'uninstall', 'ml-online', '--yes'], check=True)
-#         subprocess.run(['pip', 'install', 'ml-online/'], check=True)
+@pytest.mark.xfail
+@pytest.mark.parametrize(
+    'name',
+    [
+        'ml-intermediate',
+        'etl',
+        'ml-online',
+    ],
+)
+def test_generate_valid_argo_specs(name, tmp_projects):
+    if name == 'ml-online':
+        subprocess.run(['pip', 'uninstall', 'ml-online', '--yes'], check=True)
+        subprocess.run(['pip', 'install', 'ml-online/'], check=True)
 
-#     os.chdir(name)
+    os.chdir(name)
 
-#     runner = CliRunner()
-#     result = runner.invoke(
-#         cli.add,
-#         ['serve', '--backend', 'argo-workflows'],
-#         catch_exceptions=False,
-#     )
+    runner = CliRunner()
+    result = runner.invoke(
+        cli.add,
+        ['serve', '--backend', 'argo-workflows'],
+        catch_exceptions=False,
+    )
 
-#     assert result.exit_code == 0
-#     # validate argo workflow
-#     content = Path('serve', 'argo.yaml').read_text()
-#     assert Workflow.from_dict(yaml.safe_load(content))
+    assert result.exit_code == 0
+    # validate argo workflow
+    content = Path('serve', 'argo.yaml').read_text()
+    assert Workflow.from_dict(yaml.safe_load(content))

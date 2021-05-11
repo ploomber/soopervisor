@@ -11,9 +11,3 @@ ArgoMountedVolume
 -----------------
 
 .. autoclass:: soopervisor.argo.config.ArgoMountedVolume
-
-
-ArgoCodePod
------------
-
-.. autoclass:: soopervisor.argo.config.ArgoCodePod

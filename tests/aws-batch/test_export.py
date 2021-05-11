@@ -127,21 +127,20 @@ def mock_batch(aws_credentials, iam_resource, batch_client, vpc):
 
 def test_add(backup_packaged_project):
 
-    batch.add(name='train')
+    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
+    exporter.add()
 
     with open('soopervisor.yaml') as f:
         d = yaml.safe_load(f)
 
     assert d['train'] == {
         'backend': 'aws-batch',
-        'submit': {
-            'repository': 'your-repository-url/name',
-            'job_queue': 'your-job-queue',
-            'region_name': 'your-region-name',
-            'container_properties': {
-                'memory': 16384,
-                'vcpus': 8
-            }
+        'repository': 'your-repository/name',
+        'job_queue': 'your-job-queue',
+        'region_name': 'your-region-name',
+        'container_properties': {
+            'memory': 16384,
+            'vcpus': 8
         }
     }
 
@@ -169,9 +168,9 @@ def test_submit(mock_batch, monkeypatch, backup_packaged_project):
     monkeypatch.setattr(batch.boto3, 'client',
                         lambda name, region_name: boto3_mock)
 
-    batch.add(name='train')
-
-    batch.submit(name='train')
+    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
+    exporter.add()
+    exporter.submit()
 
     jobs = mock_batch.list_jobs(jobQueue='your-job-queue')['jobSummaryList']
 

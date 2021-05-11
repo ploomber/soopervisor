@@ -18,7 +18,7 @@ Use jinja to generate the script (it makes easy to embed logic)
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
 
-def generate_script(config, command):
+def generate_script(config, project_name, command):
     """
     Generate a bash script (string) to run a pipeline in a clean environment
 
@@ -34,7 +34,9 @@ def generate_script(config, command):
     template = env.get_template('script.sh')
     # config = __scape_spaces_on_paths(config)
 
-    return template.render(config=config, command=command)
+    return template.render(config=config,
+                           project_name=project_name,
+                           command=command)
 
 
 def __scape_spaces_on_paths(config):

@@ -28,6 +28,9 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
 
     @staticmethod
     def _add(cfg, env_name):
+        """
+        Add Dockerfile
+        """
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
             e.copy_template('argo-workflows/Dockerfile')
@@ -35,7 +38,8 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
 
     @staticmethod
     def _submit(cfg, env_name, until):
-        """Export Argo YAML spec from Ploomber project to argo.yaml
+        """
+        Build and upload Docker image. Export Argo YAML spec.
         """
         # use lazy load?
         dag = DAGSpec.find().to_dag()
@@ -99,9 +103,9 @@ def _make_argo_task(name, dependencies):
 
 
 def _make_argo_spec(dag, env_name, cfg, pkg_name, target_image):
-    if cfg.submit.mounted_volumes:
+    if cfg.mounted_volumes:
         volumes, volume_mounts = zip(*((mv.to_volume(), mv.to_volume_mount())
-                                       for mv in cfg.submit.mounted_volumes))
+                                       for mv in cfg.mounted_volumes))
         # force them to be lists to prevent "!!python/tuple" to be added
         volumes = list(volumes)
         volume_mounts = list(volume_mounts)

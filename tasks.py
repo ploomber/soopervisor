@@ -20,10 +20,10 @@ def setup(c, version='3.8'):
 
 
 @task
-def test_no_docker(c):
+def test(c):
     """Run all tests except the ones that use Docker
     """
-    c.run('pytest tests --ignore tests/test_docker_executor.py', pty=True)
+    c.run('pytest tests', pty=True)
 
 
 @task

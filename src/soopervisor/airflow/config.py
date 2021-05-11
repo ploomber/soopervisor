@@ -1,18 +1,14 @@
-from soopervisor.base.config import ScriptConfig
+from soopervisor import abc
+from soopervisor.enum import Backend
 
 
-class AirflowConfig(ScriptConfig):
-    # TODO: Airflow-exclusive parameters, which operator to use (bash,
-    # docker, kubernetespod). Maybe template? jinja template where ploomber's
-    # code will be generated, in case there is some customization to do for
-    # default parameters
+class AirflowConfig(abc.AbstractConfig):
+    @classmethod
+    def get_backend_value(cls):
+        return Backend.airflow.value
 
-    # TODO: some default values should change. for example, look by default
-    # for an environment.lock.yml (explain why) and do not set a default
-    # to products. lazy_import=True, allow_incremental=False
-    lazy_import: bool = True
-
-    # NOTE: another validation we can implement would be to create the
-    # environment.yml and then make sure we can instantiate the dag, this would
-    # allow to verify missing dependencies before exporting rather than when
-    # trying to run it in the airflow host
+    @classmethod
+    def defaults(cls):
+        data = cls().dict()
+        data['backend'] = cls.get_backend_value()
+        return data

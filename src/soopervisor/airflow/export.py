@@ -1,7 +1,6 @@
 """
 Export a Ploomber DAG to Airflow
 """
-import os
 import shutil
 from pathlib import Path
 from itertools import chain
@@ -11,10 +10,10 @@ from jinja2 import Environment, PackageLoader, StrictUndefined
 
 from ploomber.spec import DAGSpec
 from soopervisor.airflow.config import AirflowConfig
-from soopervisor.base.config import ScriptConfig
 from ploomber.products import MetaProduct
 from soopervisor import config
 from soopervisor import abc
+from soopervisor.script.script import generate_script
 
 
 class AirflowExporter(abc.AbstractExporter):
@@ -24,92 +23,36 @@ class AirflowExporter(abc.AbstractExporter):
     def _add(cfg, env_name):
         """Export Ploomber project to Airflow
 
-        Calling this function generates an Airflow DAG definition at
-        {airflow-home}/dags/{project-name}.py and copies the project's source
-        code
-        to {airflow-home}/ploomber/{project-name}. The exported Airflow DAG is
-        composed of BashOperator tasks, one per task in the Ploomber DAG.
-
-        Parameters
-        ----------
-        project_root : str
-            Project's root folder (pipeline.yaml parent)
-
-        output_path : str, optional
-            Output folder. If None, it looks up the value in the
-            AIRFLOW_HOME environment variable. If the variable isn't set, it
-            defaults to ~/airflow
+        Generates a .py file that exposes a dag variable
         """
         click.echo('Exporting to Airflow...')
-        project_root = '.'
-        output_path = env_name
+        project_root = Path('.').resolve()
+        project_name = project_root.name
+
+        Path(env_name).mkdir(exist_ok=True)
 
         env = Environment(loader=PackageLoader('soopervisor', 'assets'),
                           undefined=StrictUndefined)
         template = env.get_template('airflow.py')
 
-        project_root = Path(project_root).resolve()
+        out = template.render(project_name=project_name, env_name=env_name)
 
-        # use airflow-home to know where to save the Airflow dag definition
-        if output_path is None:
-            output_path = os.environ.get('AIRFLOW_HOME', '~/airflow')
+        # maybe the rest should be the submit step?
+        # add: creates airflow.py
+        # submit: copies (latest) source code and renames env
+        # maybe rename submit to export? some backends export and submit
+        # but others just export
+        # after adding airflow.py users may edit it (as long as they dont
+        # change  the dag initialization that's fine)
 
-        output_path = str(Path(output_path).expanduser())
-
-        Path(output_path).mkdir(exist_ok=True, parents=True)
-
-        print('Processing project: ', project_root)
-
-        # copy project-root to airflow-home (create a folder with the same
-        # name)
-        # TODO: what to exclude?
-        project_name = Path(project_root).name
-        project_root_airflow = Path(output_path, 'ploomber', project_name)
-        project_root_airflow.mkdir(exist_ok=True, parents=True)
-
-        out = template.render(project_root=project_root_airflow,
-                              project_name=project_name,
-                              env_name=env_name)
-
-        if project_root_airflow.exists():
-            print(f'Removing existing project at {project_root_airflow}')
-            shutil.rmtree(project_root_airflow)
-
-        print('Exporting...')
-
-        # make sure this works if copying everything in a project root
-        # sub-directory
-        try:
-            rel = project_root_airflow.resolve().relative_to(project_root)
-            sub_dir = rel.parts[0]
-            is_sub_dir = True
-        except ValueError:
-            is_sub_dir = False
-            sub_dir = None
-
-        # copy source code that will be uploadded
-        if is_sub_dir:
-
-            def ignore(src, names):
-                dir_name = Path(src).resolve().relative_to(project_root)
-                return names if str(dir_name).startswith(sub_dir) else []
-
-            shutil.copytree(project_root,
-                            dst=project_root_airflow,
-                            ignore=ignore)
-        else:
-            shutil.copytree(project_root, dst=project_root_airflow)
-
-        # generate script that exposes the DAG airflow
-        path_out = Path(output_path, 'dags', project_name + '.py')
+        # generate script that declares the Airflow DAG
+        path_out = Path(env_name, 'dags', project_name + '.py')
         path_out.parent.mkdir(exist_ok=True, parents=True)
         path_out.write_text(out)
 
-        # rename env.{env_name}.yaml if needed
-        config.replace_env(env_name=env_name, target_dir=project_root_airflow)
-
-        print('Copied project source code to: ', project_root_airflow)
-        print('Saved Airflow DAG definition to: ', path_out)
+        click.echo(f'Airflow DAG declaration saved to {path_out!r}, you may '
+                   'edit the file to change the configuration if needed, '
+                   '(e.g., set the execution period)')
 
     @staticmethod
     def _validate(cfg, dag, env_name):
@@ -117,7 +60,7 @@ class AirflowExporter(abc.AbstractExporter):
         Validates a project before exporting as an Airflow DAG.
         This runs as a sanity check in the development machine
         """
-        project_root = Path(cfg.paths.project)
+        project_root = Path('.').resolve()
 
         env = (f'env.{env_name}.yaml'
                if Path(f'env.{env_name}.yaml').exists() else None)
@@ -186,8 +129,32 @@ class AirflowExporter(abc.AbstractExporter):
         # paths?
 
     @staticmethod
-    def _submit():
-        raise NotImplementedError
+    def _submit(cfg, env_name, until):
+        """
+        Copies the current source code to the target environment folder.
+        The code along with the DAG declaration file can be copied to
+        AIRFLOW_HOME for execution
+        """
+        project_root = Path('.').resolve()
+        project_name = project_root.name
+
+        project_root_airflow = Path(env_name, 'ploomber', project_name)
+
+        # since we are copying the source code into a sub-directory
+        # we must ignore the target directory to prevent an infinite recursion
+        rel = project_root_airflow.resolve().relative_to(project_root)
+        sub_dir = rel.parts[0]
+
+        def ignore(src, names):
+            dir_name = Path(src).resolve().relative_to(project_root)
+            return names if str(dir_name).startswith(sub_dir) else []
+
+        shutil.copytree(project_root, dst=project_root_airflow, ignore=ignore)
+
+        # rename env.{env_name}.yaml if needed
+        config.replace_env(env_name=env_name, target_dir=project_root_airflow)
+
+        click.echo(f'Copied project source code to {project_root_airflow!r}')
 
 
 def spec_to_airflow(project_root, dag_name, env_name, airflow_default_args):
@@ -198,7 +165,7 @@ def spec_to_airflow(project_root, dag_name, env_name, airflow_default_args):
     This function is called by the DAG definition parsed by Airflow in
     {AIRFLOW_HOME}/dags
     """
-    script_cfg = ScriptConfig.from_file_with_root_key(
+    script_cfg = AirflowConfig.from_file_with_root_key(
         Path(project_root, 'soopervisor.yaml'),
         env_name=env_name,
     )
@@ -207,7 +174,9 @@ def spec_to_airflow(project_root, dag_name, env_name, airflow_default_args):
     # airflow host and we should never expect that environment to have
     # the project environment configured, as its only purpose is to parse
     # the DAG
-    dag = DAGSpec(script_cfg.paths.entry_point, lazy_import=True).to_dag()
+    # TODO: auto discover yaml spec
+    dag = DAGSpec(Path(project_root, 'pipeline.yaml'),
+                  lazy_import=True).to_dag()
 
     return _dag_to_airflow(dag, dag_name, script_cfg, airflow_default_args)
 
@@ -225,6 +194,9 @@ def _dag_to_airflow(dag, dag_name, script_cfg, airflow_default_args):
     from airflow import DAG
     from airflow.operators.bash_operator import BashOperator
 
+    project_root = Path('.').resolve()
+    project_name = project_root.name
+
     dag_airflow = DAG(
         dag_name,
         default_args=airflow_default_args,
@@ -233,9 +205,15 @@ def _dag_to_airflow(dag, dag_name, script_cfg, airflow_default_args):
     )
 
     for task_name in dag:
+        # TODO: might be better to generate the script.sh script and embed
+        # it in the airflow.py file directly, then users can edit it if
+        # they want to
+        cmd = generate_script(config=script_cfg,
+                              project_name=project_name,
+                              command=f'ploomber task {task_name}')
+
         task_airflow = BashOperator(task_id=task_name,
-                                    bash_command=script_cfg.to_script(
-                                        command=f'ploomber task {task_name}'),
+                                    bash_command=cmd,
                                     dag=dag_airflow)
 
     for task_name in dag:

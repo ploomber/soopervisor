@@ -45,7 +45,9 @@ DEV = [
     'yapf',
     'flake8',
     'sphinx',
-    'apache-airflow',
+    # soopervisor works with airflow 1.X as well but this prevents pip
+    # from installing it (tests will not pass since imports are different)
+    'apache-airflow>=2',
     'twine',
     # to validate argo specs
     'argo-workflows-dsl',

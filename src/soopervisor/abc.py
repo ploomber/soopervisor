@@ -3,6 +3,7 @@ Abstract classes that define the protocol for all exporters
 """
 import abc
 from pathlib import Path
+from collections.abc import Mapping
 
 import click
 import yaml
@@ -24,6 +25,13 @@ class AbstractConfig(BaseModel, abc.ABC):
         cls._write_defaults(path_to_config, env_name)
 
         data = yaml.safe_load(Path(path_to_config).read_text())
+
+        # check data is a dictionary
+
+        # check data[env_name] is a dictionary
+        if not isinstance(data[env_name], Mapping):
+            raise TypeError(f'Expected {env_name!r} to be a dictionary, '
+                            f'got {type(data[env_name]).__name__}')
 
         # check env_name in data, otherwise the env is corrupted
 
@@ -122,7 +130,7 @@ class AbstractExporter(abc.ABC):
         env_file = 'environment.lock.yml'
 
         if not Path(env_file).exists():
-            raise FileNotFoundError(f'Missing {env_file} file at the root '
+            raise FileNotFoundError(f'Missing {env_file!r} file at the root '
                                     'directory')
 
         # TODO: warn if the environment file does not have pinned versions
@@ -143,14 +151,14 @@ class AbstractExporter(abc.ABC):
 
         return self._add(cfg=self._cfg, env_name=self._env_name)
 
-    def submit(self, until):
+    def submit(self, until=None):
         return self._submit(cfg=self._cfg,
                             env_name=self._env_name,
                             until=until)
 
     @staticmethod
     @abc.abstractmethod
-    def _validate(cfg, dag):
+    def _validate(cfg, dag, env_name):
         """Validate project before generating exported files
         """
         pass
@@ -164,5 +172,5 @@ class AbstractExporter(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def _submit():
+    def _submit(cfg, env_name, until):
         pass

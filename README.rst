@@ -6,55 +6,56 @@ Soopervisor
    :alt: CI badge
 
 
-Soopervisor introduces the concept of a *Ploomber project*, which is a standard
-way of running `Ploomber <github.com/ploomber/ploomber>`_ pipelines.
+Soopervisor lets you run `Ploomber <github.com/ploomber/ploomber>`_ pipelines for large-scale workloads or online inference.
+
+Supported platforms
+===================
+
+* Large scale workloads:
+
+  * Kubernetes / Argo Workflows
+  * AWS Batch
+
+* Online inference:
+
+  * AWS Lambda
 
 
-Use cases
-=========
+Standard layout
+===============
 
-1. Running a pipeline locally
-2. Running a pipeline in a continuous integration service
-3. Scheduling a pipeline using cron (or Github Actions)
-4. Running in Kubernetes via Argo workflows
-5. Running in Apache Airflow
-
-
-How it works
-============
-
-When running a pipeline, Soopervisor expects the following file layout:
+Soopervisor expects your Ploomber project to be in the standard project layout, which requires the following files:
 
 1. ``environment.yml``: `Conda environment specification <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually>`_
-2. ``pipeline.yaml``: Ploomber pipeline specification
+2. ``setup.py``: File for packaging code
 
-The parent folder to all these files is defined as the project's root folder.
-The name of such folder is designed as the project's name.
+You can scaffold a new project with the following command:
 
-For example if your ``pipeline.yaml`` is located at
-``/path/to/projects/some-project/pipeline.yaml``, your project's root folder
-is ``/path/to/projects/some-project`` and your project's name is
-``some-project``.
+.. code-block:: sh
 
-If your project follows these two conventions, you'll be able to use Soopervisor
-to run your project locally, continuous integration service or Apache Airflow.
+   ploomber scaffold
 
 
-Project validation
-==================
+Basic usage
+===========
 
-Before building/exporting your project, Soopervisor first checks that the
-project has the right structure, if it finds any issues, it reports them so you
-can fix them before you attempt to run the pipeline.
+Soopervisor introduces the notion of *target platform* which defines the
+configuration and format to export your projects. Say, for example, that you want
+to train multiple models in parallel, you may create a new target platform like this:
 
-If all checks pass, it generates a bash script to install the conda environment
-and then run the pipeline.
+.. code-block:: sh
 
-How the script is used to actually execute the pipeline depends on your
-configuration settings, the simplest case is to just run it locally, but you
-can also tell Soopervisor to run the pipeline inside a Docker container or
-to just export your project to run in Kubernetes (using Argo) or Airflow.
+   soopervisor add training --backend argo-workflows
 
+After filling in some basic configuration settings (which depend on the chosen platform):
+
+.. code-block:: sh
+
+   soopervisor submit training
+
+Ploomber will take care of packaging and submitting your pipeline for execution. In this case,
+it will create a Docker image, upload the image to a registry, generate the Argo's YAML spec and
+submit the workload.
 
 Installation
 ============

@@ -6,7 +6,7 @@ import yaml
 from click.testing import CliRunner
 from soopervisor import cli
 
-from soopervisor.aws import lambda_
+from soopervisor.aws.lambda_ import AWSLambdaExporter
 from ploomber.io import _commander
 
 body = {
@@ -34,7 +34,8 @@ def replace_line(path, line, value):
 
 
 def test_add(backup_packaged_project):
-    lambda_.add(name='serve')
+    exporter = AWSLambdaExporter('soopervisor.yaml', 'serve')
+    exporter.add()
 
     with open('soopervisor.yaml') as f:
         d = yaml.safe_load(f)
@@ -71,7 +72,9 @@ def test_submit(backup_packaged_project, monkeypatch):
     subprocess.run(
         ['cp', 'products/model.pickle', 'src/my_project/model.pickle'],
         check=True)
-    lambda_.add(name='serve')
+
+    exporter = AWSLambdaExporter('soopervisor.yaml', 'serve')
+    exporter.add()
     erase_lines('serve/app.py', from_=14, to=16)
     erase_lines('serve/test_aws_lambda.py', from_=10, to=12)
     replace_line('serve/test_aws_lambda.py',

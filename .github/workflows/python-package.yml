@@ -30,4 +30,4 @@ jobs:
         CLIENT_ID: ${{ secrets.CLIENT_ID }}
         PRIMARY_ACCESS_TOKEN: ${{ secrets.PRIMARY_ACCESS_TOKEN }}
       run: |
-        invoke test-no-docker
+        invoke test

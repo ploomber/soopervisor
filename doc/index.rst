@@ -7,13 +7,10 @@ User Guide
 .. toctree::
    :maxdepth: 2
 
-   local
-   ci
-   scheduling
    kubernetes
-   airflow
    aws-batch
    aws-lambda
+   airflow
    api/index
    dev
 

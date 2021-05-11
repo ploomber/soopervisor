@@ -7,8 +7,9 @@ from airflow import DAG
 from airflow.operators.bash import BashOperator
 import pytest
 
+from soopervisor.airflow.config import AirflowConfig
 from soopervisor.airflow.export import AirflowExporter
-from soopervisor.base.config import ScriptConfig
+from soopervisor.script.script import generate_script
 
 
 # need to modify the env.airflow.yaml name
@@ -22,7 +23,8 @@ from soopervisor.base.config import ScriptConfig
     ],
 )
 def test_generate_valid_airflow_dags(name, tmp_projects):
-    # TODO: clean up projects/ and remove the soopervisor.yaml, they should
+    # TODO: clean up projects/ source code and remove the soopervisor.yaml,
+    # they should
     # work without one
 
     if name == 'ml-online':
@@ -43,15 +45,24 @@ def test_generate_valid_airflow_dags(name, tmp_projects):
     subprocess.run(['python', f'serve/dags/{name}.py'], check=True)
 
 
-def test_export_airflow_sample_project(monkeypatch, tmp_sample_project,
-                                       no_sys_modules_cache):
+def test_airflow_add_sample_project(monkeypatch, tmp_sample_project,
+                                    no_sys_modules_cache):
     exporter = AirflowExporter(path_to_config='soopervisor.yaml',
                                env_name='serve')
     exporter.add()
 
+    assert os.listdir('serve') == ['dags']
+    assert os.listdir(Path('serve', 'dags')) == ['sample_project.py']
+
+
+def test_airflow_export_sample_project(monkeypatch, tmp_sample_project,
+                                       no_sys_modules_cache):
+    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
+                               env_name='serve')
+    exporter.add()
+    exporter.submit()
+
     monkeypatch.syspath_prepend('serve/dags')
-    airflow_home = Path(tmp_sample_project, 'serve').resolve()
-    monkeypatch.setenv('AIRFLOW_HOME', airflow_home)
     mod = importlib.import_module('sample_project')
     dag = mod.dag
 
@@ -66,46 +77,25 @@ def test_export_airflow_sample_project(monkeypatch, tmp_sample_project,
             }
 
 
-def test_export_airflow_custom_args(monkeypatch, tmp_sample_project,
-                                    no_sys_modules_cache):
-    Path('soopervisor.yaml').write_text('serve:\n    args: --some-arg')
-
-    # export project
-    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
-                               env_name='serve')
-    exporter.add()
-
-    # load exported dag
-    monkeypatch.syspath_prepend('serve/dags')
-    airflow_home = str(Path(tmp_sample_project, 'serve').resolve())
-    monkeypatch.setenv('AIRFLOW_HOME', airflow_home)
-    mod = importlib.import_module('sample_project')
-    dag = mod.dag
-
-    assert 'ploomber task raw --some-arg' in dag.task_dict['raw'].bash_command
-    assert 'ploomber task clean --some-arg' in dag.task_dict[
-        'clean'].bash_command
-    assert 'ploomber task plot --some-arg' in dag.task_dict[
-        'plot'].bash_command
-
-
 def test_export_airflow_callables(monkeypatch, tmp_callables):
     exporter = AirflowExporter(path_to_config='soopervisor.yaml',
                                env_name='serve')
     exporter.add()
+    exporter.submit()
 
     monkeypatch.syspath_prepend('serve/dags')
-    airflow_home = Path(tmp_callables, 'serve').resolve()
-    monkeypatch.setenv('AIRFLOW_HOME', airflow_home)
     mod = importlib.import_module('callables')
     dag = mod.dag
 
     # generate scripts to compare them to the ones in airflow
-    script_cfg = ScriptConfig.from_file_with_root_key(
+    cfg = AirflowConfig.from_file_with_root_key(
         path_to_config='serve/ploomber/callables/soopervisor.yaml',
         env_name='serve')
+
     scripts = {
-        t: script_cfg.to_script(command=f'ploomber task {t}')
+        t: generate_script(config=cfg,
+                           project_name='callables',
+                           command=f'ploomber task {t}')
         for t in dag.task_dict
     }
 
@@ -128,18 +118,3 @@ def test_export_airflow_callables(monkeypatch, tmp_callables):
     assert scripts['features'] == dag.task_dict['features'].bash_command
     assert scripts['fit'] == dag.task_dict['fit'].bash_command
     assert scripts['join'] == dag.task_dict['join'].bash_command
-
-
-# TODO: env management needs refactoring to make this work again
-@pytest.mark.xfail
-def test_export_airflow_no_airflow_env(tmp_callables, capsys):
-    Path('env.airflow.yaml').unlink()
-
-    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
-                               env_name='serve')
-    exporter.add()
-
-    assert 'No env.airflow.yaml found...' in capsys.readouterr().out
-
-
-# TODO: add test when there is no config file

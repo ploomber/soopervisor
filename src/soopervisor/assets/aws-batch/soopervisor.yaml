@@ -1,9 +1,0 @@
-{{env_name}}:
-  backend: aws-batch
-  submit:
-    repository: your-repository-url/name
-    job_queue: your-job-queue
-    region_name: your-region-name
-    container_properties:
-      memory: 16384
-      vcpus: 8

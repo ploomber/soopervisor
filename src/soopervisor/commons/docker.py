@@ -61,9 +61,9 @@ def build(e, cfg, name, until):
     if until == 'build':
         raise CommanderStop('Done. Run "docker images" to see your image.')
 
-    # TODO: validate format of cfg.submit.repository
-    if cfg.submit.repository:
-        image_target = f'{cfg.submit.repository}:{version}'
+    # TODO: validate format of cfg.repository
+    if cfg.repository:
+        image_target = f'{cfg.repository}:{version}'
         e.run('docker',
               'tag',
               image_local,

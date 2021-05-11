@@ -3,6 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from soopervisor import abc
+from soopervisor.enum import Backend
 
 
 class ArgoMountedVolume(BaseModel):
@@ -27,6 +28,9 @@ class ArgoMountedVolume(BaseModel):
     sub_path: str = ''
     spec: dict
 
+    class Config:
+        extra = 'forbid'
+
     def to_volume(self):
         """
         Generate the entry for the spec.volumes
@@ -46,14 +50,6 @@ class ArgoMountedVolume(BaseModel):
         }
 
 
-class ArgoSubmitConfig(BaseModel):
-    repository: Optional[str] = None
-    mounted_volumes: Optional[List[ArgoMountedVolume]] = None
-
-    class Config:
-        extra = 'forbid'
-
-
 class ArgoConfig(abc.AbstractConfig):
     """Configuration for exporting to Argo
 
@@ -63,15 +59,16 @@ class ArgoConfig(abc.AbstractConfig):
         List of volumes to mount on each Pod, described with the
         ``ArgoMountedVolumes`` schema.
     """
-    submit: ArgoSubmitConfig
+    repository: Optional[str] = None
+    mounted_volumes: Optional[List[ArgoMountedVolume]] = None
 
     @classmethod
     def get_backend_value(cls):
-        return 'argo-workflows'
+        return Backend.argo_workflows.value
 
     @classmethod
     def defaults(cls):
-        data = cls(submit=dict(repository='your-repository')).dict()
+        data = cls(repository='your-repository').dict()
         data['backend'] = cls.get_backend_value()
-        del data['submit']['mounted_volumes']
+        del data['mounted_volumes']
         return data
