@@ -2,7 +2,6 @@ import os
 from unittest.mock import Mock
 import json
 from pathlib import Path
-import subprocess
 
 import yaml
 import pytest
@@ -10,7 +9,7 @@ import moto
 import boto3
 
 from soopervisor.aws import batch
-from ploomber.io import _commander
+from ploomber.io import _commander, _commander_tester
 
 service_role = {
     "Version":
@@ -126,18 +125,6 @@ def mock_batch(aws_credentials, iam_resource, batch_client, vpc):
     yield batch_client
 
 
-class CommanderTester:
-    def __init__(self, run=None, return_value=None):
-        self._run = run or []
-        self._return_value = return_value or dict()
-
-    def __call__(self, cmd):
-        if cmd in self._run:
-            return subprocess.check_call(cmd)
-        elif cmd in self._return_value:
-            return self._return_value[cmd]
-
-
 def test_add(backup_packaged_project):
 
     batch.add(name='train')
@@ -164,7 +151,7 @@ def test_add(backup_packaged_project):
 def test_submit(mock_batch, monkeypatch, backup_packaged_project):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in DAGSpec.find().to_dag().clients)')
-    tester = CommanderTester(
+    tester = _commander_tester.CommanderTester(
         run=[
             ('python', '-m', 'build', '--sdist'),
         ],

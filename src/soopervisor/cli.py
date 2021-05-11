@@ -15,7 +15,7 @@ from soopervisor.enum import Backend
 @click.version_option(version=__version__)
 def cli():
     """
-    soopervisor exports ploomber projects to run in other platforms
+    Soopervisor exports Ploomber projects
     """
     pass
 
@@ -58,8 +58,6 @@ def add(name, backend):
         lambda_.add(name=name)
 
     elif backend == Backend.argo_workflows:
-        # TODO: re-enable support for upload
-        # export_argo.upload_code(config)
         exporter = ArgoWorkflowsExporter('soopervisor.yaml', env_name=name)
         exporter.add()
 
@@ -90,15 +88,14 @@ def submit(name, until_build):
         batch.submit(name=name, until=until)
     elif backend == Backend.aws_lambda:
         lambda_.submit(name=name, until=until)
+    elif backend == Backend.argo_workflows:
+        exporter = ArgoWorkflowsExporter('soopervisor.yaml', env_name=name)
+        exporter.submit(until=until)
     elif backend == Backend.airflow:
         raise click.ClickException(
             f'Submitting environments with {backend} backend is not '
             'supported, you must copy the exported environment to AIRFLOW_HOME'
         )
-    elif backend == Backend.argo_workflows:
-        raise click.ClickException(
-            f'Submitting environments with {backend} backend is not '
-            'supported, submit your workflow using the "argo submit" command')
 
 
 if __name__ == '__main__':

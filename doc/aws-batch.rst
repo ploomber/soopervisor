@@ -164,7 +164,7 @@ build the Docker image from scratch. Subsequent runs will be much faster.
 of the compute environment. Try lowering those resources and submit again. If
 that doesn't work, `check this out <https://aws.amazon.com/premiumsupport/knowledge-center/batch-job-stuck-runnable-status/>`_.
 
-Congratulations! You just ran Ploomber on AWS Batch!
+**Congratulations! You just ran Ploomber on AWS Batch!**
 
 
 Scaffolding projects

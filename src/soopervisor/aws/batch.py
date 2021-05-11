@@ -1,14 +1,13 @@
 """
 Running pipelines on AWS Batch
 """
-import importlib
 import boto3
 
-from ploomber.util import default
 from ploomber.spec import DAGSpec
 from ploomber.io._commander import Commander
 
 from soopervisor.aws.config import AWSBatchConfig
+from soopervisor.commons import docker
 
 # TODO:
 # warn on large distribution artifacts - there might be data files
@@ -55,75 +54,12 @@ def submit(name, until=None):
     # warn if missing client (only warn cause the config might configure
     # it when building the docker image)
 
-    pkg_name = default.find_package_name()
-
-    # if using versioneer, the version may contain "+"
-    version = importlib.import_module(pkg_name).__version__.replace(
-        '+', '-plus-')
-
     # TODO check if image already exists locally or remotely and skip...
 
     with Commander(workspace=name,
                    templates_path=('soopervisor', 'assets')) as e:
-        e.cp('environment.lock.yml')
 
-        # generate source distribution
-        # TODO: delete egg-info
-        e.rm('dist', 'build')
-        e.run('python', '-m', 'build', '--sdist', description='Packaging code')
-        e.cp('dist')
-
-        e.cd(name)
-
-        local_name = f'{pkg_name}:{version}'
-
-        # TODO: validate format of cfg.submit.repository
-        remote_name = f'{cfg.submit.repository}:{version}'
-
-        # how to allow passing --no-cache?
-        e.run('docker',
-              'build',
-              '.',
-              '--tag',
-              local_name,
-              description='Building image')
-
-        e.run('docker',
-              'run',
-              local_name,
-              'ploomber',
-              'status',
-              description='Testing image',
-              error_message='Error while testing your docker image with',
-              hint=f'Use "docker run -it {local_name} /bin/bash" to '
-              'start an interactive session to debug your image')
-
-        test_cmd = ('from ploomber.spec import DAGSpec; '
-                    'print("File" in DAGSpec.find().to_dag().clients)')
-        e.run('docker',
-              'run',
-              local_name,
-              'python',
-              '-c',
-              test_cmd,
-              description='Testing image',
-              error_message='Error while checking File client configuration',
-              hint=f'Use "docker run -it {local_name} /bin/bash" to '
-              'start an interactive session to debug your image and ensure a '
-              'File client is properly configured',
-              capture_output=True,
-              expected_output='True\n')
-
-        if until == 'build':
-            e.print('Done. Run "docker images" to see your image.')
-            return
-
-        e.run('docker', 'tag', local_name, remote_name, description='Tagging')
-        e.run('docker', 'push', remote_name, description='Pushing image')
-
-        if until == 'push':
-            e.print('Done. Image pushed to repository.')
-            return
+        pkg_name, remote_name = docker.build(e, cfg, name, until=until)
 
         e.info('Submitting jobs to AWS Batch')
 

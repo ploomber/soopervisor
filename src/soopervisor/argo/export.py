@@ -2,10 +2,8 @@
 Export to Argo Workflows
 """
 import click
-import shlex
-import subprocess
-
 from ploomber.spec import DAGSpec
+from ploomber.io._commander import Commander
 import yaml
 from yaml.representer import SafeRepresenter
 
@@ -17,6 +15,7 @@ except ImportError:
 
 from soopervisor import assets
 from soopervisor import abc
+from soopervisor.commons import docker
 from soopervisor.argo.config import ArgoConfig
 
 
@@ -29,66 +28,38 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
 
     @staticmethod
     def _add(cfg, env_name):
-        """Export Argo YAML spec from Ploomber project to argo.yaml
-        """
-        click.echo('Generating argo spec from project...')
-        # TODO: validate returns a dag, maybe use that one?
-        dag = DAGSpec(cfg.paths.entry_point,
-                      lazy_import=cfg.lazy_import).to_dag()
-
-        volumes, volume_mounts = zip(*((mv.to_volume(), mv.to_volume_mount())
-                                       for mv in cfg.mounted_volumes))
-        # force them to be lists to prevent "!!python/tuple" to be added
-        volumes = list(volumes)
-        volume_mounts = list(volume_mounts)
-
-        d = yaml.safe_load(
-            pkg_resources.read_text(assets, 'argo-workflow.yaml'))
-        d['spec']['volumes'] = volumes
-
-        tasks_specs = []
-
-        for task_name in dag:
-            task = dag[task_name]
-            spec = _make_argo_task(task_name, list(task.upstream))
-            tasks_specs.append(spec)
-
-        d['metadata']['generateName'] = f'{cfg.project_name}-'
-        d['spec']['templates'][1]['dag']['tasks'] = tasks_specs
-        d['spec']['templates'][0]['script']['volumeMounts'] = volume_mounts
-
-        # set Pods working directory to the root of the first mounted volume
-        working_dir = volume_mounts[0]['mountPath']
-        d['spec']['templates'][0]['script']['workingDir'] = working_dir
-
-        d['spec']['templates'][0]['script']['image'] = cfg.image
-
-        cfg_in_argo = cfg.with_project_root(working_dir)
-
-        # use literal_str to make the script source code be represented in YAML
-        # literal style, this makes it readable
-        d['spec']['templates'][0]['script']['source'] = _literal_str(
-            cfg_in_argo.to_script(
-                command='ploomber task {{inputs.parameters.task_name}} --force'
-            ))
-
-        # TODO: delete cfg.paths.project
-        output_path = f'{env_name}/argo.yaml'
-
-        with open(output_path, 'w') as f:
-            yaml.dump(d, f)
-
-        click.echo('Done. Saved argo spec to "argo.yaml"')
-        click.echo(
-            f'Submit your workflow with: argo submit -n argo {output_path}')
-
-        return d
+        with Commander(workspace=env_name,
+                       templates_path=('soopervisor', 'assets')) as e:
+            e.copy_template('argo-workflows/Dockerfile')
+            e.success('Done')
 
     @staticmethod
-    def _submit():
-        raise NotImplementedError
+    def _submit(cfg, env_name, until):
+        """Export Argo YAML spec from Ploomber project to argo.yaml
+        """
+        # use lazy load?
+        dag = DAGSpec.find().to_dag()
+
+        with Commander(workspace=env_name,
+                       templates_path=('soopervisor', 'assets')) as e:
+
+            pkg_name, target_image = docker.build(e,
+                                                  cfg,
+                                                  env_name,
+                                                  until=until)
+
+            e.info('Generating Argo Workflows YAML spec')
+            _make_argo_spec(dag=dag,
+                            env_name=env_name,
+                            cfg=cfg,
+                            pkg_name=pkg_name,
+                            target_image=target_image)
+
+            e.info('Submitting jobs to Argo Workflows')
+            e.success('Done. Submitted to Argo Workflows')
 
 
+# TODO: delete
 class _literal_str(str):
     """Custom str to represent it in YAML literal style
     Source: https://stackoverflow.com/a/20863889/709975
@@ -127,28 +98,44 @@ def _make_argo_task(name, dependencies):
     return task
 
 
-def upload_code(config):
-    """Upload code to code pod
-    """
+def _make_argo_spec(dag, env_name, cfg, pkg_name, target_image):
+    if cfg.submit.mounted_volumes:
+        volumes, volume_mounts = zip(*((mv.to_volume(), mv.to_volume_mount())
+                                       for mv in cfg.submit.mounted_volumes))
+        # force them to be lists to prevent "!!python/tuple" to be added
+        volumes = list(volumes)
+        volume_mounts = list(volume_mounts)
+    else:
+        volumes = []
+        volume_mounts = []
 
-    if config.code_pod is None:
-        raise ValueError('"code_pod" section in the configuration file '
-                         'is required when using the upload option')
+    d = yaml.safe_load(pkg_resources.read_text(assets, 'argo-workflow.yaml'))
+    d['spec']['volumes'] = volumes
 
-    get_pods_args = shlex.split(config.code_pod.args or '')
+    tasks_specs = []
 
-    print('Locating nfs-server pod...')
-    result = subprocess.run([
-        'kubectl', 'get', 'pods', '--output',
-        'jsonpath="{.items[0].metadata.name}"'
-    ] + get_pods_args,
-                            check=True,
-                            capture_output=True)
+    for task_name in dag:
+        task = dag[task_name]
+        spec = _make_argo_task(task_name, list(task.upstream))
+        tasks_specs.append(spec)
 
-    pod_name = result.stdout.decode('utf-8').replace('"', '')
-    print(f'Got pod: "{pod_name}". Uploading code to "{config.code_pod.path}"')
+    d['metadata']['generateName'] = f'{pkg_name}-'.replace('_', '-')
+    d['spec']['templates'][1]['dag']['tasks'] = tasks_specs
+    d['spec']['templates'][0]['script']['volumeMounts'] = volume_mounts
 
-    subprocess.run([
-        'kubectl', 'cp',
-        str(config.paths.project), f'{pod_name}:{config.code_pod.path}'
-    ])
+    d['spec']['templates'][0]['script']['image'] = target_image
+
+    # use literal_str to make the script source code be represented in YAML
+    # literal style, this makes it readable
+    d['spec']['templates'][0]['script']['source'] = _literal_str(
+        'ploomber task {{inputs.parameters.task_name}}')
+
+    # when we run this the current working directory is env_name/
+    with open('argo.yaml', 'w') as f:
+        yaml.dump(d, f)
+
+    output_path = f'{env_name}/argo.yaml'
+    click.echo(f'Done. Saved argo spec to {output_path!r}')
+    click.echo(f'Submit your workflow with: argo submit -n argo {output_path}')
+
+    return d

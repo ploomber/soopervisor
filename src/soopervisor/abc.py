@@ -119,16 +119,13 @@ class AbstractExporter(abc.ABC):
         Verify project has the right structure before running the script.
         This runs as a sanity check in the development machine
         """
-        if not Path(self._cfg.paths.environment).exists():
-            raise FileNotFoundError(
-                'Expected a conda "environment.yml" at: {}'.format(
-                    self._cfg.paths.environment))
+        env_file = 'environment.lock.yml'
+
+        if not Path(env_file).exists():
+            raise FileNotFoundError(f'Missing {env_file} file at the root '
+                                    'directory')
 
         # TODO: warn if the environment file does not have pinned versions
-
-        if self._cfg.environment_name is None:
-            raise ValueError('Failed to extract the environment name from the '
-                             'conda "environment.yaml"')
 
     def add(self):
         # check that env_name folder does not exist
@@ -146,8 +143,10 @@ class AbstractExporter(abc.ABC):
 
         return self._add(cfg=self._cfg, env_name=self._env_name)
 
-    def submit(self):
-        return self._submit(cfg=self._cfg, env_name=self._env_name)
+    def submit(self, until):
+        return self._submit(cfg=self._cfg,
+                            env_name=self._env_name,
+                            until=until)
 
     @staticmethod
     @abc.abstractmethod

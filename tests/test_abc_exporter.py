@@ -60,3 +60,6 @@ def test_error_if_dag_fails_to_initialize(tmp_sample_project):
         ConcreteExporter('soopervisor.yaml', env_name='some_env')
 
     assert str(excinfo.value) == 'Error initializing DAG from pipeline.yaml'
+
+
+# TODO: submit without adding first

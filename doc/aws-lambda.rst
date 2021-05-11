@@ -189,7 +189,7 @@ Open a new terminal and call the API:
 Try calling with other values to get a different prediction
 
 
-Congratulations! You just ran Ploomber on AWS Lambda!
+**Congratulations! You just ran Ploomber on AWS Lambda!**
 
 To deploy:
 
