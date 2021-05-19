@@ -3,21 +3,40 @@ from pathlib import Path
 
 from ploomber.util import default
 from ploomber.io._commander import CommanderStop
+from soopervisor.commons import source
 
 
 def build(e, cfg, name, until):
-    pkg_name = default.find_package_name()
-    # if using versioneer, the version may contain "+"
-    version = importlib.import_module(pkg_name).__version__.replace(
-        '+', '-plus-')
+    # if this is a pkg, get the name
+    try:
+        pkg_name = default.find_package_name()
+    # if not a package, use the parent folder's name
+    except ValueError:
+        pkg_name = Path('.').resolve().name
+        version = 'latest'
+    else:
+        # if using versioneer, the version may contain "+"
+        version = importlib.import_module(pkg_name).__version__.replace(
+            '+', '-plus-')
 
     e.cp('environment.lock.yml')
 
     # generate source distribution
 
-    # .egg-info may cause issues if MANIFEST.in was recently updated
-    e.rm('dist', 'build', Path('src', pkg_name, f'{pkg_name}.egg-info'))
-    e.run('python', '-m', 'build', '--sdist', description='Packaging code')
+    if Path('setup.py').exists():
+        # .egg-info may cause issues if MANIFEST.in was recently updated
+        e.rm('dist', 'build', Path('src', pkg_name, f'{pkg_name}.egg-info'))
+        e.run('python', '-m', 'build', '--sdist', description='Packaging code')
+
+        # raise error if include is not None? use MANIFEST.instead
+    else:
+        # TODO: warn on unsaved changes (new files will not be included
+        # since they are not yet tracked on git)
+        e.rm('dist')
+        target = Path('dist', pkg_name)
+        source.copy('.', target, include=cfg.include)
+        source.compress_dir(target, Path('dist', f'{pkg_name}.tar.gz'))
+
     e.cp('dist')
 
     e.cd(name)
