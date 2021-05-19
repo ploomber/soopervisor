@@ -5,8 +5,8 @@ AWS Batch
 computing. This tutorial shows you how to submit a Ploomber pipeline to AWS
 Batch.
 
-Note that this tutorial involves several stages. If you encounter any issues,
-`let us know <https://github.com/ploomber/soopervisor/issues/new?title=AWS%20Batch%20tutorial%20problem>`_.
+If you encounter any issues with this
+tutorial, `let us know <https://github.com/ploomber/soopervisor/issues/new?title=AWS%20Batch%20tutorial%20problem>`_.
 
 Pre-requisites
 --------------
@@ -38,7 +38,7 @@ We'll now fetch an example pipeline:
 .. code-block:: sh
 
     git clone https://github.com/ploomber/projects
-    cd ml-online
+    cd projects/ml-online/
 
 Configure the development environment:
 
@@ -114,23 +114,31 @@ We are almost ready to submit. To execute tasks in AWS Batch, we must create
 a Docker image with all our project's source code.
 
 Create a new repository in `Amazon ECR <https://aws.amazon.com/ecr/>`_ before
-continuing. Once you create it, authenticate with the following command
-(replace ``your-repository-url/name`` with your repository's URL):
+continuing. Once you create it, authenticate with:
 
 .. code-block:: sh
 
-    aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin your-repository-url/name
+    aws ecr get-login-password --region your-region | docker login --username AWS --password-stdin your-repository-url/name
+
+
+.. note::
+
+    Replace ``your-repository-url/name`` with your repository's URL and
+    ``your-region`` with the corresponding ECR region
 
 
 Let's now create the necessary files to export our Docker image:
 
-**Note:** you don't have to install ``soopervisor`` manually; it should've
-been installed when running ``ploomber install``. If missing, install it with
-``pip install soopervisor``.
-
 .. code-block:: sh
 
     soopervisor add training --backend aws-batch
+
+
+.. note::
+
+    You don't have to install ``soopervisor`` manually; it should've been
+    installed when running ``ploomber install``. If missing, install it with
+    ``pip install soopervisor``.
 
 
 Open the ``soopervisor.yaml`` file and fill in the missing values in
@@ -140,13 +148,12 @@ Open the ``soopervisor.yaml`` file and fill in the missing values in
 
     training:
       backend: aws-batch
-      submit:
-        repository: your-repository-url/name
-        job_queue: your-job-queue
-        region_name: your-region-name
-        container_properties:
-          memory: 16384
-          vcpus: 8
+      repository: your-repository-url/name
+      job_queue: your-job-queue
+      region_name: your-region-name
+      container_properties:
+      memory: 16384
+      vcpus: 8
 
 Submit for execution:
 
@@ -158,31 +165,13 @@ The previous command will take a few minutes the first time since it has to
 build the Docker image from scratch. Subsequent runs will be much faster.
 
 
-**Note** if you successfully submit tasks, but they are stuck in the console in
-``RUNNABLE`` status. It's likely that the requested resources (the
-``container_properties`` section in ``soopervisor.yaml``) exceed the capacity
-of the compute environment. Try lowering those resources and submit again. If
-that doesn't work, `check this out <https://aws.amazon.com/premiumsupport/knowledge-center/batch-job-stuck-runnable-status/>`_.
+.. note:: 
+
+    if you successfully submitted tasks, but they are stuck in the console in
+    ``RUNNABLE`` status. It's likely that the requested resources (the
+    ``container_properties`` section in ``soopervisor.yaml``) exceeded the capacity
+    of the compute environment. Try lowering resources and submit again. If
+    that doesn't work, `check this out <https://aws.amazon.com/premiumsupport/knowledge-center/batch-job-stuck-runnable-status/>`_.
 
 **Congratulations! You just ran Ploomber on AWS Batch!**
-
-
-Scaffolding projects
---------------------
-
-For AWS Batch export to work, your project must be in standard form. This
-involves packaging your code using a ``setup.py`` file, providing dependencies
-via lock files, among other things. To ensure your projects are correctly
-configured, we recommend using the ``ploomber scaffold command``.
-
-.. code-block:: sh
-
-    # create a base layout
-    ploomber scaffold
-
-    # add any extra dependencies to the setup.py file
-
-    # setup the development environment
-    ploomber install
-
 

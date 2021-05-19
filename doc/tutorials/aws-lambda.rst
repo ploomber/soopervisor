@@ -12,6 +12,10 @@ deploy complete inference DAGs (as opposed to a model file) without changing
 your training pipeline's code; handling packaging, containerization and
 deployment.
 
+
+If you encounter any issues with this
+tutorial, `let us know <https://github.com/ploomber/soopervisor/issues/new?title=AWS%20Lambda%20tutorial%20problem>`_.
+
 Pre-requisites
 --------------
 
@@ -47,7 +51,7 @@ We'll now fetch an example pipeline:
 .. code-block:: sh
 
     git clone https://github.com/ploomber/projects
-    cd ml-online
+    cd projects/ml-online/
 
 Configure the development environment:
 
@@ -127,9 +131,11 @@ Let's now create the necessary files to export to AWS Lambda:
     soopervisor add serve --backend aws-lambda
 
 
-**Note:** you don't have to install ``soopervisor`` manually; it should've
-been installed when running ``ploomber install``. If missing, install it with
-``pip install soopervisor``.
+.. note::
+
+    You don't have to install ``soopervisor`` manually; it should've been
+    installed when running ``ploomber install``. If missing, install it with
+    ``pip install soopervisor``.
 
 You have to provide a few details before you can run the model in AWS Lambda.
 First, edit the  ``serve/test_aws_lambda.py`` file. Such file contains a
@@ -148,7 +154,7 @@ like this:
         'petal width (cm)': 0.2,
     }
 
-You should also remove the line that raises the ``NotImplementedError``.
+.. important:: You should also remove the line that raises the ``NotImplementedError``.
 
 Next, we have to tell Lambda, how to handle an incoming API request, this
 happens in the ``serve/app.py`` file. The request body is received as a string
@@ -180,18 +186,19 @@ Once finished, you may start the API locally with:
 
 Open a new terminal and call the API:
 
-(note that due to the way the local api is built this will take a few seconds, the real deployment will be much faster)
-
 .. code-block:: sh
 
     curl http://127.0.0.1:3000/predict -X POST -d '{"sepal length (cm)": 5.1, "sepal width (cm)": 3.5, "petal length (cm)": 1.4, "petal width (cm)": 0.2}'
 
 Try calling with other values to get a different prediction
 
+.. note:: Due to the way the local API is built this will take a few seconds
+
 
 **Congratulations! You just ran Ploomber on AWS Lambda!**
 
-To deploy:
+Deployment
+**********
 
 .. code-block:: sh
 
@@ -206,6 +213,6 @@ About ``template.yaml``
 
 To deploy to Lamnda, AWS requires a ``template.yaml`` file to specify your
 serverless application. A sample file that configures an API Gateway is
-provided, but you may need to edit it for your application purposes.
+provided, but you may need to edit it for your application.
 `Click here to learn more <https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification.html>`_.
 

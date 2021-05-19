@@ -50,9 +50,10 @@ class AirflowExporter(abc.AbstractExporter):
         path_out.parent.mkdir(exist_ok=True, parents=True)
         path_out.write_text(out)
 
-        click.echo(f'Airflow DAG declaration saved to {path_out!r}, you may '
-                   'edit the file to change the configuration if needed, '
-                   '(e.g., set the execution period)')
+        click.echo(
+            f'Airflow DAG declaration saved to {str(path_out)!r}, you may '
+            'edit the file to change the configuration if needed, '
+            '(e.g., set the execution period)')
 
     @staticmethod
     def _validate(cfg, dag, env_name):
@@ -65,12 +66,7 @@ class AirflowExporter(abc.AbstractExporter):
         env = (f'env.{env_name}.yaml'
                if Path(f'env.{env_name}.yaml').exists() else None)
 
-        # TODO: let dagsspec figure out where to load pipeline.yaml from
-        # NOTE: should lazy_import be an option from config?
-        # check what would happen if we initialize the pipeline
-        spec = DAGSpec(project_root / 'pipeline.yaml',
-                       env=env,
-                       lazy_import=True)
+        spec = DAGSpec.find(env=env, lazy_import=True)
         dag_airflow = spec.to_dag()
         dag_airflow.render()
 
@@ -103,6 +99,8 @@ class AirflowExporter(abc.AbstractExporter):
             if resolve_product(p).startswith(str(project_root))
         ]
 
+        # TODO: move this validation to the submit stage, since the
+        # config may change from one deployment to another
         if products_invalid:
             products_invalid_ = '\n'.join(products_invalid)
             # TODO: replace {env} if None, must print the location of the
@@ -154,7 +152,8 @@ class AirflowExporter(abc.AbstractExporter):
         # rename env.{env_name}.yaml if needed
         config.replace_env(env_name=env_name, target_dir=project_root_airflow)
 
-        click.echo(f'Copied project source code to {project_root_airflow!r}')
+        click.echo(
+            f'Copied project source code to {str(project_root_airflow)!r}')
 
 
 def spec_to_airflow(project_root, dag_name, env_name, airflow_default_args):
@@ -170,13 +169,11 @@ def spec_to_airflow(project_root, dag_name, env_name, airflow_default_args):
         env_name=env_name,
     )
 
-    # NOTE: we use lazy_import=True here because this runs in the
+    # we use lazy_import=True here because this runs in the
     # airflow host and we should never expect that environment to have
     # the project environment configured, as its only purpose is to parse
     # the DAG
-    # TODO: auto discover yaml spec
-    dag = DAGSpec(Path(project_root, 'pipeline.yaml'),
-                  lazy_import=True).to_dag()
+    dag = DAGSpec.find(lazy_import=True).to_dag()
 
     return _dag_to_airflow(dag, dag_name, script_cfg, airflow_default_args)
 

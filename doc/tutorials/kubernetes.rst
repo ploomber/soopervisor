@@ -1,9 +1,12 @@
 Kubernetes (Argo)
 =================
 
-Soopervisor can export Ploomber projects to run in Kubernetes via
-`Argo <https://argoproj.github.io/argo/>`_.
+This tutorial shows how to run a pipeline in Kubernetes
+via `Argo Workflows <https://argoproj.github.io/argo/>`_. locally using
+``minikube`` or in Google Cloud.
 
+If you encounter any issues with this
+tutorial, `let us know <https://github.com/ploomber/soopervisor/issues/new?title=Argo%20Workflows%20tutorial%20problem>`_.
 
 Example 1: minikube
 -------------------
@@ -68,7 +71,7 @@ Let's now run a Ploomber sample Machine Learning pipeline:
 
     # get the sample projects
     git clone https://github.com/ploomber/projects
-    cd ml-online
+    cd projects/ml-online/
 
     # configure development environment
     ploomber install
@@ -91,16 +94,15 @@ The last command will create a ``soopervisor.yaml`` file. We need to make a few 
     # configuration for the target platform
     training:
       backend: argo-workflows
-      submit:
-        # we are not uploading the docke image, put  null
-        repository: null
-        # mount the /host folder (which is linked to $HOME/minikube), it will
-        # be visible to pods in /mnt/shared-folder
-        mounted_volumes:
-          - name: shared-folder
-            spec:
-              hostPath:
-                path: /host
+      # we are not uploading the docker image, set it as null
+      repository: null
+      # mount the /host folder (which is linked to $HOME/minikube), it will
+      # be visible to pods in /mnt/shared-folder
+      mounted_volumes:
+        - name: shared-folder
+          spec:
+            hostPath:
+              path: /host
 
 Now, we must configure the project to store all outputs in the shared folder.
 Create an ``env.yaml`` file with the following content, make sure you create
@@ -145,8 +147,8 @@ Example 2: Google Cloud
 
 This second tutorial runs a pipeline in a local Kubernetes cluster using Google Cloud.
 
-**Note:** you may use or create a new
-`Google Cloud project <https://cloud.google.com/resource-manager/docs/creating-managing-projects>`_ to follow this tutorial.
+
+.. note:: You may use or create a new `Google Cloud project <https://cloud.google.com/resource-manager/docs/creating-managing-projects>`_ to follow this tutorial.
 
 Pre-requisites
 **************
@@ -197,7 +199,7 @@ Let's now run a Ploomber sample Machine Learning pipeline:
 
     # get the sample projects
     git clone https://github.com/ploomber/projects
-    cd ml-online
+    cd projects/ml-online/
 
     # configure development environment
     ploomber install
@@ -216,8 +218,7 @@ the container registry to upload our Docker image:
 
     training:
       backend: argo-workflows
-      submit:
-        repository: gcr.io/PROJECT-ID/my-ploomber-pipeline
+      repository: gcr.io/PROJECT-ID/my-ploomber-pipeline
 
 Replace ``PROJECT-ID`` with your actual project ID.
 
@@ -254,7 +255,7 @@ in module ``src/ml_online/clients.py`` to get the client. Edit the
 
 You can ignore the rest of the file. Finally, we add service account credentials to
 upload to Google Cloud Storage. To learn more about service accounts,
-`click here <https://cloud.google.com/docs/authentication/production`_
+`click here <https://cloud.google.com/docs/authentication/production>`_.
 
 
 Store the service account details in a ``credentials.json`` in the root project
@@ -280,18 +281,21 @@ Check out the bucket to see output.
 
 **Congratulations! You just ran Ploomber on Kubernetes!**
 
-**Make sure you delete your cluster, bucket after running this example.**
+.. attention:: 
 
-.. code-block:: sh
+    Make sure you delete your cluster, bucket, and image after running this example!
 
-    # delete cluster
-    gcloud container clusters delete my-cluster --zone us-east1-b
+    .. code-block:: sh
 
-    # delete bucket
-    gsutil rm -r gs://my-sample-ploomber-bucket
+        # delete cluster
+        gcloud container clusters delete my-cluster --zone us-east1-b
 
-    # delete image (you can get the image id from the google cloud console)
-    gcloud container images delete IMAGE-ID
+        # delete bucket
+        gsutil rm -r gs://my-sample-ploomber-bucket
+
+        # delete image (you can get the image id from the google cloud console)
+        gcloud container images delete IMAGE-ID
+
 
 Optional: Mounting a shared disk
 ********************************
@@ -329,14 +333,17 @@ Here's how to configure a shared disk:
     curl -O https://raw.githubusercontent.com/ploomber/soopervisor/master/doc/assets/03-nfs-pv-pvc.yaml
     kubectl apply -f 03-nfs-pv-pvc.yaml
 
+
+**Optionally**, you can check that the disk is properly configured by running this sample workflow:
+
+.. code-block:: sh
+
     # run sample workflow (uses nfs and creates an empty file on it)
     curl -O https://raw.githubusercontent.com/ploomber/soopervisor/master/doc/assets/dag.yaml
     argo submit -n argo --watch dag.yaml
 
-Container sees the contents of the shared drive ``/export/`` directory at
-``/mnt/nfs``.
 
-Check the output of ``dag.yaml``:
+Check the output:
 
 .. code-block:: sh
 
@@ -352,27 +359,37 @@ Once inside the Pod, run:
 
     ls /exports/
 
-You should see files A, B, C, D. Generated by ``dag.yaml``.
+You should see files A, B, C, D. Generated by the previous workflow.
+
+
+Let's now run the Machine Learning workflow. Since we configured a shared disk,
+artifacts from upstream tasks will be available to downstream ones (no need
+to download them from S3 anymore); the S3 client is only used to upload
+artifacts for us to review later.
 
 To make the shared disk available to the pods that run each task, we have
 to modify ``soopervisor.yaml``:
-
 
 .. code-block:: yaml
 
     training:
       backend: argo-workflows
-      submit:
-        repository: gcr.io/your-project/your-repository
-        mounted_volumes:
-          - name: nfs
-            sub_path: my-shared-folder
-            spec:
-              persistentVolumeClaim:
-                claimName: nfs
+      repository: gcr.io/your-project/your-repository
+      mounted_volumes:
+        - name: nfs
+          sub_path: my-shared-folder
+          spec:
+            persistentVolumeClaim:
+              claimName: nfs
 
-This exposes ``/my-shared-folder`` in the shared folder in the ``/mnt/nfs/``
-folder inside each pod. Now, we must configure the pipeline to store all
-products in ``/mnt/nfs/``
+This exposes ``/my-shared-folder`` sub directory in our shared disk
+in ``/mnt/nfs/`` on each pod. Now, we must configure the pipeline to store all
+products in ``/mnt/nfs/``. Create an ``env.yaml`` file in the root folder
+(same folder that contains the ``setup.py`` file) with this content:
 
-[TODO: show how to edit env.yaml]
+
+.. code-block:: yaml
+
+    sample: False
+    # this configures the pipeline to store all otuputs in the shared disk
+    product_root: /mnt/nfs

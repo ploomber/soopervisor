@@ -1,23 +1,19 @@
 .. include:: ../README.rst
 
-
-User Guide
-==========
-
 .. toctree::
    :maxdepth: 2
+   :hidden:
 
-   kubernetes
-   aws-batch
-   aws-lambda
-   airflow
-   api/index
-   dev
+   tutorials/kubernetes
+   tutorials/aws-batch
+   tutorials/aws-lambda
+   tutorials/airflow
 
 
-Indices and tables
-==================
+.. toctree::
+   :caption: External links
+   :hidden:
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   Github <https://github.com/ploomber/soopervisor>
+   Ploomber <https://github.com/ploomber/ploomber>
+   Blog <https://ploomber.io>

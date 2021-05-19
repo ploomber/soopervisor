@@ -1,25 +1,106 @@
-Airfow
-======
+Airflow
+=======
 
-*This tutorial shows you how to export a Ploomber pipeline using Soopervisor.*
+This tutorial shows you how to export a Ploomber pipeline using Soopervisor.
+
+If you encounter any issues with this
+tutorial, `let us know <https://github.com/ploomber/soopervisor/issues/new?title=Airflow%20tutorial%20problem>`_.
 
 
-Exporting a Ploomber pipeline using Soopervisor
------------------------------------------------
+Pre-requisites
+**************
+* ``airflow`` `See instructions here <https://airflow.apache.org/docs/apache-airflow/stable/start/index.html>`_.
+* ``conda`` `See instruction shere <https://docs.conda.io/en/latest/miniconda.html>`_
+* `git <https://git-scm.com/book/en/v2/Getting-Started-Installing-Git>`_
+* Install Ploomber with ``pip install ploomber``
 
-Generating an Airflow pipeline from a Ploomber one is as simple as installing
-Soopervisor and running one command:
+
+Instructions
+------------
+
+Once you installed and configured Airflow, start the scheduler and
+webserver. In a terminal:
+
+NOTE: soopervisor and ploomber must be installed in the host
 
 .. code-block:: sh
 
-    pip install soopervisor
+    airflow webserver --port 8080
+
+.. note::
+
+    To log in to the web server, you must the credentials configured as part
+    of the setup process by running the ``airflow users create`` command.
+
+In a second terminal:
+
+.. code-block:: sh
+
+    airflow scheduler
+
+
+Let's now pull some sample code:
+
+.. code-block:: sh
+
+    # get the sample projects
+    git clone https://github.com/ploomber/projects
+    cd projects/ml-intermediate/
+
+    # configure environment
+    conda env create --file environment.yml
+
+    # activate environment
+    conda activate ml-intermediate
+
+    # generate lock file
+    conda env export --no-build --file environment.lock.yml
+
+
+We now export the pipeline to Airflow:
+
+.. code-block:: sh
+
     soopervisor add train --backend airflow
+
+
+.. note::
+
+    You don't have to install ``soopervisor`` manually; it should've been
+    installed when running ``ploomber install``. If missing, install it with
+    ``pip install soopervisor``.
+
+
+TODO: explain env.train.yaml addition
+
+.. code-block:: yaml
+    
+    product_root: /some/output/directory
+
+
+.. code-block:: sh
+
+    soopervisor submit train
 
 
 Once the export process finishes, you'll see a new ``train/`` folder with
 two subfolders ``dag/``, which contains the Airflow DAG definition and
 ``ploomber/`` which contains your project's source code. To deploy, move
-those directories to your AIRFLOW_HOME.
+those directories to your ``AIRFLOW_HOME``.
+
+For example, if ``AIRFLOW_HOME`` is set to ``~/airflow``:
+
+
+.. code-block:: sh
+
+    cp train/dags/ml-intermediate.py ~/airflow/dags/ml-intermediate.py
+    cp -r train/ploomber/ml-intermediate  ~/airflow/ploomber
+
+
+airflow dags list
+airflow dags unpause ml-intermediate
+airflow dags trigger ml-intermediate
+airflow dags state ml-intermediate "2021-05-19 20:55:42+00:00"
 
 Generated Airflow DAG
 ---------------------
@@ -31,9 +112,11 @@ creates a conda virtual environment and runs the task.
 The generated file is simple, and you can customize it to your needs by
 using Airflow's API directly.
 
-*NOTE: we are adding more features such as using other types of
-operators for exported tasks. Let us know what features we are missing
-by opening an issue in the* `repository <https://github.com/ploomber/soopervisor>`_.
+.. note::
+    
+    We are adding more features such as using other types of
+    operators for exported tasks. Let us know what we should build next
+    by opening an issue in the `repository <https://github.com/ploomber/soopervisor>`_.
 
 
 Requirements in the Airflow host
