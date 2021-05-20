@@ -71,4 +71,5 @@ class ArgoConfig(abc.AbstractConfig):
         data = cls(repository='your-repository/name').dict()
         data['backend'] = cls.get_backend_value()
         del data['mounted_volumes']
+        del data['include']
         return data

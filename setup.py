@@ -32,35 +32,33 @@ REQUIRES = [
     'ploomber>=0.9.3',
 ]
 
-EXTRAS = [
-    'docker',
-    'boxsdk',
-]
-
 AWS = ['boto3']
 
 DEV = [
+    # TEST
     'pytest',
     'Faker',
     'yapf',
     'flake8',
+    # soopervisor works with airflow 1.X as well but this prevents pip
+    # from installing it (tests will not pass since imports are different)
+    'apache-airflow[docker]>=2',
+    # to validate argo specs
+    'argo-workflows-dsl',
+    # for testing aws (newer versions break)
+    # see: https://github.com/spulec/moto/issues/1793
+    'moto==1.3.14',
+    # for test_dist.py
+    'wheel',
+    # to run assets/my_project
+    'scikit-learn',
+    # DOCS
     'sphinx',
     'sphinx-autobuild',
     'sphinx-inline-tabs',
     'furo',
-    # soopervisor works with airflow 1.X as well but this prevents pip
-    # from installing it (tests will not pass since imports are different)
-    'apache-airflow[docker]>=2',
+    # RELEASE
     'twine',
-    # to validate argo specs
-    'argo-workflows-dsl',
-    # for some reason, the env running in github actions does not have
-    # this making test_dist.py (error when calling
-    # "python setup.py bdist_wheel")
-    'wheel',
-    # for testing aws (newer versions break)
-    # see: https://github.com/spulec/moto/issues/1793
-    'moto==1.3.14',
     'ipython',
 ]
 
@@ -100,9 +98,8 @@ setup(
     extras_require={
         # for users
         'aws': AWS,
-        'all': EXTRAS,
         # for development and testing
-        'dev': EXTRAS + DEV + AWS,
+        'dev': DEV + AWS,
     },
     setup_requires=[],
     entry_points={

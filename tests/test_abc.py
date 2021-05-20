@@ -32,7 +32,11 @@ def test_creates_soopervisor_yaml_if_it_doesnt_exist(tmp_empty):
     ConcreteConfig._write_defaults('soopervisor.yaml', 'some_env')
 
     cfg = yaml.safe_load(Path('soopervisor.yaml').read_text())
-    assert cfg['some_env'] == {'default': 'value', 'backend': 'backend-value'}
+    assert cfg['some_env'] == {
+        'default': 'value',
+        'backend': 'backend-value',
+        'include': None
+    }
 
 
 def test_error_if_root_key_exists_in_soopervisor_yaml(tmp_empty):

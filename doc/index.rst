@@ -1,13 +1,19 @@
 .. include:: ../README.rst
 
 .. toctree::
-   :maxdepth: 2
+   :caption: Batch processing
    :hidden:
 
    tutorials/kubernetes
    tutorials/aws-batch
-   tutorials/aws-lambda
    tutorials/airflow
+
+
+.. toctree::
+   :caption: Online inference
+   :hidden:
+
+   tutorials/aws-batch
 
 
 .. toctree::

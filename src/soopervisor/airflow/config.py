@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional
 
 from soopervisor import abc
 from soopervisor.enum import Backend
@@ -6,7 +6,6 @@ from soopervisor.enum import Backend
 
 class AirflowConfig(abc.AbstractConfig):
     repository: Optional[str] = None
-    include: Optional[List[str]] = None
 
     @classmethod
     def get_backend_value(cls):

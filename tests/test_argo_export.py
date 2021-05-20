@@ -70,7 +70,8 @@ def test_submit(mock_docker_calls, backup_packaged_project):
     # should not change workingdir
     assert run_task_template['script']['workingDir'] is None
 
-    assert run_task_template['script']['image'] == 'your-repository:0.1dev'
+    assert run_task_template['script'][
+        'image'] == 'your-repository/name:0.1dev'
     assert run_task_template['name'] == 'run-task'
     assert spec['metadata']['generateName'] == 'my-project-'
     assert all([
@@ -131,7 +132,8 @@ def test_custom_volumes(mock_docker_calls, backup_packaged_project):
     }]
 
 
-@pytest.mark.xfail
+# move to project's CI
+@pytest.mark.skip
 @pytest.mark.parametrize(
     'name',
     [

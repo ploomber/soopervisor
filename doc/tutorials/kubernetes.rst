@@ -56,15 +56,14 @@ store everything there:
     minikube mount $HOME/minikube:/host
 
 
-**(Optional):** Enable Argo's UI. Run this in a new terminal:
+.. tip:: Enable Argo's UI. Run this in a new terminal:
 
-.. code-block:: sh
+    .. code-block:: sh
 
-    # port forwarding to enable the UI
-    kubectl -n argo port-forward svc/argo-server 2746:2746
+        # port forwarding to enable the UI
+        kubectl -n argo port-forward svc/argo-server 2746:2746
 
-
-Then open: http://127.0.0.1:2746
+    Then, open: http://127.0.0.1:2746
 
 
 Let's now run a Ploomber sample Machine Learning pipeline:
@@ -186,14 +185,15 @@ Submit a sample workflow to make sure Argo is working:
     argo submit -n argo --watch https://raw.githubusercontent.com/argoproj/argo/master/examples/hello-world.yaml
 
 
-**Optional:** Enable Argo's UI:
+.. tip:: Enable Argo's UI:
 
-.. code-block:: sh
+    .. code-block:: sh
 
-    # port forwarding to enable the UI
-    kubectl -n argo port-forward svc/argo-server 2746:2746
+        # port forwarding to enable the UI
+        kubectl -n argo port-forward svc/argo-server 2746:2746
 
-Open: http://127.0.0.1:2746
+    Then, open: http://127.0.0.1:2746
+
 
 Let's now run a Ploomber sample Machine Learning pipeline:
 
@@ -277,9 +277,7 @@ We are ready to execute the workflow:
     argo submit -n argo training/argo.yaml
 
 
-You may keep track of execution by opening the GUI.
-
-Check out the bucket to see output.
+You may keep track of execution by opening the UI. Check out the bucket to see output.
 
 **Congratulations! You just ran Ploomber on Kubernetes!**
 
@@ -393,5 +391,5 @@ products in ``/mnt/nfs/``. Create an ``env.yaml`` file in the root folder
 .. code-block:: yaml
 
     sample: False
-    # this configures the pipeline to store all otuputs in the shared disk
+    # this configures the pipeline to store all outputs in the shared disk
     product_root: /mnt/nfs

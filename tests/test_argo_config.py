@@ -33,7 +33,7 @@ def test_make_volume_entries_no_sub_path():
 
 def test_config_defaults():
     assert ArgoConfig.defaults() == {
-        'repository': 'your-repository',
+        'repository': 'your-repository/name',
         'backend': 'argo-workflows'
     }
 
@@ -43,5 +43,6 @@ def test_sample_project_from_empty_config(tmp_empty):
                                              env_name='env')
     assert cfg.dict() == {
         'repository': 'your-repository/name',
-        'mounted_volumes': None
+        'mounted_volumes': None,
+        'include': None,
     }

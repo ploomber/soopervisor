@@ -4,6 +4,7 @@ Abstract classes that define the protocol for all exporters
 import abc
 from pathlib import Path
 from collections.abc import Mapping
+from typing import Optional, List
 
 import click
 import yaml
@@ -16,6 +17,8 @@ class AbstractConfig(BaseModel, abc.ABC):
     """
     Configuration schema
     """
+    include: Optional[List[str]] = None
+
     class Config:
         extra = 'forbid'
 

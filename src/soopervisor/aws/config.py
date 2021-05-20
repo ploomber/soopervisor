@@ -24,6 +24,7 @@ class AWSBatchConfig(AbstractConfig):
                    job_queue='your-job-queue',
                    region_name='your-region-name').dict()
         data['backend'] = cls.get_backend_value()
+        del data['include']
         return data
 
 

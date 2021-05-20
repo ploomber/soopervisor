@@ -11,6 +11,14 @@ import pytest
 from soopervisor.airflow.export import AirflowExporter
 
 
+def git_init():
+    subprocess.check_call(['git', 'init'])
+    subprocess.check_call(['git', 'config', 'user.email', 'ci@ploomberio'])
+    subprocess.check_call(['git', 'config', 'user.name', 'Ploomber'])
+    subprocess.check_call(['git', 'add', '--all'])
+    subprocess.check_call(['git', 'commit', '-m', 'commit'])
+
+
 @pytest.fixture
 def mock_docker_calls(monkeypatch):
     cmd = ('from ploomber.spec import '
@@ -76,9 +84,7 @@ def test_airflow_export_sample_project(monkeypatch, mock_docker_calls,
                                env_name='serve')
 
     # this requires a git repo
-    subprocess.check_call(['git', 'init'])
-    subprocess.check_call(['git', 'add', '--all'])
-    subprocess.check_call(['git', 'commit', '-m', 'commit'])
+    git_init()
 
     exporter.add()
     exporter.submit()
@@ -119,9 +125,7 @@ def test_export_airflow_callables(monkeypatch, mock_docker_calls_callables,
                                env_name='serve')
 
     # this requires a git repo
-    subprocess.check_call(['git', 'init'])
-    subprocess.check_call(['git', 'add', '--all'])
-    subprocess.check_call(['git', 'commit', '-m', 'commit'])
+    git_init()
 
     exporter.add()
     exporter.submit()

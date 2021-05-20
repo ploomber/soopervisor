@@ -11,8 +11,6 @@ tutorial, `let us know <https://github.com/ploomber/soopervisor/issues/new?title
 Pre-requisites
 --------------
 
-Before continuing, make sure you have ``ploomber``, ``docker``, ``conda``
-and ``aws``.
 
 * `conda instructions <https://docs.conda.io/en/latest/miniconda.html>`_
 * `docker instructions <https://docs.docker.com/get-docker/>`_
@@ -25,7 +23,7 @@ uploads it and submits it for execution; however, you still have to configure
 the AWS Batch environment. Specifically, you must configure a compute
 environment and a job queue. `Refer to this guide for instructions. <https://docs.aws.amazon.com/batch/latest/userguide/Batch_GetStarted.html>`_
 
-**Note** Only EC2 compute environments are supported.
+.. note:: Only EC2 compute environments are supported.
 
 Once you've configured an EC2 compute environment and a job queue, continue to
 the next step.

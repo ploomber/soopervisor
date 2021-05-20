@@ -5,15 +5,19 @@ from pathlib import Path
 from soopervisor.commons import source
 
 
+def git_init():
+    subprocess.check_call(['git', 'init'])
+    subprocess.check_call(['git', 'config', 'user.email', 'ci@ploomberio'])
+    subprocess.check_call(['git', 'config', 'user.name', 'Ploomber'])
+    subprocess.check_call(['git', 'add', '--all'])
+    subprocess.check_call(['git', 'commit', '-m', 'commit'])
+
+
 def test_copy(tmp_empty):
     Path('file').touch()
     Path('dir').mkdir()
     Path('dir', 'another').touch()
-
-    subprocess.check_call(['git', 'init'])
-    subprocess.check_call(['git', 'add', '--all'])
-    subprocess.check_call(['git', 'commit', '-m', 'commit'])
-
+    git_init()
     source.copy('.', 'dist')
 
     expected = set(
@@ -31,10 +35,7 @@ def test_copy_with_gitignore(tmp_empty):
     Path('ignoreme').touch()
 
     Path('.gitignore').write_text('ignoreme')
-    subprocess.check_call(['git', 'init'])
-    subprocess.check_call(['git', 'add', '--all'])
-    subprocess.check_call(['git', 'commit', '-m', 'commit'])
-
+    git_init()
     source.copy('.', 'dist')
 
     expected = set(Path(p) for p in (
@@ -49,9 +50,7 @@ def test_include(tmp_empty):
     Path('secrets.txt').touch()
 
     Path('.gitignore').write_text('secrets.txt')
-    subprocess.check_call(['git', 'init'])
-    subprocess.check_call(['git', 'add', '--all'])
-    subprocess.check_call(['git', 'commit', '-m', 'commit'])
+    git_init()
 
     source.copy('.', 'dist', include=['secrets.txt'])
 

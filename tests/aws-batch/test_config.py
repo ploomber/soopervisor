@@ -1,9 +1,10 @@
 from soopervisor.aws.config import AWSBatchConfig
 
 
-def test_defaults(tmp_empty):
-    cfg = AWSBatchConfig.from_file_with_root_key('soopervisor.yaml', 'env')
-    assert cfg.dict() == {
+def test_defaults():
+    cfg = AWSBatchConfig.defaults()
+    assert cfg == {
+        'backend': 'aws-batch',
         'repository': 'your-repository/name',
         'container_properties': {
             'memory': 16384,
