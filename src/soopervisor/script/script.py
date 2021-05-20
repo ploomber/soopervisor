@@ -18,6 +18,7 @@ Use jinja to generate the script (it makes easy to embed logic)
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
 
+# no longer used, delete
 def generate_script(config, project_name, command):
     """
     Generate a bash script (string) to run a pipeline in a clean environment

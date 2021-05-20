@@ -69,3 +69,9 @@ def test_error_if_invalid_backend_value(tmp_empty):
 
 def test_error_if_target_directory_exists_and_not_empty(tmp_empty):
     pass
+
+
+def test_error_if_missing_dot_git():
+    """Projects must be in a git repository
+    """
+    pass

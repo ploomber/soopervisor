@@ -46,3 +46,8 @@ def upload(c, tag, production=True):
     """Upload to PyPI
     """
     versioneer.upload(tag, production=production)
+
+
+@task
+def doc_auto(c):
+    c.run('sphinx-autobuild doc doc/_build/html')

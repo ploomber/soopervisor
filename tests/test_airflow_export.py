@@ -1,19 +1,34 @@
 import os
 import subprocess
-from pathlib import Path
 import importlib
+from unittest.mock import Mock
 
 from airflow import DAG
-from airflow.operators.bash import BashOperator
+from airflow.providers.docker.operators.docker import DockerOperator
+from ploomber.io import _commander, _commander_tester
 import pytest
 
-from soopervisor.airflow.config import AirflowConfig
 from soopervisor.airflow.export import AirflowExporter
-from soopervisor.script.script import generate_script
+
+
+@pytest.fixture
+def mock_docker_calls(monkeypatch):
+    cmd = ('from ploomber.spec import '
+           'DAGSpec; print("File" in DAGSpec.find().to_dag().clients)')
+    tester = _commander_tester.CommanderTester(return_value={
+        ('docker', 'run', 'sample_project:latest', 'python', '-c', cmd):
+        b'True\n'
+    })
+
+    subprocess_mock = Mock()
+    subprocess_mock.check_call.side_effect = tester
+    subprocess_mock.check_output.side_effect = tester
+    monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
 
 
 # need to modify the env.airflow.yaml name
-@pytest.mark.xfail
+# better to move to project's CI
+@pytest.mark.skip
 @pytest.mark.parametrize(
     'name',
     [
@@ -51,24 +66,30 @@ def test_airflow_add_sample_project(monkeypatch, tmp_sample_project,
                                env_name='serve')
     exporter.add()
 
-    assert os.listdir('serve') == ['dags']
-    assert os.listdir(Path('serve', 'dags')) == ['sample_project.py']
+    assert set(os.listdir('serve')) == {'sample_project.py', 'Dockerfile'}
 
 
-def test_airflow_export_sample_project(monkeypatch, tmp_sample_project,
+def test_airflow_export_sample_project(monkeypatch, mock_docker_calls,
+                                       tmp_sample_project,
                                        no_sys_modules_cache):
     exporter = AirflowExporter(path_to_config='soopervisor.yaml',
                                env_name='serve')
+
+    # this requires a git repo
+    subprocess.check_call(['git', 'init'])
+    subprocess.check_call(['git', 'add', '--all'])
+    subprocess.check_call(['git', 'commit', '-m', 'commit'])
+
     exporter.add()
     exporter.submit()
 
-    monkeypatch.syspath_prepend('serve/dags')
+    monkeypatch.syspath_prepend('serve')
     mod = importlib.import_module('sample_project')
     dag = mod.dag
 
     assert isinstance(dag, DAG)
     assert set(dag.task_dict) == {'clean', 'plot', 'raw'}
-    assert set(type(t) for t in dag.tasks) == {BashOperator}
+    assert set(type(t) for t in dag.tasks) == {DockerOperator}
     assert {n: t.upstream_task_ids
             for n, t in dag.task_dict.items()} == {
                 'raw': set(),
@@ -77,33 +98,43 @@ def test_airflow_export_sample_project(monkeypatch, tmp_sample_project,
             }
 
 
-def test_export_airflow_callables(monkeypatch, tmp_callables):
+@pytest.fixture
+def mock_docker_calls_callables(monkeypatch):
+    cmd = ('from ploomber.spec import '
+           'DAGSpec; print("File" in DAGSpec.find().to_dag().clients)')
+    tester = _commander_tester.CommanderTester(return_value={
+        ('docker', 'run', 'callables:latest', 'python', '-c', cmd):
+        b'True\n'
+    })
+
+    subprocess_mock = Mock()
+    subprocess_mock.check_call.side_effect = tester
+    subprocess_mock.check_output.side_effect = tester
+    monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
+
+
+def test_export_airflow_callables(monkeypatch, mock_docker_calls_callables,
+                                  tmp_callables, no_sys_modules_cache):
     exporter = AirflowExporter(path_to_config='soopervisor.yaml',
                                env_name='serve')
+
+    # this requires a git repo
+    subprocess.check_call(['git', 'init'])
+    subprocess.check_call(['git', 'add', '--all'])
+    subprocess.check_call(['git', 'commit', '-m', 'commit'])
+
     exporter.add()
     exporter.submit()
 
-    monkeypatch.syspath_prepend('serve/dags')
+    monkeypatch.syspath_prepend('serve')
     mod = importlib.import_module('callables')
     dag = mod.dag
-
-    # generate scripts to compare them to the ones in airflow
-    cfg = AirflowConfig.from_file_with_root_key(
-        path_to_config='serve/ploomber/callables/soopervisor.yaml',
-        env_name='serve')
-
-    scripts = {
-        t: generate_script(config=cfg,
-                           project_name='callables',
-                           command=f'ploomber task {t}')
-        for t in dag.task_dict
-    }
 
     assert isinstance(dag, DAG)
     # check tasks in dag
     assert set(dag.task_dict) == {'features', 'fit', 'get', 'join'}
     # check task's class
-    assert set(type(t) for t in dag.tasks) == {BashOperator}
+    assert set(type(t) for t in dag.tasks) == {DockerOperator}
     # check dependencies
     assert {n: t.upstream_task_ids
             for n, t in dag.task_dict.items()} == {
@@ -114,7 +145,7 @@ def test_export_airflow_callables(monkeypatch, tmp_callables):
             }
 
     # check generated scripts
-    assert scripts['get'] == dag.task_dict['get'].bash_command
-    assert scripts['features'] == dag.task_dict['features'].bash_command
-    assert scripts['fit'] == dag.task_dict['fit'].bash_command
-    assert scripts['join'] == dag.task_dict['join'].bash_command
+    assert dag.task_dict['get'].command == 'ploomber task get'
+    assert dag.task_dict['features'].command == 'ploomber task features'
+    assert dag.task_dict['fit'].command == 'ploomber task fit'
+    assert dag.task_dict['join'].command == 'ploomber task join'

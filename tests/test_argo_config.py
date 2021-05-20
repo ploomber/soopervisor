@@ -42,6 +42,6 @@ def test_sample_project_from_empty_config(tmp_empty):
     cfg = ArgoConfig.from_file_with_root_key('soopervisor.yaml',
                                              env_name='env')
     assert cfg.dict() == {
-        'repository': 'your-repository',
+        'repository': 'your-repository/name',
         'mounted_volumes': None
     }

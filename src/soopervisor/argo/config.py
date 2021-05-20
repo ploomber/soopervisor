@@ -68,7 +68,7 @@ class ArgoConfig(abc.AbstractConfig):
 
     @classmethod
     def defaults(cls):
-        data = cls(repository='your-repository').dict()
+        data = cls(repository='your-repository/name').dict()
         data['backend'] = cls.get_backend_value()
         del data['mounted_volumes']
         return data

@@ -60,6 +60,7 @@ def add(name, backend):
     Exporter('soopervisor.yaml', env_name=name).add()
 
 
+# TODO: rename to export
 @cli.command()
 @click.argument('name')
 @click.option('--until-build',
