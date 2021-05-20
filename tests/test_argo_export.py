@@ -47,7 +47,7 @@ def test_submit(mock_docker_calls, backup_packaged_project):
     exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
                                      env_name='serve')
     exporter.add()
-    exporter.submit(until=None)
+    exporter.export(until=None)
 
     yaml_str = Path('serve/argo.yaml').read_text()
     spec = yaml.safe_load(yaml_str)
@@ -110,7 +110,7 @@ def test_custom_volumes(mock_docker_calls, backup_packaged_project):
 
     # reload exporter
     ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
-                          env_name='serve').submit(until=None)
+                          env_name='serve').export(until=None)
 
     spec = yaml.safe_load(Path('serve/argo.yaml').read_text())
 

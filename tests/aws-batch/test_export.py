@@ -172,7 +172,7 @@ def test_submit(mock_batch, monkeypatch, backup_packaged_project):
 
     exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
     exporter.add()
-    exporter.submit()
+    exporter.export()
 
     jobs = mock_batch.list_jobs(jobQueue='your-job-queue')['jobSummaryList']
 

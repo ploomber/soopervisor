@@ -37,7 +37,7 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
             e.success('Done')
 
     @staticmethod
-    def _submit(cfg, env_name, until):
+    def _export(cfg, env_name, until):
         """
         Build and upload Docker image. Export Argo YAML spec.
         """

@@ -53,7 +53,7 @@ class AWSBatchExporter(abc.AbstractExporter):
         # TODO: run dag checks: client configured, ploomber status
 
     @staticmethod
-    def _submit(cfg, env_name, until):
+    def _export(cfg, env_name, until):
         dag = DAGSpec.find().to_dag()
 
         # warn if missing client (only warn cause the config might configure

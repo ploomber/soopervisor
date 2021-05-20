@@ -77,7 +77,7 @@ def export(name, until_build):
 
     backend = Backend(config.get_backend(name))
     Exporter = exporter.for_backend(backend)
-    Exporter('soopervisor.yaml', env_name=name).submit(until=until)
+    Exporter('soopervisor.yaml', env_name=name).export(until=until)
 
 
 if __name__ == '__main__':

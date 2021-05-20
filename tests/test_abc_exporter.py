@@ -22,7 +22,7 @@ class ConcreteExporter(AbstractExporter):
         pass
 
     @staticmethod
-    def _submit():
+    def _export():
         pass
 
     @staticmethod

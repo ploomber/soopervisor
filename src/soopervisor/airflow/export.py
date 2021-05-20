@@ -52,7 +52,7 @@ class AirflowExporter(abc.AbstractExporter):
         pass
 
     @staticmethod
-    def _submit(cfg, env_name, until):
+    def _export(cfg, env_name, until):
         """
         Copies the current source code to the target environment folder.
         The code along with the DAG declaration file can be copied to

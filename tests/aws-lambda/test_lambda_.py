@@ -61,7 +61,7 @@ class PassCall:
             return subprocess.run(cmd, check=True)
 
 
-def test_submit(backup_packaged_project, monkeypatch):
+def test_export(backup_packaged_project, monkeypatch):
 
     # mock call to: sam deploy --guided
     pass_call = PassCall('sam', 'deploy', '--guided')
@@ -82,7 +82,7 @@ def test_submit(backup_packaged_project, monkeypatch):
                  value=f'    body = {json.dumps(body)}')
 
     runner = CliRunner()
-    result = runner.invoke(cli.submit, ['serve'], catch_exceptions=False)
+    result = runner.invoke(cli.export, ['serve'], catch_exceptions=False)
 
     assert pass_call.called
     assert result.exit_code == 0

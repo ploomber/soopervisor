@@ -154,8 +154,8 @@ class AbstractExporter(abc.ABC):
 
         return self._add(cfg=self._cfg, env_name=self._env_name)
 
-    def submit(self, until=None):
-        return self._submit(cfg=self._cfg,
+    def export(self, until=None):
+        return self._export(cfg=self._cfg,
                             env_name=self._env_name,
                             until=until)
 
@@ -175,5 +175,5 @@ class AbstractExporter(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def _submit(cfg, env_name, until):
+    def _export(cfg, env_name, until):
         pass

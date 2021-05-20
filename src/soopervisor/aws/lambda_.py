@@ -46,7 +46,7 @@ class AWSLambdaExporter(abc.AbstractExporter):
                 warn_if_not_installed(name)
 
     @staticmethod
-    def _submit(cfg, env_name, until):
+    def _export(cfg, env_name, until):
 
         # TODO: validate project structure: src/*/model.*, etc...
 
