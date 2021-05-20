@@ -40,7 +40,7 @@ class AWSLambdaExporter(abc.AbstractExporter):
                 'Next steps:\n1. Add an input example to '
                 f'{env_name}/test_aws_lambda.py\n'
                 f'2. Add the input parsing logic to {env_name}/app.py\n'
-                f'3. Submit to AWS Lambda with: soopervisor submit {env_name}')
+                f'3. Submit to AWS Lambda with: soopervisor export {env_name}')
 
             for name in ['docker', 'aws', 'sam']:
                 warn_if_not_installed(name)

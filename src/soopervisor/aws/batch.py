@@ -48,7 +48,7 @@ class AWSBatchExporter(abc.AbstractExporter):
             e.print(
                 f'Fill in the configuration in the {env_name!r} '
                 'section in soopervisor.yaml then submit to AWS Batch with: '
-                f'soopervisor submit {env_name}')
+                f'soopervisor export {env_name}')
 
         # TODO: run dag checks: client configured, ploomber status
 

@@ -19,7 +19,7 @@ def cli():
 
     $ soopervisor add training --backend argo-workflows
 
-    $ soopervisor submit training
+    $ soopervisor export training
 
     """
     pass
@@ -60,16 +60,15 @@ def add(name, backend):
     Exporter('soopervisor.yaml', env_name=name).add()
 
 
-# TODO: rename to export
 @cli.command()
 @click.argument('name')
 @click.option('--until-build',
               '-ub',
               is_flag=True,
               help='Only build docker image')
-def submit(name, until_build):
+def export(name, until_build):
     """
-    Submit a target platform for execution/deployment
+    Export a target platform for execution/deployment
     """
     until = None
 

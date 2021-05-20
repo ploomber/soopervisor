@@ -86,7 +86,7 @@ pipeline:
 
 .. code-block:: sh
 
-   soopervisor submit training
+   soopervisor export training
 
 Ploomber will take care of packaging your code and submitting it for
 execution. If using Argo Workflows, it will create a Docker image, upload it to
@@ -94,4 +94,4 @@ the configured registry, generate the Argo's YAML spec and submit the workflow.
 
 Depending on the backend you select (Argo, Airflow, AWS Batch or AWS Lambda),
 the configuration will change but the API remains the same:
-``soopervisor add``, then ``soopervisor submit``.
+``soopervisor add``, then ``soopervisor export``.

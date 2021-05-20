@@ -157,7 +157,7 @@ Submit for execution:
 
 .. code-block:: sh
 
-    soopervisor submit training
+    soopervisor export training
 
 The previous command will take a few minutes the first time since it has to
 build the Docker image from scratch. Subsequent runs will be much faster.

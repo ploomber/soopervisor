@@ -119,7 +119,7 @@ Let's now submit the workflow:
 .. code-block:: sh
 
     # build docker image (takes a few minutes the first time) and generate yaml spec
-    soopervisor submit training
+    soopervisor export training
 
     # submit workflow
     argo submit -n argo --watch training/argo.yaml
@@ -271,7 +271,7 @@ We are ready to execute the workflow:
     gcloud auth configure-docker
 
     # packages code, create docker image and upload it (takes a few mins)
-    soopervisor submit training
+    soopervisor export training
 
     # submit workflow
     argo submit -n argo training/argo.yaml

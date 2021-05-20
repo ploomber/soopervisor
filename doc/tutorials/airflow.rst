@@ -191,7 +191,7 @@ Build the Docker image (takes a few mins the first time):
     
 .. code-block:: sh
 
-    soopervisor submit train
+    soopervisor export train
 
 
 Once the export process finishes, you'll see a new ``train/`` folder with

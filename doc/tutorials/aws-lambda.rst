@@ -170,7 +170,7 @@ to AWS Lambda) to test our API with the following command:
 
 .. code-block:: sh
 
-    soopervisor submit serve --until-build
+    soopervisor export serve --until-build
 
 
 The command will take a few minutes since it has to create a Docker image,
@@ -202,7 +202,7 @@ Deployment
 
 .. code-block:: sh
 
-    soopervisor submit serve
+    soopervisor export serve
 
 explain the --guided thing and add some link
 
