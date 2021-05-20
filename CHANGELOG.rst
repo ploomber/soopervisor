@@ -4,6 +4,23 @@ CHANGELOG
 0.3.5dev
 --------
 
+**Important**: Soopervisor was re-written. Some modules were deprecated and the
+API changed. This new architecture allows us to greatly simplify user experience
+and easily incorporate more platforms in the future.
+
+* New CLI
+* New documentation
+* New (simplified) ``soopervisor.yaml`` configuration schema
+* Support for non-packaged projects (i.e., the ones without a ``setup.py`` file)
+* Support for AWS Batch
+* Support for AWS Lambda
+* Argo Workflows integration builds a docker image
+* Airflow integration produces a DAG with ``DockerOperator`` tasks
+* Deprecates ``build`` module
+* Deprecates ``script`` module
+* Deprecates Box integration
+
+
 0.3.4 (2021-04-18)
 ------------------
 * Export projects compatible with `ploomber.OnlineModel` to AWS Lambda
