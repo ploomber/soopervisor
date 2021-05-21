@@ -147,7 +147,7 @@ def test_add(backup_packaged_project):
     assert Path('train', 'Dockerfile').exists()
 
 
-def test_submit(mock_batch, monkeypatch, backup_packaged_project):
+def test_export(mock_batch, monkeypatch, backup_packaged_project):
     Path('setup.py').unlink()
 
     cmd = ('from ploomber.spec import '

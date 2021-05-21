@@ -1,8 +1,9 @@
 """
 Running pipelines on AWS Batch
 """
-import boto3
+from pathlib import Path
 
+import boto3
 from ploomber.spec import DAGSpec
 from ploomber.io._commander import Commander
 
@@ -43,7 +44,8 @@ class AWSBatchExporter(abc.AbstractExporter):
     def _add(cfg, env_name):
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
-            e.copy_template('aws-batch/Dockerfile')
+            e.copy_template('aws-batch/Dockerfile',
+                            conda=Path('environment.lock.yml').exists())
             e.success('Done')
             e.print(
                 f'Fill in the configuration in the {env_name!r} '

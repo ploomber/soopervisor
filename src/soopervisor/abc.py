@@ -130,13 +130,11 @@ class AbstractExporter(abc.ABC):
         Verify project has the right structure before running the script.
         This runs as a sanity check in the development machine
         """
-        env_file = 'environment.lock.yml'
-
-        if not Path(env_file).exists():
-            raise FileNotFoundError(f'Missing {env_file!r} file at the root '
-                                    'directory')
-
-        # TODO: warn if the environment file does not have pinned versions
+        if not Path('environment.lock.yml').exists() and not Path(
+                'requirements.lock.txt').exists():
+            raise FileNotFoundError('Expected environment.lock.yml or '
+                                    'requirements.txt.lock at the root '
+                                    'directory. Add one.')
 
     def add(self):
         # check that env_name folder does not exist

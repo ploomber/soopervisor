@@ -43,7 +43,7 @@ def test_add(tmp_sample_project):
 
 
 # TODO: test with tmp_sample_project (non-packaged-project)
-def test_submit(mock_docker_calls, backup_packaged_project):
+def test_export(mock_docker_calls, backup_packaged_project):
     exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
                                      env_name='serve')
     exporter.add()

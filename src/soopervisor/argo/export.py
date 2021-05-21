@@ -1,6 +1,8 @@
 """
 Export to Argo Workflows
 """
+from pathlib import Path
+
 import click
 from ploomber.spec import DAGSpec
 from ploomber.io._commander import Commander
@@ -33,7 +35,8 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
         """
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
-            e.copy_template('argo-workflows/Dockerfile')
+            e.copy_template('argo-workflows/Dockerfile',
+                            conda=Path('environment.lock.yml').exists())
             e.success('Done')
 
     @staticmethod
