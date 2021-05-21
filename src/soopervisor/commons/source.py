@@ -11,7 +11,8 @@ from click.exceptions import ClickException
 
 def git_tracked_files():
     res = subprocess.run(['git', 'ls-tree', '-r', 'HEAD', '--name-only'],
-                         capture_output=True)
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
 
     if not res.returncode:
         return res.stdout.decode().splitlines()
