@@ -6,11 +6,20 @@ from itertools import chain
 from glob import iglob
 import subprocess
 
+from click.exceptions import ClickException
 
-def git_tracked_files():
-    out = subprocess.check_output(
-        ['git', 'ls-tree', '-r', 'HEAD', '--name-only'])
-    return out.decode().splitlines()
+
+def git_tracked_files(cmdr):
+    res = subprocess.run(['git', 'ls-tree', '-r', 'HEAD', '--name-only'],
+                         capture_output=True)
+
+    if not res.returncode:
+        return res.stdout.decode().splitlines()
+    else:
+        raise ClickException(
+            'Could not obtain git tracked files. Non-packaged projects'
+            ' must be in a git repository, create one with "git init".'
+            f' Error message: {res.stderr.decode()}')
 
 
 def glob_all(path):
@@ -19,8 +28,10 @@ def glob_all(path):
     return chain(hidden, normal)
 
 
-def copy(src, dst, include=None):
-    tracked = git_tracked_files()
+def copy(cmdr, src, dst, include=None):
+    # TODO: warn if git is dirty (new files wont be included)
+
+    tracked = git_tracked_files(cmdr=cmdr)
     include = set() if include is None else set(include)
 
     for f in glob_all(path=src):

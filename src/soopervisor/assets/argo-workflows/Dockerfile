@@ -3,7 +3,12 @@ FROM condaforge/mambaforge:4.10.1-0
 {%- set name = 'environment.lock.yml' if conda else 'requirements.lock.txt' %}
 
 COPY {{name}} project/{{name}}
+
+{% if conda %}
 RUN mamba env update --name base --file project/{{name}} && conda clean --all --force-pkgs-dir --yes
+{% else %}
+RUN pip install --requirement project/{{name}} && rm -rf /root/.cache/pip/
+{% endif %}
 
 COPY dist/* project/
 WORKDIR /project/

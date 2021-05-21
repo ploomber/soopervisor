@@ -3,7 +3,6 @@ Running pipelines on AWS Batch
 """
 from pathlib import Path
 
-import boto3
 from ploomber.spec import DAGSpec
 from ploomber.io._commander import Commander
 
@@ -54,6 +53,7 @@ class AWSBatchExporter(abc.AbstractExporter):
 
         # TODO: run dag checks: client configured, ploomber status
 
+    # TODO: add requires boto3
     @staticmethod
     def _export(cfg, env_name, until):
         dag = DAGSpec.find().to_dag()
@@ -83,6 +83,8 @@ class AWSBatchExporter(abc.AbstractExporter):
 
 def submit_dag(dag, job_def, remote_name, job_queue, container_properties,
                region_name, cmdr):
+    import boto3
+
     client = boto3.client('batch', region_name=region_name)
     container_properties['image'] = remote_name
 

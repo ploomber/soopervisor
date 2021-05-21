@@ -1,6 +1,7 @@
 import importlib
 from pathlib import Path
 
+from click import ClickException
 from ploomber.util import default
 from ploomber.io._commander import CommanderStop
 from soopervisor.commons import source
@@ -19,7 +20,14 @@ def build(e, cfg, name, until):
         version = importlib.import_module(pkg_name).__version__.replace(
             '+', '-plus-')
 
-    e.cp('environment.lock.yml')
+    if Path('requirements.lock.txt').exists():
+        e.cp('requirements.lock.txt')
+    elif Path('environment.lock.yml').exists():
+        e.cp('environment.lock.yml')
+    else:
+        raise ClickException('Expected environment.lock.yml or '
+                             'requirements.txt.lock at the root '
+                             'directory. Add one and try again')
 
     # generate source distribution
 
@@ -34,7 +42,7 @@ def build(e, cfg, name, until):
         # since they are not yet tracked on git)
         e.rm('dist')
         target = Path('dist', pkg_name)
-        source.copy('.', target, include=cfg.include)
+        source.copy(e, '.', target, include=cfg.include)
         source.compress_dir(target, Path('dist', f'{pkg_name}.tar.gz'))
 
     e.cp('dist')

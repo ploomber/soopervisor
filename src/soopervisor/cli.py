@@ -44,14 +44,6 @@ def add(name, backend):
                                        'soopervisor.yaml configuration file '
                                        'already exists. Choose another name.')
 
-    if not Path('setup.py').exists() and backend in {
-            Backend.aws_batch, Backend.aws_lambda
-    }:
-        raise click.ClickException('Only packages with a setup.py file are '
-                                   f'supported when using {backend!r}. '
-                                   'Suggestion: run "ploomber scaffold" '
-                                   'to create a base project')
-
     if Path(name).exists():
         raise click.ClickException(f'{name!r} already exists. '
                                    'Select a different name.')
