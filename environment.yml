@@ -1,0 +1,4 @@
+dependencies:
+- a
+- b
+- pip: 1

@@ -132,9 +132,9 @@ class AbstractExporter(abc.ABC):
         """
         if not Path('environment.lock.yml').exists() and not Path(
                 'requirements.lock.txt').exists():
-            raise FileNotFoundError('Expected environment.lock.yml or '
-                                    'requirements.txt.lock at the root '
-                                    'directory. Add one.')
+            raise click.ClickException('Expected environment.lock.yml or '
+                                       'requirements.txt.lock at the root '
+                                       'directory. Add one.')
 
     def add(self):
         # check that env_name folder does not exist

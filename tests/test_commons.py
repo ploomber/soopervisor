@@ -2,7 +2,12 @@ import tarfile
 import subprocess
 from pathlib import Path
 
+import yaml
+import pytest
+from click import ClickException
+
 from soopervisor.commons import source
+from soopervisor.commons import conda
 
 
 def git_init():
@@ -79,3 +84,58 @@ def test_compress_dir(tmp_empty):
         'project-name/file',
     ))
     assert set(Path(p) for p in source.glob_all('project-name')) == expected
+
+
+@pytest.mark.parametrize('env_yaml, expected', [
+    [{
+        'dependencies': ['a', 'b', {
+            'pip': ['c', 'd']
+        }]
+    }, ['c', 'd']],
+    [{
+        'dependencies': [{
+            'pip': ['y', 'z']
+        }, 'a', 'b']
+    }, ['y', 'z']],
+])
+def test_extract_pip_from_env_yaml(tmp_empty, env_yaml, expected):
+    Path('environment.yml').write_text(yaml.safe_dump(env_yaml))
+    assert conda.extract_pip_from_env_yaml('environment.yml') == expected
+
+
+def test_error_extract_pip_missing_dependencies_section():
+    Path('environment.yml').write_text(yaml.safe_dump({}))
+
+    with pytest.raises(ClickException) as excinfo:
+        conda.extract_pip_from_env_yaml('environment.yml')
+
+    msg = ('Cannot extract pip dependencies from environment.lock.yml: '
+           'missing dependencies section')
+    assert msg == str(excinfo.value)
+
+
+def test_error_extract_pip_missing_pip_dict():
+    Path('environment.yml').write_text(
+        yaml.safe_dump({'dependencies': ['a', 'b']}))
+
+    with pytest.raises(ClickException) as excinfo:
+        conda.extract_pip_from_env_yaml('environment.yml')
+
+    msg = ('Cannot extract pip dependencies from environment.lock.yml: '
+           'missing dependencies.pip section')
+    assert msg == str(excinfo.value)
+
+
+def test_error_extract_pip_unexpected_pip_list():
+    Path('environment.yml').write_text(
+        yaml.safe_dump({'dependencies': ['a', 'b', {
+            'pip': 1
+        }]}))
+
+    with pytest.raises(ClickException) as excinfo:
+        conda.extract_pip_from_env_yaml('environment.yml')
+
+    msg = ('Cannot extract pip dependencies from environment.lock.yml: '
+           'unexpected dependencies.pip value. Expected a list of '
+           'dependencies, got: 1')
+    assert msg == str(excinfo.value)

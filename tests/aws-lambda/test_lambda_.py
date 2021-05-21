@@ -2,8 +2,10 @@ import json
 from pathlib import Path
 import subprocess
 
+import pytest
 import yaml
 from click.testing import CliRunner
+from click import ClickException
 from soopervisor import cli
 
 from soopervisor.aws.lambda_ import AWSLambdaExporter
@@ -62,7 +64,6 @@ class PassCall:
 
 
 def test_export(backup_packaged_project, monkeypatch):
-
     # mock call to: sam deploy --guided
     pass_call = PassCall('sam', 'deploy', '--guided')
     monkeypatch.setattr(_commander.subprocess, 'check_call', pass_call)
@@ -86,3 +87,50 @@ def test_export(backup_packaged_project, monkeypatch):
 
     assert pass_call.called
     assert result.exit_code == 0
+
+
+def test_generate_reqs_lock_txt_from_env_lock_yml(backup_packaged_project,
+                                                  monkeypatch):
+    # mock call to: sam deploy --guided
+    pass_call = PassCall('sam', 'deploy', '--guided')
+    monkeypatch.setattr(_commander.subprocess, 'check_call', pass_call)
+
+    Path('environment.lock.yml').write_text("""
+dependencies:
+  - python=3.8
+  - pip
+  - pip:
+    - a
+    - b
+""")
+
+    subprocess.run(['ploomber', 'build'], check=True)
+    subprocess.run(
+        ['cp', 'products/model.pickle', 'src/my_project/model.pickle'],
+        check=True)
+
+    exporter = AWSLambdaExporter('soopervisor.yaml', 'serve')
+    exporter.add()
+
+    erase_lines('serve/app.py', from_=14, to=16)
+    erase_lines('serve/test_aws_lambda.py', from_=10, to=12)
+    replace_line('serve/test_aws_lambda.py',
+                 line=15,
+                 value=f'    body = {json.dumps(body)}')
+
+    exporter.export()
+    # TODO: mock lambda calls that builds docker image
+    # TODO: test warns env yaml will be used to generate reqs
+    assert not Path('requirements.lock.txt').exists()
+
+
+def test_error_when_missing_env_yml_and_reqs_txt(backup_packaged_project,
+                                                 monkeypatch):
+    Path('environment.lock.yml').unlink()
+
+    with pytest.raises(ClickException) as excinfo:
+        AWSLambdaExporter('soopervisor.yaml', 'serve')
+
+    msg = ('Expected environment.lock.yml or requirements.txt.lock at the '
+           'root directory. Add one.')
+    assert msg == str(excinfo.value)
