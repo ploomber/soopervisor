@@ -171,5 +171,10 @@ build the Docker image from scratch. Subsequent runs will be much faster.
     of the compute environment. Try lowering resources and submit again. If
     that doesn't work, `check this out <https://aws.amazon.com/premiumsupport/knowledge-center/batch-job-stuck-runnable-status/>`_.
 
+.. tip::
+
+    To number of concurrent jobs is limited by the resources in the Compute
+    Environment. Increase them to run more tasks in parallel.
+
 **Congratulations! You just ran Ploomber on AWS Batch!**
 
