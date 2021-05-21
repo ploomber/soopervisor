@@ -30,4 +30,5 @@ jobs:
         CLIENT_ID: ${{ secrets.CLIENT_ID }}
         PRIMARY_ACCESS_TOKEN: ${{ secrets.PRIMARY_ACCESS_TOKEN }}
       run: |
+        pip install git+https://github.com/ploomber/ploomber@install
         invoke test
