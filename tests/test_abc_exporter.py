@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 from ploomber.exceptions import DAGSpecInitializationError
+from click import ClickException
 
 from soopervisor.abc import AbstractExporter, AbstractConfig
 
@@ -33,10 +34,11 @@ class ConcreteExporter(AbstractExporter):
 def test_error_if_missing_environment_lock_yml(tmp_sample_project):
     Path('environment.lock.yml').unlink()
 
-    with pytest.raises(FileNotFoundError) as excinfo:
+    with pytest.raises(ClickException) as excinfo:
         ConcreteExporter('soopervisor.yaml', env_name='some_env')
 
-    assert 'Missing \'environment.lock.yml\' file' in str(excinfo.value)
+    assert 'Expected environment.lock.yml or requirements.txt.lock' in str(
+        excinfo.value)
 
 
 def test_error_if_dag_fails_to_initialize(tmp_sample_project):

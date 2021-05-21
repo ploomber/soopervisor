@@ -19,7 +19,15 @@ body = {
 }
 
 
-def erase_lines(path, from_, to):
+def _edit_generated_files():
+    _erase_lines('serve/app.py', from_=14, to=16)
+    _erase_lines('serve/test_aws_lambda.py', from_=10, to=12)
+    _replace_line('serve/test_aws_lambda.py',
+                  line=15,
+                  value=f'    body = {json.dumps(body)}')
+
+
+def _erase_lines(path, from_, to):
     lines = Path(path).read_text().splitlines()
 
     for idx in range(from_ - 1, to):
@@ -28,7 +36,7 @@ def erase_lines(path, from_, to):
     Path(path).write_text('\n'.join(lines))
 
 
-def replace_line(path, line, value):
+def _replace_line(path, line, value):
     path = Path(path)
     lines = path.read_text().splitlines()
     lines[line - 1] = value
@@ -76,13 +84,9 @@ def test_export(backup_packaged_project, monkeypatch):
 
     exporter = AWSLambdaExporter('soopervisor.yaml', 'serve')
     exporter.add()
-    erase_lines('serve/app.py', from_=14, to=16)
-    erase_lines('serve/test_aws_lambda.py', from_=10, to=12)
-    replace_line('serve/test_aws_lambda.py',
-                 line=15,
-                 value=f'    body = {json.dumps(body)}')
-
+    _edit_generated_files()
     runner = CliRunner()
+
     result = runner.invoke(cli.export, ['serve'], catch_exceptions=False)
 
     assert pass_call.called
@@ -90,7 +94,7 @@ def test_export(backup_packaged_project, monkeypatch):
 
 
 def test_generate_reqs_lock_txt_from_env_lock_yml(backup_packaged_project,
-                                                  monkeypatch):
+                                                  monkeypatch, capsys):
     # mock call to: sam deploy --guided
     pass_call = PassCall('sam', 'deploy', '--guided')
     monkeypatch.setattr(_commander.subprocess, 'check_call', pass_call)
@@ -111,16 +115,13 @@ dependencies:
 
     exporter = AWSLambdaExporter('soopervisor.yaml', 'serve')
     exporter.add()
-
-    erase_lines('serve/app.py', from_=14, to=16)
-    erase_lines('serve/test_aws_lambda.py', from_=10, to=12)
-    replace_line('serve/test_aws_lambda.py',
-                 line=15,
-                 value=f'    body = {json.dumps(body)}')
+    _edit_generated_files()
 
     exporter.export()
     # TODO: mock lambda calls that builds docker image
-    # TODO: test warns env yaml will be used to generate reqs
+
+    captured = capsys.readouterr()
+    assert 'Missing requirements.lock.txt file.' in captured.out
     assert not Path('requirements.lock.txt').exists()
 
 

@@ -66,6 +66,14 @@ class AWSLambdaExporter(abc.AbstractExporter):
 
             if not Path('requirements.lock.txt').exists():
                 if Path('environment.lock.yml').exists():
+                    e.warn_on_exit(
+                        'Missing requirements.lock.txt file. '
+                        'Once was created from the pip '
+                        'section in the environment.lock.yml file but this '
+                        'may not work if there are missing dependencies. Add '
+                        'one or ensure environment.lock.yml includes all pip '
+                        'dependencies.')
+
                     generate_reqs_txt_from_env_yml(
                         'environment.lock.yml', output='requirements.lock.txt')
                     e.rm_on_exit('requirements.lock.txt')
