@@ -42,6 +42,7 @@ def build(e, cfg, name, until):
         # since they are not yet tracked on git)
         e.rm('dist')
         target = Path('dist', pkg_name)
+        e.info('Packaging code')
         source.copy('.', target, include=cfg.include)
         source.compress_dir(target, Path('dist', f'{pkg_name}.tar.gz'))
 
@@ -77,13 +78,13 @@ def build(e, cfg, name, until):
           'python',
           '-c',
           test_cmd,
-          description='Testing image',
-          error_message='Error while checking File client configuration',
-          hint=f'Use "docker run -it {image_local} /bin/bash" to '
-          'start an interactive session to debug your image and ensure a '
-          'File client is properly configured',
+          description='Testing File client',
+          error_message='Missing File client',
+          hint=f'Run "docker run -it {image_local} /bin/bash" to '
+          'to debug your image. Ensure a File client is configured',
           capture_output=True,
-          expected_output='True\n')
+          expected_output='True\n',
+          show_cmd=False)
 
     if until == 'build':
         raise CommanderStop('Done. Run "docker images" to see your image.')

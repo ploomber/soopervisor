@@ -38,11 +38,11 @@ def copy(src, dst, include=None):
     for f in glob_all(path=src):
         if (f not in tracked
                 and f not in include) or Path(f).name == '.gitignore':
-            print(f'Ignoring {f}')
+            print(f'ignoring {f}')
         else:
             target = Path(dst, f)
             target.parent.mkdir(exist_ok=True, parents=True)
-            print(f'Copying {f} -> {target}')
+            print(f'copying {f} -> {target}')
             shutil.copy(f, dst=target)
 
 
