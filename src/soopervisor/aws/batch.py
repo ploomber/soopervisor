@@ -5,10 +5,16 @@ from pathlib import Path
 
 from ploomber.spec import DAGSpec
 from ploomber.io._commander import Commander
+from ploomber.util.util import requires
 
 from soopervisor.aws.config import AWSBatchConfig
 from soopervisor.commons import docker
 from soopervisor import abc
+
+try:
+    import boto3
+except ModuleNotFoundError:
+    boto3 = None
 
 # TODO:
 # warn on large distribution artifacts - there might be data files
@@ -53,8 +59,8 @@ class AWSBatchExporter(abc.AbstractExporter):
 
         # TODO: run dag checks: client configured, ploomber status
 
-    # TODO: add requires boto3
     @staticmethod
+    @requires(['boto3'], name='AWSBatchExporter')
     def _export(cfg, env_name, until):
         dag = DAGSpec.find().to_dag()
 
@@ -83,8 +89,6 @@ class AWSBatchExporter(abc.AbstractExporter):
 
 def submit_dag(dag, job_def, remote_name, job_queue, container_properties,
                region_name, cmdr):
-    import boto3
-
     client = boto3.client('batch', region_name=region_name)
     container_properties['image'] = remote_name
 

@@ -10,6 +10,7 @@ import boto3
 
 from soopervisor.aws import batch
 from ploomber.io import _commander, _commander_tester
+from ploomber.util import util
 
 service_role = {
     "Version":
@@ -229,3 +230,17 @@ def test_export(mock_batch, monkeypatch, backup_packaged_project):
         calls[name]['containerOverrides']['command'] ==
         ['ploomber', 'task', name]
     ] for name in names)
+
+
+def test_error_if_missing_boto3(monkeypatch, backup_packaged_project):
+
+    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
+    exporter.add()
+
+    # simulate boto3 is not installed
+    monkeypatch.setattr(util.importlib.util, 'find_spec', lambda _: None)
+
+    with pytest.raises(ImportError) as excinfo:
+        exporter.export()
+
+    assert 'boto3 is required to use AWSBatchExporter' in str(excinfo.value)

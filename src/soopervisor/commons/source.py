@@ -9,7 +9,7 @@ import subprocess
 from click.exceptions import ClickException
 
 
-def git_tracked_files(cmdr):
+def git_tracked_files():
     res = subprocess.run(['git', 'ls-tree', '-r', 'HEAD', '--name-only'],
                          capture_output=True)
 
@@ -28,10 +28,10 @@ def glob_all(path):
     return chain(hidden, normal)
 
 
-def copy(cmdr, src, dst, include=None):
+def copy(src, dst, include=None):
     # TODO: warn if git is dirty (new files wont be included)
 
-    tracked = git_tracked_files(cmdr=cmdr)
+    tracked = git_tracked_files()
     include = set() if include is None else set(include)
 
     for f in glob_all(path=src):

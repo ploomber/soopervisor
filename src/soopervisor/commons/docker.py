@@ -42,7 +42,7 @@ def build(e, cfg, name, until):
         # since they are not yet tracked on git)
         e.rm('dist')
         target = Path('dist', pkg_name)
-        source.copy(e, '.', target, include=cfg.include)
+        source.copy('.', target, include=cfg.include)
         source.compress_dir(target, Path('dist', f'{pkg_name}.tar.gz'))
 
     e.cp('dist')
