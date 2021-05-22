@@ -7,7 +7,8 @@ Soopervisor
 
 
 Soopervisor runs `Ploomber <github.com/ploomber/ploomber>`_ pipelines
-for batch processing (large-scale training or batch serving) or online inference.
+for batch processing (large-scale training or batch serving) or online
+inference.
 
 .. code-block:: sh
 
@@ -29,18 +30,38 @@ Supported platforms
 Standard layout
 ===============
 
-Soopervisor expects your Ploomber project to be in the standard project layout, which requires the following files:
+Soopervisor expects your Ploomber project to be in the standard project
+layout, which requires the following:
 
-1. ``environment.lock.yml``: `conda environment <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually>`_ with pinned dependencies
-2. A ``pipeline.yaml`` file in the current working directory or in ``src/{package-name}/pipeline.yaml`` (if your project is a Python package)
+Dependencies file
+*****************
+
+* ``requirements.lock.txt``: ``pip`` dependencies file
+
+.. tip:: You can generate it with ``pip freeze > requirements.lock.txt``
+
+OR
+
+* ``environment.lock.yml``: `conda environment <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually>`_ with pinned dependencies
+
+.. tip:: You can generate it with ``conda env export --no-build --file environment.lock.yml``
+
+Pipeline declaration
+********************
+
+A ``pipeline.yaml`` file in the current working directory
+(or in ``src/{package-name}/pipeline.yaml`` if your project is a Python
+package).
 
 .. note::
 
    If your project is a package (i.e., it has a ``src/`` directory, a 
    ``setup.py`` file is also required.
 
-The easiest way to get started is to scaffold a new project with the following
-commands:
+Scaffolding standard layout
+***************************
+
+The fastest way to get started is to scaffold a new project:
 
 .. code-block:: sh
 
@@ -50,9 +71,17 @@ commands:
    # scaffold project
    ploomber scaffold
 
+   # or to use conda (instead of pip)
+   ploomber scaffold --conda
 
-Then you can configure the development environment (which generates
-the ``environment.lock.yml`` file) with:
+   # or to use the package structure
+   ploomber scaffold --package
+
+   # or to use conda and the package structure
+   ploomber scaffold --conda --package
+
+
+Then, configure the development environment:
 
 .. code-block:: sh
 
@@ -63,35 +92,32 @@ the ``environment.lock.yml`` file) with:
    ploomber install
 
 
-If you prefer, you may use ``conda`` directly:
+.. note::
 
-.. code-block::
-
-   conda env export --no-build --file environment.lock.yml
-
+   ``ploomber install`` automatically generates the
+   ``environment.lock.yml`` or ``requirements.lock.txt`` file
 
 Basic usage
 ===========
 
-Soopervisor introduces the notion of *target platform*. Say, for example, that
-you want to train multiple models in parallel, you may create a new target
-environment to execute your pipeline in Kubernetes (using Argo Workflows):
+Say that you want to train multiple models in a Kubernetes
+cluster, you may create a new target environment to execute your pipeline
+using Argo Workflows:
 
 .. code-block:: sh
 
    soopervisor add training --backend argo-workflows
 
-After filling in some basic configuration settings, you can execute the
-pipeline:
+After filling in some basic configuration settings, export the pipeline with:
 
 .. code-block:: sh
 
    soopervisor export training
 
-Ploomber will take care of packaging your code and submitting it for
+Soopervisor will take care of packaging your code and submitting it for
 execution. If using Argo Workflows, it will create a Docker image, upload it to
-the configured registry, generate the Argo's YAML spec and submit the workflow.
+the configured registry, generate an Argo's YAML spec and submit the workflow.
 
-Depending on the backend you select (Argo, Airflow, AWS Batch or AWS Lambda),
-the configuration will change but the API remains the same:
+Depending on the selected backend (Argo, Airflow, AWS Batch or AWS Lambda),
+configuration details will change but the API remains the same:
 ``soopervisor add``, then ``soopervisor export``.
