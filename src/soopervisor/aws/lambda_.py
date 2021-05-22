@@ -34,10 +34,6 @@ class AWSLambdaExporter(abc.AbstractExporter):
             e.copy_template('aws-lambda/app.py', package_name=pkg_name)
 
             e.copy_template('aws-lambda/template.yaml', package_name=pkg_name)
-
-            e.append('aws-lambda/soopervisor.yaml',
-                     'soopervisor.yaml',
-                     env_name=env_name)
             e.success('Done.')
             e.print(
                 'Next steps:\n1. Add an input example to '
@@ -45,6 +41,7 @@ class AWSLambdaExporter(abc.AbstractExporter):
                 f'2. Add the input parsing logic to {env_name}/app.py\n'
                 f'3. Submit to AWS Lambda with: soopervisor export {env_name}')
 
+            # TODO: use e.warn_on_exit
             for name in ['docker', 'aws', 'sam']:
                 warn_if_not_installed(name)
 
