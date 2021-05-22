@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.3.5dev
---------
+0.4 (2021-05-22)
+----------------
 
 **Important**: Soopervisor was re-written. Some modules were deprecated and the
 API changed. This new architecture allows us to greatly simplify user experience
