@@ -93,8 +93,8 @@ Then, configure the development environment:
    ``environment.lock.yml`` or ``requirements.lock.txt`` file. If you prefer so,
    you may skip ``ploomber install`` and generate the lock files yourself.
 
-Basic usage
-===========
+Usage
+=====
 
 Say that you want to train multiple models in a Kubernetes
 cluster, you may create a new target environment to execute your pipeline
