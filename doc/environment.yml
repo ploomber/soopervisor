@@ -3,3 +3,5 @@ name: soopervisor-docs
 
 dependencies:
   - python=3.8
+  # install soopervisor
+  - -e ..
