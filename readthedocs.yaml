@@ -7,10 +7,3 @@ formats: all
 
 conda:
   environment: doc/environment.yml
-
-python:
-  install:
-    - method: pip
-      path: .
-      extra_requirements:
-        - all
