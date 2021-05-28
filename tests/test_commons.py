@@ -9,7 +9,7 @@ from ploomber.spec import DAGSpec
 from ploomber.executors import Serial
 
 from soopervisor.commons import source, conda
-from soopervisor.commons.dag import load_dag
+from soopervisor import commons
 
 
 def git_init():
@@ -151,15 +151,18 @@ def dag_build():
 
 
 def test_load_dag(tmp_fast_pipeline, add_current_to_sys_path, dag_build):
-    assert load_dag(incremental=False) == {'root': [], 'another': ['root']}
+    assert commons.load_dag(incremental=False) == {
+        'root': [],
+        'another': ['root']
+    }
 
 
 def test_load_dag_incremental(tmp_fast_pipeline, add_current_to_sys_path,
                               dag_build):
-    assert load_dag(incremental=True) == {}
+    assert commons.load_dag(incremental=True) == {}
 
 
 def test_load_dag_incremental_partial(tmp_fast_pipeline,
                                       add_current_to_sys_path, dag_build):
     Path('remote', 'out', 'another').unlink()
-    assert load_dag(incremental=True) == {'another': []}
+    assert commons.load_dag(incremental=True) == {'another': []}

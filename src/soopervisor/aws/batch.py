@@ -3,12 +3,12 @@ Running pipelines on AWS Batch
 """
 from pathlib import Path
 
-from ploomber.spec import DAGSpec
 from ploomber.io._commander import Commander
 from ploomber.util.util import requires
 
 from soopervisor.aws.config import AWSBatchConfig
 from soopervisor.commons import docker
+from soopervisor import commons
 from soopervisor import abc
 
 try:
@@ -62,7 +62,8 @@ class AWSBatchExporter(abc.AbstractExporter):
     @staticmethod
     @requires(['boto3'], name='AWSBatchExporter')
     def _export(cfg, env_name, until):
-        dag = DAGSpec.find().to_dag()
+        # load here to fail fast if there is an error loading the dag
+        dag = commons.load_dag(incremental=True)
 
         # warn if missing client (only warn cause the config might configure
         # it when building the docker image)
@@ -102,14 +103,14 @@ def submit_dag(dag, job_def, remote_name, job_queue, container_properties,
 
     cmdr.info('Submitting jobs...')
 
-    for name, task in dag.items():
+    for name, upstream in dag.items():
         response = client.submit_job(
             jobName=name,
             jobQueue=job_queue,
             jobDefinition=jd['jobDefinitionArn'],
             dependsOn=[{
                 "jobId": job_ids[name]
-            } for name in task.upstream],
+            } for name in upstream],
             containerOverrides={"command": ['ploomber', 'task', name]})
 
         job_ids[name] = response["jobId"]
