@@ -6,6 +6,7 @@ from faker import Faker
 import os
 import shutil
 from pathlib import Path
+from copy import copy
 
 import my_project
 import pytest
@@ -37,6 +38,22 @@ def tmp_sample_project(tmp_path):
     shutil.copytree(str(sample_project), str(tmp))
 
     os.chdir(str(tmp))
+
+    yield tmp
+
+    os.chdir(old)
+
+
+@pytest.fixture
+def tmp_fast_pipeline(tmp_path):
+    relative_path_project = "assets/fast-pipeline"
+    old = os.getcwd()
+    tmp = Path(tmp_path, relative_path_project)
+    fast_pipeline = _path_to_tests() / relative_path_project
+    shutil.copytree(str(fast_pipeline), str(tmp))
+
+    os.chdir(str(tmp))
+    Path('environment.yml').touch()
 
     yield tmp
 
@@ -159,3 +176,11 @@ def no_sys_modules_cache():
 
     for a_module in to_remove:
         del sys.modules[a_module]
+
+
+@pytest.fixture
+def add_current_to_sys_path():
+    old = copy(sys.path)
+    sys.path.insert(0, os.path.abspath('.'))
+    yield sys.path
+    sys.path = old

@@ -5,9 +5,11 @@ from pathlib import Path
 import yaml
 import pytest
 from click import ClickException
+from ploomber.spec import DAGSpec
+from ploomber.executors import Serial
 
-from soopervisor.commons import source
-from soopervisor.commons import conda
+from soopervisor.commons import source, conda
+from soopervisor.commons.dag import load_dag
 
 
 def git_init():
@@ -139,3 +141,25 @@ def test_error_extract_pip_unexpected_pip_list():
            'unexpected dependencies.pip value. Expected a list of '
            'dependencies, got: 1')
     assert msg == str(excinfo.value)
+
+
+@pytest.fixture
+def dag_build():
+    dag = DAGSpec.find().to_dag()
+    dag.executor = Serial(build_in_subprocess=False)
+    dag.render().build()
+
+
+def test_load_dag(tmp_fast_pipeline, add_current_to_sys_path, dag_build):
+    assert load_dag(incremental=False) == {'root': [], 'another': ['root']}
+
+
+def test_load_dag_incremental(tmp_fast_pipeline, add_current_to_sys_path,
+                              dag_build):
+    assert load_dag(incremental=True) == {}
+
+
+def test_load_dag_incremental_partial(tmp_fast_pipeline,
+                                      add_current_to_sys_path, dag_build):
+    Path('remote', 'out', 'another').unlink()
+    assert load_dag(incremental=True) == {'another': []}

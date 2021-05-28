@@ -1,0 +1,9 @@
+clients:
+  File: fast_pipeline.get_client
+
+tasks:
+  - source: fast_pipeline.root
+    product: out/root
+
+  - source: fast_pipeline.another
+    product: out/another
