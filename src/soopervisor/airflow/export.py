@@ -7,10 +7,9 @@ from pathlib import Path
 
 import click
 
-from ploomber.spec import DAGSpec
 from ploomber.io._commander import Commander
 from soopervisor.airflow.config import AirflowConfig
-from soopervisor.commons import docker
+from soopervisor import commons
 from soopervisor import abc
 
 
@@ -59,20 +58,19 @@ class AirflowExporter(abc.AbstractExporter):
         The code along with the DAG declaration file can be copied to
         AIRFLOW_HOME for execution
         """
-        dag = DAGSpec.find(lazy_import=True).to_dag()
+        dag = commons.load_dag(incremental=True)
 
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
 
-            pkg_name, target_image = docker.build(e,
-                                                  cfg,
-                                                  env_name,
-                                                  until=until)
+            pkg_name, target_image = commons.docker.build(e,
+                                                          cfg,
+                                                          env_name,
+                                                          until=until)
 
         dag_dict = dict(tasks=[], image=target_image)
 
-        for name, task in dag.items():
-            upstream = [t.name for t in task.upstream.values()]
+        for name, upstream in dag.items():
             dag_dict['tasks'].append({'name': name, 'upstream': upstream})
 
         path_dag_dict_out = Path(env_name, pkg_name + '.json')

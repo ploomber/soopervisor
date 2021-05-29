@@ -8,7 +8,7 @@ from airflow.providers.docker.operators.docker import DockerOperator
 from ploomber.io import _commander, _commander_tester
 import pytest
 
-from soopervisor.airflow.export import AirflowExporter
+from soopervisor.airflow.export import AirflowExporter, commons
 
 
 def git_init():
@@ -80,6 +80,9 @@ def test_airflow_add_sample_project(monkeypatch, tmp_sample_project,
 def test_airflow_export_sample_project(monkeypatch, mock_docker_calls,
                                        tmp_sample_project,
                                        no_sys_modules_cache):
+    load_dag_mock = Mock(wraps=commons.load_dag)
+    monkeypatch.setattr(commons, 'load_dag', load_dag_mock)
+
     exporter = AirflowExporter(path_to_config='soopervisor.yaml',
                                env_name='serve')
 
@@ -93,6 +96,7 @@ def test_airflow_export_sample_project(monkeypatch, mock_docker_calls,
     mod = importlib.import_module('sample_project')
     dag = mod.dag
 
+    load_dag_mock.assert_called_once_with(incremental=True)
     assert isinstance(dag, DAG)
     assert set(dag.task_dict) == {'clean', 'plot', 'raw'}
     assert set(type(t) for t in dag.tasks) == {DockerOperator}

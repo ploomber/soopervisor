@@ -13,7 +13,6 @@ from click.testing import CliRunner
 
 from soopervisor.argo.export import ArgoWorkflowsExporter, commons
 from soopervisor import cli
-from soopervisor.commons.dag import load_dag
 
 
 @pytest.fixture

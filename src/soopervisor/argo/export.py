@@ -4,7 +4,6 @@ Export to Argo Workflows
 from pathlib import Path
 
 import click
-from ploomber.spec import DAGSpec
 from ploomber.io._commander import Commander
 import yaml
 from yaml.representer import SafeRepresenter
