@@ -18,6 +18,7 @@ except ImportError:
 from soopervisor import assets
 from soopervisor import abc
 from soopervisor.commons import docker
+from soopervisor import commons
 from soopervisor.argo.config import ArgoConfig
 
 
@@ -44,8 +45,7 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
         """
         Build and upload Docker image. Export Argo YAML spec.
         """
-        # use lazy load?
-        dag = DAGSpec.find().to_dag()
+        dag = commons.load_dag(incremental=True)
 
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
@@ -121,9 +121,8 @@ def _make_argo_spec(dag, env_name, cfg, pkg_name, target_image):
 
     tasks_specs = []
 
-    for task_name in dag:
-        task = dag[task_name]
-        spec = _make_argo_task(task_name, list(task.upstream))
+    for task_name, upstream in dag.items():
+        spec = _make_argo_task(task_name, upstream)
         tasks_specs.append(spec)
 
     d['metadata']['generateName'] = f'{pkg_name}-'.replace('_', '-')

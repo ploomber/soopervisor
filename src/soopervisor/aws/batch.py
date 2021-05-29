@@ -69,6 +69,7 @@ class AWSBatchExporter(abc.AbstractExporter):
         # it when building the docker image)
 
         # TODO check if image already exists locally or remotely and skip...
+        # TODO: don't build docker image if dag is empty
 
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
@@ -114,3 +115,5 @@ def submit_dag(dag, job_def, remote_name, job_queue, container_properties,
             containerOverrides={"command": ['ploomber', 'task', name]})
 
         job_ids[name] = response["jobId"]
+
+        cmdr.print(f'Submitted task {name!r}...')

@@ -11,8 +11,9 @@ from ploomber.spec import DAGSpec
 from ploomber.io import _commander, _commander_tester
 from click.testing import CliRunner
 
-from soopervisor.argo.export import ArgoWorkflowsExporter
+from soopervisor.argo.export import ArgoWorkflowsExporter, commons
 from soopervisor import cli
+from soopervisor.commons.dag import load_dag
 
 
 @pytest.fixture
@@ -43,7 +44,10 @@ def test_add(tmp_sample_project):
 
 
 # TODO: test with tmp_sample_project (non-packaged-project)
-def test_export(mock_docker_calls, backup_packaged_project):
+def test_export(mock_docker_calls, backup_packaged_project, monkeypatch):
+    load_dag_mock = Mock(wraps=commons.load_dag)
+    monkeypatch.setattr(commons, 'load_dag', load_dag_mock)
+
     exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
                                      env_name='serve')
     exporter.add()
@@ -52,6 +56,8 @@ def test_export(mock_docker_calls, backup_packaged_project):
     yaml_str = Path('serve/argo.yaml').read_text()
     spec = yaml.safe_load(yaml_str)
     dag = DAGSpec.find().to_dag()
+
+    load_dag_mock.assert_called_once_with(incremental=True)
 
     # make sure the "source" key is represented in literal style
     # (https://yaml-multiline.info/) to make the generated script more readable
