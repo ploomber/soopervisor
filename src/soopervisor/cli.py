@@ -58,7 +58,11 @@ def add(name, backend):
               '-ub',
               is_flag=True,
               help='Only build docker image')
-def export(name, until_build):
+@click.option('--mode',
+              '-m',
+              type=click.Choice({'incremental', 'regular', 'force'}),
+              default='incremental')
+def export(name, until_build, mode):
     """
     Export a target platform for execution/deployment
     """
@@ -69,7 +73,7 @@ def export(name, until_build):
 
     backend = Backend(config.get_backend(name))
     Exporter = exporter.for_backend(backend)
-    Exporter('soopervisor.yaml', env_name=name).export(until=until)
+    Exporter('soopervisor.yaml', env_name=name).export(mode=mode, until=until)
 
 
 if __name__ == '__main__':
