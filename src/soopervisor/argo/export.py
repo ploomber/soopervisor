@@ -44,7 +44,7 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
         """
         Build and upload Docker image. Export Argo YAML spec.
         """
-        dag = commons.load_dag(incremental=True)
+        tasks = commons.load_tasks(incremental=True)
 
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
@@ -55,7 +55,7 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
                                                   until=until)
 
             e.info('Generating Argo Workflows YAML spec')
-            _make_argo_spec(dag=dag,
+            _make_argo_spec(tasks=tasks,
                             env_name=env_name,
                             cfg=cfg,
                             pkg_name=pkg_name,
@@ -104,7 +104,7 @@ def _make_argo_task(name, dependencies):
     return task
 
 
-def _make_argo_spec(dag, env_name, cfg, pkg_name, target_image):
+def _make_argo_spec(tasks, env_name, cfg, pkg_name, target_image):
     if cfg.mounted_volumes:
         volumes, volume_mounts = zip(*((mv.to_volume(), mv.to_volume_mount())
                                        for mv in cfg.mounted_volumes))
@@ -120,7 +120,7 @@ def _make_argo_spec(dag, env_name, cfg, pkg_name, target_image):
 
     tasks_specs = []
 
-    for task_name, upstream in dag.items():
+    for task_name, upstream in tasks.items():
         spec = _make_argo_task(task_name, upstream)
         tasks_specs.append(spec)
 

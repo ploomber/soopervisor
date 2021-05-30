@@ -171,8 +171,8 @@ def test_export(mock_batch, monkeypatch, backup_packaged_project):
     boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
     monkeypatch.setattr(batch.boto3, 'client',
                         lambda name, region_name: boto3_mock)
-    load_dag_mock = Mock(wraps=commons.load_dag)
-    monkeypatch.setattr(commons, 'load_dag', load_dag_mock)
+    load_tasks_mock = Mock(wraps=commons.load_tasks)
+    monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
     exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
     exporter.add()
@@ -183,7 +183,7 @@ def test_export(mock_batch, monkeypatch, backup_packaged_project):
     jobs_info = mock_batch.describe_jobs(jobs=[job['jobId']
                                                for job in jobs])['jobs']
 
-    load_dag_mock.assert_called_once_with(incremental=True)
+    load_tasks_mock.assert_called_once_with(incremental=True)
 
     assert {j['jobName']
             for j in jobs_info

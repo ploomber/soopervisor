@@ -5,15 +5,23 @@ from ploomber.constants import TaskStatus
 from ploomber.spec import DAGSpec
 
 
-def load_dag(incremental=False):
-    """
-    Load DAG and return task names and dependencies in a dictionary
+def load_tasks(incremental=False):
+    """Load tasks names and their upstream dependencies
 
     Parameters
     ----------
     incremental : bool, default=False
         If True, returned dictionary only returns tasks whose status
         is not Skipped
+
+    Returns
+    -------
+    task : dict
+        A dictionary with tasks (keys) and upstream dependencies (values)
+        to submit
+
+    args : list
+        A list of arguments to pass to "ploomber task {name}"
     """
     dag = DAGSpec.find().to_dag()
     dag.render(remote=True)

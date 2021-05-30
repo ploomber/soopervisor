@@ -63,7 +63,7 @@ class AWSBatchExporter(abc.AbstractExporter):
     @requires(['boto3'], name='AWSBatchExporter')
     def _export(cfg, env_name, until):
         # load here to fail fast if there is an error loading the dag
-        dag = commons.load_dag(incremental=True)
+        tasks = commons.load_tasks(incremental=True)
 
         # warn if missing client (only warn cause the config might configure
         # it when building the docker image)
@@ -78,7 +78,7 @@ class AWSBatchExporter(abc.AbstractExporter):
 
             e.info('Submitting jobs to AWS Batch')
 
-            submit_dag(dag=dag,
+            submit_dag(tasks=tasks,
                        job_def=pkg_name,
                        remote_name=remote_name,
                        job_queue=cfg.job_queue,
@@ -89,7 +89,7 @@ class AWSBatchExporter(abc.AbstractExporter):
             e.success('Done. Submitted to AWS Batch')
 
 
-def submit_dag(dag, job_def, remote_name, job_queue, container_properties,
+def submit_dag(tasks, job_def, remote_name, job_queue, container_properties,
                region_name, cmdr):
     client = boto3.client('batch', region_name=region_name)
     container_properties['image'] = remote_name
@@ -104,7 +104,7 @@ def submit_dag(dag, job_def, remote_name, job_queue, container_properties,
 
     cmdr.info('Submitting jobs...')
 
-    for name, upstream in dag.items():
+    for name, upstream in tasks.items():
         response = client.submit_job(
             jobName=name,
             jobQueue=job_queue,

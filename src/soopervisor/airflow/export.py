@@ -58,7 +58,7 @@ class AirflowExporter(abc.AbstractExporter):
         The code along with the DAG declaration file can be copied to
         AIRFLOW_HOME for execution
         """
-        dag = commons.load_dag(incremental=True)
+        tasks = commons.load_tasks(incremental=True)
 
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
@@ -70,7 +70,7 @@ class AirflowExporter(abc.AbstractExporter):
 
         dag_dict = dict(tasks=[], image=target_image)
 
-        for name, upstream in dag.items():
+        for name, upstream in tasks.items():
             dag_dict['tasks'].append({'name': name, 'upstream': upstream})
 
         path_dag_dict_out = Path(env_name, pkg_name + '.json')

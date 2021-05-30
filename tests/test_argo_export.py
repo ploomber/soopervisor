@@ -44,8 +44,8 @@ def test_add(tmp_sample_project):
 
 # TODO: test with tmp_sample_project (non-packaged-project)
 def test_export(mock_docker_calls, backup_packaged_project, monkeypatch):
-    load_dag_mock = Mock(wraps=commons.load_dag)
-    monkeypatch.setattr(commons, 'load_dag', load_dag_mock)
+    load_tasks_mock = Mock(wraps=commons.load_tasks)
+    monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
     exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
                                      env_name='serve')
@@ -56,7 +56,7 @@ def test_export(mock_docker_calls, backup_packaged_project, monkeypatch):
     spec = yaml.safe_load(yaml_str)
     dag = DAGSpec.find().to_dag()
 
-    load_dag_mock.assert_called_once_with(incremental=True)
+    load_tasks_mock.assert_called_once_with(incremental=True)
 
     # make sure the "source" key is represented in literal style
     # (https://yaml-multiline.info/) to make the generated script more readable

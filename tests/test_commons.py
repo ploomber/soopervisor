@@ -150,19 +150,19 @@ def dag_build():
     dag.render().build()
 
 
-def test_load_dag(tmp_fast_pipeline, add_current_to_sys_path, dag_build):
-    assert commons.load_dag(incremental=False) == {
+def test_load_tasks(tmp_fast_pipeline, add_current_to_sys_path, dag_build):
+    assert commons.load_tasks(incremental=False) == {
         'root': [],
         'another': ['root']
     }
 
 
-def test_load_dag_incremental(tmp_fast_pipeline, add_current_to_sys_path,
-                              dag_build):
-    assert commons.load_dag(incremental=True) == {}
+def test_load_tasks_incremental(tmp_fast_pipeline, add_current_to_sys_path,
+                                dag_build):
+    assert commons.load_tasks(incremental=True) == {}
 
 
-def test_load_dag_incremental_partial(tmp_fast_pipeline,
-                                      add_current_to_sys_path, dag_build):
+def test_load_tasks_incremental_partial(tmp_fast_pipeline,
+                                        add_current_to_sys_path, dag_build):
     Path('remote', 'out', 'another').unlink()
-    assert commons.load_dag(incremental=True) == {'another': []}
+    assert commons.load_tasks(incremental=True) == {'another': []}
