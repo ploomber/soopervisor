@@ -6,7 +6,7 @@ import click
 from soopervisor import __version__
 from soopervisor import config
 from soopervisor import exporter
-from soopervisor.enum import Backend
+from soopervisor.enum import Backend, Mode
 
 
 @click.group()
@@ -60,8 +60,8 @@ def add(name, backend):
               help='Only build docker image')
 @click.option('--mode',
               '-m',
-              type=click.Choice({'incremental', 'regular', 'force'}),
-              default='incremental')
+              type=click.Choice(Mode.get_values()),
+              default=Mode.incremental.value)
 def export(name, until_build, mode):
     """
     Export a target platform for execution/deployment

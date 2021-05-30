@@ -4,6 +4,8 @@ Loading dags
 from ploomber.constants import TaskStatus
 from ploomber.spec import DAGSpec
 
+from soopervisor.enum import Mode
+
 
 def load_tasks(mode='incremental'):
     """Load tasks names and their upstream dependencies
@@ -25,7 +27,7 @@ def load_tasks(mode='incremental'):
     args : list
         A list of arguments to pass to "ploomber task {name}"
     """
-    valid = {'incremental', 'regular', 'force'}
+    valid = Mode.get_values()
     if mode not in valid:
         raise ValueError(f'mode must be one of {valid!r}')
 

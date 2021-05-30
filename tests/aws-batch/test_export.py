@@ -1,5 +1,4 @@
 import os
-from re import sub
 from unittest.mock import Mock
 import json
 from pathlib import Path

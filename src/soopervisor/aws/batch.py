@@ -3,7 +3,7 @@ Running pipelines on AWS Batch
 """
 from pathlib import Path
 
-from ploomber.io._commander import Commander
+from ploomber.io._commander import Commander, CommanderStop
 from ploomber.util.util import requires
 
 from soopervisor.aws.config import AWSBatchConfig
@@ -62,17 +62,15 @@ class AWSBatchExporter(abc.AbstractExporter):
     @staticmethod
     @requires(['boto3'], name='AWSBatchExporter')
     def _export(cfg, env_name, mode, until):
-        # load here to fail fast if there is an error loading the dag
-        tasks, args = commons.load_tasks(mode=mode)
-
-        # warn if missing client (only warn cause the config might configure
-        # it when building the docker image)
-
-        # TODO check if image already exists locally or remotely and skip...
-        # TODO: don't build docker image if dag is empty
-
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
+            tasks, args = commons.load_tasks(mode=mode)
+
+            # TODO: add this to the other exporters
+            if not tasks:
+                raise CommanderStop(f'Loaded DAG in {mode!r} mode yield no '
+                                    'tasks to submit. Try "--mode force" to '
+                                    'submit all tasks regardless of status')
 
             pkg_name, remote_name = docker.build(e, cfg, env_name, until=until)
 
