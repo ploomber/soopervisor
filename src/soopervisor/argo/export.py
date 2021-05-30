@@ -40,11 +40,11 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
             e.success('Done')
 
     @staticmethod
-    def _export(cfg, env_name, until):
+    def _export(cfg, env_name, mode, until):
         """
         Build and upload Docker image. Export Argo YAML spec.
         """
-        tasks = commons.load_tasks(incremental=True)
+        tasks, args = commons.load_tasks(mode=mode)
 
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
@@ -56,6 +56,7 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
 
             e.info('Generating Argo Workflows YAML spec')
             _make_argo_spec(tasks=tasks,
+                            args=args,
                             env_name=env_name,
                             cfg=cfg,
                             pkg_name=pkg_name,
@@ -104,7 +105,7 @@ def _make_argo_task(name, dependencies):
     return task
 
 
-def _make_argo_spec(tasks, env_name, cfg, pkg_name, target_image):
+def _make_argo_spec(tasks, args, env_name, cfg, pkg_name, target_image):
     if cfg.mounted_volumes:
         volumes, volume_mounts = zip(*((mv.to_volume(), mv.to_volume_mount())
                                        for mv in cfg.mounted_volumes))
@@ -130,10 +131,14 @@ def _make_argo_spec(tasks, env_name, cfg, pkg_name, target_image):
 
     d['spec']['templates'][0]['script']['image'] = target_image
 
+    command = 'ploomber task {{inputs.parameters.task_name}}'
+
+    if args:
+        command = f'{command} {" ".join(args)}'
+
     # use literal_str to make the script source code be represented in YAML
     # literal style, this makes it readable
-    d['spec']['templates'][0]['script']['source'] = _literal_str(
-        'ploomber task {{inputs.parameters.task_name}}')
+    d['spec']['templates'][0]['script']['source'] = _literal_str(command)
 
     # when we run this the current working directory is env_name/
     with open('argo.yaml', 'w') as f:

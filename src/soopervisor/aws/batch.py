@@ -61,9 +61,9 @@ class AWSBatchExporter(abc.AbstractExporter):
 
     @staticmethod
     @requires(['boto3'], name='AWSBatchExporter')
-    def _export(cfg, env_name, until):
+    def _export(cfg, env_name, mode, until):
         # load here to fail fast if there is an error loading the dag
-        tasks = commons.load_tasks(incremental=True)
+        tasks, args = commons.load_tasks(mode=mode)
 
         # warn if missing client (only warn cause the config might configure
         # it when building the docker image)
@@ -79,6 +79,7 @@ class AWSBatchExporter(abc.AbstractExporter):
             e.info('Submitting jobs to AWS Batch')
 
             submit_dag(tasks=tasks,
+                       args=args,
                        job_def=pkg_name,
                        remote_name=remote_name,
                        job_queue=cfg.job_queue,
@@ -89,8 +90,16 @@ class AWSBatchExporter(abc.AbstractExporter):
             e.success('Done. Submitted to AWS Batch')
 
 
-def submit_dag(tasks, job_def, remote_name, job_queue, container_properties,
-               region_name, cmdr):
+def submit_dag(
+    tasks,
+    args,
+    job_def,
+    remote_name,
+    job_queue,
+    container_properties,
+    region_name,
+    cmdr,
+):
     client = boto3.client('batch', region_name=region_name)
     container_properties['image'] = remote_name
 
@@ -112,7 +121,7 @@ def submit_dag(tasks, job_def, remote_name, job_queue, container_properties,
             dependsOn=[{
                 "jobId": job_ids[name]
             } for name in upstream],
-            containerOverrides={"command": ['ploomber', 'task', name]})
+            containerOverrides={"command": ['ploomber', 'task', name] + args})
 
         job_ids[name] = response["jobId"]
 

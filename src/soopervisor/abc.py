@@ -152,9 +152,10 @@ class AbstractExporter(abc.ABC):
 
         return self._add(cfg=self._cfg, env_name=self._env_name)
 
-    def export(self, until=None):
+    def export(self, mode, until=None):
         return self._export(cfg=self._cfg,
                             env_name=self._env_name,
+                            mode=mode,
                             until=until)
 
     @staticmethod
@@ -173,5 +174,5 @@ class AbstractExporter(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def _export(cfg, env_name, until):
+    def _export(cfg, env_name, mode, until):
         pass

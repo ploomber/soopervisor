@@ -150,19 +150,49 @@ def dag_build():
     dag.render().build()
 
 
-def test_load_tasks(tmp_fast_pipeline, add_current_to_sys_path, dag_build):
-    assert commons.load_tasks(incremental=False) == {
+@pytest.mark.parametrize('mode, tasks_expected, args_expected', [
+    ['incremental', {}, []],
+    ['regular', {
         'root': [],
         'another': ['root']
-    }
+    }, []],
+    ['force', {
+        'root': [],
+        'another': ['root']
+    }, ['--force']],
+])
+def test_load_tasks(tmp_fast_pipeline, add_current_to_sys_path, dag_build,
+                    mode, tasks_expected, args_expected):
+    tasks, args = commons.load_tasks(mode=mode)
+    assert tasks == tasks_expected
+    assert args == args_expected
 
 
-def test_load_tasks_incremental(tmp_fast_pipeline, add_current_to_sys_path,
-                                dag_build):
-    assert commons.load_tasks(incremental=True) == {}
-
-
-def test_load_tasks_incremental_partial(tmp_fast_pipeline,
-                                        add_current_to_sys_path, dag_build):
+@pytest.mark.parametrize('mode, tasks_expected, args_expected', [
+    ['incremental', {
+        'another': []
+    }, []],
+    ['regular', {
+        'root': [],
+        'another': ['root']
+    }, []],
+    ['force', {
+        'root': [],
+        'another': ['root']
+    }, ['--force']],
+])
+def test_load_tasks_missing_remote_metadata(tmp_fast_pipeline,
+                                            add_current_to_sys_path, dag_build,
+                                            mode, tasks_expected,
+                                            args_expected):
     Path('remote', 'out', 'another').unlink()
-    assert commons.load_tasks(incremental=True) == {'another': []}
+    tasks, args = commons.load_tasks(mode=mode)
+    assert tasks == tasks_expected
+    assert args == args_expected
+
+
+def test_invalid_mode():
+    with pytest.raises(ValueError) as excinfo:
+        commons.load_tasks(mode='unknown')
+
+    assert 'mode must be one of' in str(excinfo.value)

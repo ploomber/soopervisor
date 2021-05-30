@@ -1,4 +1,5 @@
 import os
+from re import sub
 from unittest.mock import Mock
 import json
 from pathlib import Path
@@ -38,7 +39,7 @@ instance_role = {
 }
 
 
-@pytest.fixture()
+@pytest.fixture
 def vpc():
     mock = moto.mock_ec2()
     mock.start()
@@ -69,7 +70,7 @@ def batch_client():
     mock.stop()
 
 
-@pytest.fixture()
+@pytest.fixture
 def iam_resource():
     mock = moto.mock_iam()
     mock.start()
@@ -127,6 +128,20 @@ def mock_batch(aws_credentials, iam_resource, batch_client, vpc):
     yield batch_client
 
 
+def test_error_if_missing_boto3(monkeypatch, backup_packaged_project):
+
+    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
+    exporter.add()
+
+    # simulate boto3 is not installed
+    monkeypatch.setattr(util.importlib.util, 'find_spec', lambda _: None)
+
+    with pytest.raises(ImportError) as excinfo:
+        exporter.export(mode='incremental')
+
+    assert 'boto3 is required to use AWSBatchExporter' in str(excinfo.value)
+
+
 def test_add(backup_packaged_project):
 
     exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
@@ -149,7 +164,76 @@ def test_add(backup_packaged_project):
     assert Path('train', 'Dockerfile').exists()
 
 
-def test_export(mock_batch, monkeypatch, backup_packaged_project):
+def process_submit_job_call(call):
+    """Process a call to boto3.submit_job to index by task name
+    """
+    try:
+        # py 3.6, 3.7
+        kw = call[1]
+    except KeyError:
+        # py >3.7
+        kw = call.kwargs
+
+    return {
+        kw['jobName']: {
+            'dependsOn': [dep['jobId'] for dep in kw['dependsOn']],
+            'containerOverrides': kw['containerOverrides']
+        }
+    }
+
+
+def index_submit_job_by_task_name(calls):
+    """Index all calls to boto3.submit_job by task name
+    """
+    calls = [process_submit_job_call(c) for c in calls]
+    return {k: v for d in calls for k, v in d.items()}
+
+
+def index_by(d, index_by, value_from_key):
+    """
+    Extract a key from a dictionary and assign the value to the one from
+    another key
+    """
+    return {d[index_by]: d[value_from_key]}
+
+
+def merge_dicts(dicts):
+    """Merge dictionaries into one
+    """
+    return {k: v for d in dicts for k, v in d.items()}
+
+
+def index_job_name_by_id(jobs_info):
+    """Create a mapping from job id to name from jobs info
+    """
+    return merge_dicts(
+        index_by(info, index_by='jobId', value_from_key='jobName')
+        for info in jobs_info)
+
+
+def index_dependencies_by_name(submitted, id2name):
+    return {
+        name: set(id2name[id_] for id_ in val['dependsOn'])
+        for name, val in submitted.items()
+    }
+
+
+def index_commands_by_name(submitted):
+    return {
+        key: val['containerOverrides']['command']
+        for key, val in submitted.items()
+    }
+
+
+@pytest.mark.parametrize(
+    'mode, args',
+    [
+        ['incremental', []],
+        ['regular', []],
+        ['force', ['--force']],
+    ],
+)
+def test_export(mock_batch, monkeypatch, backup_packaged_project, mode, args):
     Path('setup.py').unlink()
 
     cmd = ('from ploomber.spec import '
@@ -176,76 +260,45 @@ def test_export(mock_batch, monkeypatch, backup_packaged_project):
 
     exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
     exporter.add()
-    exporter.export()
+    exporter.export(mode=mode)
 
     jobs = mock_batch.list_jobs(jobQueue='your-job-queue')['jobSummaryList']
 
+    # get jobs information
     jobs_info = mock_batch.describe_jobs(jobs=[job['jobId']
                                                for job in jobs])['jobs']
+    load_tasks_mock.assert_called_once_with(mode=mode)
 
-    load_tasks_mock.assert_called_once_with(incremental=True)
+    submitted = index_submit_job_by_task_name(
+        boto3_mock.submit_job.call_args_list)
+    id2name = index_job_name_by_id(jobs_info)
 
+    dependencies = index_dependencies_by_name(submitted, id2name)
+    commands = index_commands_by_name(submitted)
+
+    # check all tasks submitted
     assert {j['jobName']
             for j in jobs_info
             } == {'features', 'fit', 'get', 'petal-area', 'sepal-area'}
 
-    def process_call(call):
-        try:
-            # py 3.6, 3.7
-            kw = call[1]
-        except KeyError:
-            # py >3.7
-            kw = call.kwargs
+    # check submitted to the right queue
+    assert all(['your-job-queue' in j['jobQueue'] for j in jobs_info])
 
-        return {
-            kw['jobName']: {
-                'dependsOn': [dep['jobId'] for dep in kw['dependsOn']],
-                'containerOverrides': kw['containerOverrides']
-            }
-        }
+    # check created a job definition with the right name
+    assert all(['my_project:1' in j['jobDefinition'] for j in jobs_info])
 
-    calls = [process_call(c) for c in boto3_mock.submit_job.call_args_list]
-    calls = {k: v for d in calls for k, v in d.items()}
+    assert dependencies == {
+        'get': set(),
+        'sepal-area': {'get'},
+        'petal-area': {'get'},
+        'features': {'get', 'petal-area', 'sepal-area'},
+        'fit': {'features'}
+    }
 
-    def process_dict(d, index_by, include_keys):
-        if isinstance(include_keys, str):
-            return {d[index_by]: d[include_keys]}
-        else:
-            return {d[index_by]: {k: d[k] for k in include_keys}}
-
-    def merge_dicts(dicts):
-        return {k: v for d in dicts for k, v in d.items()}
-
-    id2name = merge_dicts(
-        process_dict(info, index_by='jobId', include_keys='jobName')
-        for info in jobs_info)
-
-    assert calls['get']['dependsOn'] == []
-    assert {id2name[dep]
-            for dep in calls['petal-area']['dependsOn']} == {'get'}
-    assert {id2name[dep]
-            for dep in calls['sepal-area']['dependsOn']} == {'get'}
-    assert {id2name[dep]
-            for dep in calls['features']['dependsOn']
-            } == {'get', 'sepal-area', 'petal-area'}
-    assert {id2name[dep] for dep in calls['fit']['dependsOn']} == {'features'}
-
-    names = ['features', 'fit', 'get', 'petal-area', 'sepal-area']
-    assert all([
-        calls[name]['containerOverrides']['command'] ==
-        ['ploomber', 'task', name]
-    ] for name in names)
-
-
-def test_error_if_missing_boto3(monkeypatch, backup_packaged_project):
-
-    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
-    exporter.add()
-
-    # simulate boto3 is not installed
-    monkeypatch.setattr(util.importlib.util, 'find_spec', lambda _: None)
-
-    with pytest.raises(ImportError) as excinfo:
-        exporter.export()
-
-    assert 'boto3 is required to use AWSBatchExporter' in str(excinfo.value)
+    assert commands == {
+        'get': ['ploomber', 'task', 'get'] + args,
+        'sepal-area': ['ploomber', 'task', 'sepal-area'] + args,
+        'petal-area': ['ploomber', 'task', 'petal-area'] + args,
+        'features': ['ploomber', 'task', 'features'] + args,
+        'fit': ['ploomber', 'task', 'fit'] + args
+    }

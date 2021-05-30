@@ -52,13 +52,13 @@ class AirflowExporter(abc.AbstractExporter):
         pass
 
     @staticmethod
-    def _export(cfg, env_name, until):
+    def _export(cfg, env_name, mode, until):
         """
         Copies the current source code to the target environment folder.
         The code along with the DAG declaration file can be copied to
         AIRFLOW_HOME for execution
         """
-        tasks = commons.load_tasks(incremental=True)
+        tasks, args = commons.load_tasks(mode=mode)
 
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
@@ -71,7 +71,16 @@ class AirflowExporter(abc.AbstractExporter):
         dag_dict = dict(tasks=[], image=target_image)
 
         for name, upstream in tasks.items():
-            dag_dict['tasks'].append({'name': name, 'upstream': upstream})
+            command = f'ploomber task {name}'
+
+            if args:
+                command = f'{command} {" ".join(args)}'
+
+            dag_dict['tasks'].append({
+                'name': name,
+                'upstream': upstream,
+                'command': command
+            })
 
         path_dag_dict_out = Path(env_name, pkg_name + '.json')
         path_dag_dict_out.write_text(json.dumps(dag_dict))

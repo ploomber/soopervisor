@@ -96,7 +96,7 @@ def test_airflow_export_sample_project(monkeypatch, mock_docker_calls,
     mod = importlib.import_module('sample_project')
     dag = mod.dag
 
-    load_tasks_mock.assert_called_once_with(incremental=True)
+    load_tasks_mock.assert_called_once_with(mode='incremental')
     assert isinstance(dag, DAG)
     assert set(dag.task_dict) == {'clean', 'plot', 'raw'}
     assert set(type(t) for t in dag.tasks) == {DockerOperator}
@@ -123,8 +123,15 @@ def mock_docker_calls_callables(monkeypatch):
     monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
 
 
+@pytest.mark.parametrize('mode, args', [
+    ['incremental', ''],
+    ['regular', ''],
+    ['force', ' --force'],
+],
+                         ids=['incremental', 'regular', 'force'])
 def test_export_airflow_callables(monkeypatch, mock_docker_calls_callables,
-                                  tmp_callables, no_sys_modules_cache):
+                                  tmp_callables, no_sys_modules_cache, mode,
+                                  args):
     exporter = AirflowExporter(path_to_config='soopervisor.yaml',
                                env_name='serve')
 
@@ -132,7 +139,7 @@ def test_export_airflow_callables(monkeypatch, mock_docker_calls_callables,
     git_init()
 
     exporter.add()
-    exporter.export()
+    exporter.export(mode=mode)
 
     monkeypatch.syspath_prepend('serve')
     mod = importlib.import_module('callables')
@@ -153,7 +160,7 @@ def test_export_airflow_callables(monkeypatch, mock_docker_calls_callables,
             }
 
     # check generated scripts
-    assert dag.task_dict['get'].command == 'ploomber task get'
-    assert dag.task_dict['features'].command == 'ploomber task features'
-    assert dag.task_dict['fit'].command == 'ploomber task fit'
-    assert dag.task_dict['join'].command == 'ploomber task join'
+    assert dag.task_dict['get'].command == 'ploomber task get' + args
+    assert dag.task_dict['features'].command == 'ploomber task features' + args
+    assert dag.task_dict['fit'].command == 'ploomber task fit' + args
+    assert dag.task_dict['join'].command == 'ploomber task join' + args

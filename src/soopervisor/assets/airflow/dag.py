@@ -21,9 +21,9 @@ spec = json.loads(path_to_spec.read_text())
 
 for task in spec['tasks']:
     DockerOperator(image=spec['image'],
-                   command=f'ploomber task {task["name"]}',
+                   command=task['command'],
                    dag=dag,
-                   task_id=task["name"])
+                   task_id=task['name'])
 
 for task in spec['tasks']:
     t = dag.get_task(task['name'])

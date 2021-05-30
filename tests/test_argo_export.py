@@ -43,20 +43,29 @@ def test_add(tmp_sample_project):
 
 
 # TODO: test with tmp_sample_project (non-packaged-project)
-def test_export(mock_docker_calls, backup_packaged_project, monkeypatch):
+
+
+@pytest.mark.parametrize('mode, args', [
+    ['incremental', ''],
+    ['regular', ''],
+    ['force', ' --force'],
+],
+                         ids=['incremental', 'regular', 'force'])
+def test_export(mock_docker_calls, backup_packaged_project, monkeypatch, mode,
+                args):
     load_tasks_mock = Mock(wraps=commons.load_tasks)
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
     exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
                                      env_name='serve')
     exporter.add()
-    exporter.export(until=None)
+    exporter.export(mode=mode, until=None)
 
     yaml_str = Path('serve/argo.yaml').read_text()
     spec = yaml.safe_load(yaml_str)
     dag = DAGSpec.find().to_dag()
 
-    load_tasks_mock.assert_called_once_with(incremental=True)
+    load_tasks_mock.assert_called_once_with(mode=mode)
 
     # make sure the "source" key is represented in literal style
     # (https://yaml-multiline.info/) to make the generated script more readable
@@ -64,6 +73,9 @@ def test_export(mock_docker_calls, backup_packaged_project, monkeypatch):
 
     run_task_template = spec['spec']['templates'][0]
     tasks = spec['spec']['templates'][1]['dag']['tasks']
+
+    assert run_task_template['script'][
+        'source'] == 'ploomber task {{inputs.parameters.task_name}}' + args
 
     assert spec['spec']['volumes'] == []
     assert run_task_template['script']['volumeMounts'] == []
@@ -115,7 +127,8 @@ def test_custom_volumes(mock_docker_calls, backup_packaged_project):
 
     # reload exporter
     ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
-                          env_name='serve').export(until=None)
+                          env_name='serve').export(mode='incremental',
+                                                   until=None)
 
     spec = yaml.safe_load(Path('serve/argo.yaml').read_text())
 

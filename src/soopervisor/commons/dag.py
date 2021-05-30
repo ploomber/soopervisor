@@ -5,14 +5,16 @@ from ploomber.constants import TaskStatus
 from ploomber.spec import DAGSpec
 
 
-def load_tasks(incremental=False):
+def load_tasks(mode='incremental'):
     """Load tasks names and their upstream dependencies
 
     Parameters
     ----------
-    incremental : bool, default=False
-        If True, returned dictionary only returns tasks whose status
-        is not Skipped
+    mode : bool, default='incremental'
+        One of 'incremental' (only include outdated tasks with respect to
+        the remote metadata), 'regular' (ignore status, submit all tasks and
+        determine status at runtime) or 'force' (ignore status, submit all
+        tasks and force execution regardless of status)
 
     Returns
     -------
@@ -23,17 +25,30 @@ def load_tasks(incremental=False):
     args : list
         A list of arguments to pass to "ploomber task {name}"
     """
+    valid = {'incremental', 'regular', 'force'}
+    if mode not in valid:
+        raise ValueError(f'mode must be one of {valid!r}')
+
     dag = DAGSpec.find().to_dag()
-    dag.render(remote=True)
 
-    tasks = []
+    if mode == 'incremental':
+        dag.render(remote=True)
+
+        tasks = []
+
+        for name, task in dag.items():
+            if not mode or task.exec_status != TaskStatus.Skipped:
+                tasks.append(name)
+    else:
+        # force makes rendering faster. we just need this to ensure the
+        # pipeline does not have any rendering problems before proceeding
+        dag.render(force=True)
+
+        tasks = list(dag.keys())
+
     out = {}
-
-    for name, task in dag.items():
-        if not incremental or task.exec_status != TaskStatus.Skipped:
-            tasks.append(name)
 
     for t in tasks:
         out[t] = [name for name in dag[t].upstream.keys() if name in tasks]
 
-    return out
+    return out, [] if mode != 'force' else ['--force']
