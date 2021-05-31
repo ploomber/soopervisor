@@ -90,6 +90,17 @@ def test_export(backup_packaged_project, mock_sam_calls):
     ]
 
 
+def test_export_non_packaged_project(tmp_sample_project):
+    exporter = AWSLambdaExporter('soopervisor.yaml', 'serve')
+
+    with pytest.raises(ClickException) as excinfo:
+        exporter.add()
+
+    expected = ('AWS Lambda is only supported in packaged projects.'
+                ' See the documentation to see an example.')
+    assert expected == str(excinfo.value)
+
+
 def test_skip_tests(backup_packaged_project, mock_sam_calls):
     Path('requirements.lock.txt').touch()
     subprocess.run(['ploomber', 'build'], check=True)

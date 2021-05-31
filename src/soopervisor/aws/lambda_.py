@@ -31,7 +31,12 @@ class AWSLambdaExporter(abc.AbstractExporter):
 
     @staticmethod
     def _add(cfg, env_name):
-        pkg_name = default.find_package_name()
+        try:
+            pkg_name = default.find_package_name()
+        except ValueError as e:
+            raise ClickException(
+                'AWS Lambda is only supported in packaged projects. '
+                'See the documentation to see an example.') from e
 
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
