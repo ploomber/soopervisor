@@ -3,6 +3,9 @@ CHANGELOG
 
 0.4.1dev
 --------
+* Adds ``--mode`` option to ``soopervisor export``
+* Batch export stops if there are no tasks to execute
+* Adds ``--skip-tests`` option to skip tests before submitting
 
 0.4 (2021-05-22)
 ----------------
