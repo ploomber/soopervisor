@@ -164,3 +164,20 @@ def test_export_airflow_callables(monkeypatch, mock_docker_calls_callables,
     assert dag.task_dict['features'].command == 'ploomber task features' + args
     assert dag.task_dict['fit'].command == 'ploomber task fit' + args
     assert dag.task_dict['join'].command == 'ploomber task join' + args
+
+
+def test_stops_if_no_tasks(monkeypatch, mock_docker_calls, tmp_sample_project,
+                           no_sys_modules_cache, capsys):
+    load_tasks_mock = Mock(return_value=([], []))
+    monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
+
+    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
+                               env_name='serve')
+
+    git_init()
+
+    exporter.add()
+    exporter.export(mode='incremental')
+
+    captured = capsys.readouterr()
+    assert 'has no tasks to submit.' in captured.out

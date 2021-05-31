@@ -7,7 +7,7 @@ from pathlib import Path
 
 import click
 
-from ploomber.io._commander import Commander
+from ploomber.io._commander import Commander, CommanderStop
 from soopervisor.airflow.config import AirflowConfig
 from soopervisor import commons
 from soopervisor import abc
@@ -58,29 +58,43 @@ class AirflowExporter(abc.AbstractExporter):
         The code along with the DAG declaration file can be copied to
         AIRFLOW_HOME for execution
         """
-        tasks, args = commons.load_tasks(mode=mode)
-
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
+            tasks, args = commons.load_tasks(mode=mode)
+
+            if not tasks:
+                raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
+                                    'tasks to submit. Try "--mode force" to '
+                                    'submit all tasks regardless of status')
 
             pkg_name, target_image = commons.docker.build(e,
                                                           cfg,
                                                           env_name,
                                                           until=until)
 
-        dag_dict = dict(tasks=[], image=target_image)
+            dag_dict = generate_airflow_spec(tasks, args, target_image)
 
-        for name, upstream in tasks.items():
-            command = f'ploomber task {name}'
+            path_dag_dict_out = Path(pkg_name + '.json')
+            path_dag_dict_out.write_text(json.dumps(dag_dict))
 
-            if args:
-                command = f'{command} {" ".join(args)}'
 
-            dag_dict['tasks'].append({
-                'name': name,
-                'upstream': upstream,
-                'command': command
-            })
+def generate_airflow_spec(tasks, args, target_image):
+    """
+    Generates a dictionary with the spec used by Airflow to construct the
+    DAG
+    """
+    dag_dict = dict(tasks=[], image=target_image)
 
-        path_dag_dict_out = Path(env_name, pkg_name + '.json')
-        path_dag_dict_out.write_text(json.dumps(dag_dict))
+    for name, upstream in tasks.items():
+        command = f'ploomber task {name}'
+
+        if args:
+            command = f'{command} {" ".join(args)}'
+
+        dag_dict['tasks'].append({
+            'name': name,
+            'upstream': upstream,
+            'command': command
+        })
+
+    return dag_dict

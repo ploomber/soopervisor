@@ -178,3 +178,17 @@ def test_generate_valid_argo_specs(name, tmp_projects):
     # validate argo workflow
     content = Path('serve', 'argo.yaml').read_text()
     assert Workflow.from_dict(yaml.safe_load(content))
+
+
+def test_stops_if_no_tasks(mock_docker_calls, backup_packaged_project,
+                           monkeypatch, capsys):
+    load_tasks_mock = Mock(return_value=([], []))
+    monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
+
+    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
+                                     env_name='serve')
+    exporter.add()
+    exporter.export(mode='incremental', until=None)
+
+    captured = capsys.readouterr()
+    assert 'has no tasks to submit.' in captured.out

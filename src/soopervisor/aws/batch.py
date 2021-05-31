@@ -66,7 +66,6 @@ class AWSBatchExporter(abc.AbstractExporter):
                        templates_path=('soopervisor', 'assets')) as e:
             tasks, args = commons.load_tasks(mode=mode)
 
-            # TODO: add this to the other exporters
             if not tasks:
                 raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
                                     'tasks to submit. Try "--mode force" to '

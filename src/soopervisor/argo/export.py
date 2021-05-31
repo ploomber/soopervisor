@@ -4,7 +4,7 @@ Export to Argo Workflows
 from pathlib import Path
 
 import click
-from ploomber.io._commander import Commander
+from ploomber.io._commander import Commander, CommanderStop
 import yaml
 from yaml.representer import SafeRepresenter
 
@@ -44,10 +44,15 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
         """
         Build and upload Docker image. Export Argo YAML spec.
         """
-        tasks, args = commons.load_tasks(mode=mode)
-
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
+
+            tasks, args = commons.load_tasks(mode=mode)
+
+            if not tasks:
+                raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
+                                    'tasks to submit. Try "--mode force" to '
+                                    'submit all tasks regardless of status')
 
             pkg_name, target_image = docker.build(e,
                                                   cfg,
