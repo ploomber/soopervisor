@@ -90,7 +90,7 @@ def test_airflow_export_sample_project(monkeypatch, mock_docker_calls,
     git_init()
 
     exporter.add()
-    exporter.export()
+    exporter.export(mode='incremental')
 
     monkeypatch.syspath_prepend('serve')
     mod = importlib.import_module('sample_project')

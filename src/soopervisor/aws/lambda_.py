@@ -16,6 +16,14 @@ from soopervisor import abc
 class AWSLambdaExporter(abc.AbstractExporter):
     CONFIG_CLASS = AWSLambdaConfig
 
+    def export(self, mode=None, until=None):
+        if mode is not None:
+            raise ValueError("AWS Lambda does not support 'mode'")
+
+        return self._export(cfg=self._cfg,
+                            env_name=self._env_name,
+                            until=until)
+
     @staticmethod
     def _validate(cfg, dag, env_name):
         pass

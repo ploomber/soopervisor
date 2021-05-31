@@ -72,6 +72,12 @@ def export(name, until_build, mode):
         until = 'build'
 
     backend = Backend(config.get_backend(name))
+
+    # TODO: ignore mode if using aws lambda, raised exception if value
+    # is not the default
+    if backend == Backend.aws_lambda:
+        mode = None
+
     Exporter = exporter.for_backend(backend)
     Exporter('soopervisor.yaml', env_name=name).export(mode=mode, until=until)
 

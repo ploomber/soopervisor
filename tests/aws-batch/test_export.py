@@ -224,17 +224,8 @@ def index_commands_by_name(submitted):
     }
 
 
-@pytest.mark.parametrize(
-    'mode, args',
-    [
-        ['incremental', []],
-        ['regular', []],
-        ['force', ['--force']],
-    ],
-)
-def test_export(mock_batch, monkeypatch, backup_packaged_project, mode, args):
-    Path('setup.py').unlink()
-
+@pytest.fixture
+def monkeypatch_docker(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in DAGSpec.find().to_dag().clients)')
     tester = _commander_tester.CommanderTester(
@@ -251,6 +242,18 @@ def test_export(mock_batch, monkeypatch, backup_packaged_project, mode, args):
     subprocess_mock.check_output.side_effect = tester
     monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
 
+
+@pytest.mark.parametrize(
+    'mode, args',
+    [
+        ['incremental', []],
+        ['regular', []],
+        ['force', ['--force']],
+    ],
+)
+def test_export(mock_batch, monkeypatch_docker, monkeypatch,
+                backup_packaged_project, mode, args):
+    Path('setup.py').unlink()
     boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
     monkeypatch.setattr(batch.boto3, 'client',
                         lambda name, region_name: boto3_mock)
@@ -301,3 +304,15 @@ def test_export(mock_batch, monkeypatch, backup_packaged_project, mode, args):
         'features': ['ploomber', 'task', 'features'] + args,
         'fit': ['ploomber', 'task', 'fit'] + args
     }
+
+
+def test_stops_if_no_tasks(monkeypatch, backup_packaged_project, capsys):
+    load_tasks_mock = Mock(return_value=([], []))
+    monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
+
+    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
+    exporter.add()
+    exporter.export(mode='incremental')
+
+    captured = capsys.readouterr()
+    assert 'has no tasks to submit.' in captured.out

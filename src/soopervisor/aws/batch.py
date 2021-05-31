@@ -68,7 +68,7 @@ class AWSBatchExporter(abc.AbstractExporter):
 
             # TODO: add this to the other exporters
             if not tasks:
-                raise CommanderStop(f'Loaded DAG in {mode!r} mode yield no '
+                raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
 
