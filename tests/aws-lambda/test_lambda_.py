@@ -1,15 +1,14 @@
 import json
 from pathlib import Path
 import subprocess
+from unittest.mock import Mock
 
 import pytest
 import yaml
-from click.testing import CliRunner
 from click import ClickException
-from soopervisor import cli
 
 from soopervisor.aws.lambda_ import AWSLambdaExporter
-from ploomber.io import _commander
+from ploomber.io import _commander, _commander_tester
 
 body = {
     "sepal length (cm)": 5.1,
@@ -59,23 +58,19 @@ def test_add(backup_packaged_project):
     assert Path('serve', 'test_aws_lambda.py').exists()
 
 
-class PassCall:
-    def __init__(self, *args):
-        self.args = args
-        self.called = False
+@pytest.fixture
+def mock_sam_calls(monkeypatch):
+    tester = _commander_tester.CommanderTester(run=[
+        ('python', '-m', 'build', '--wheel', '.'),
+    ])
+    subprocess_mock = Mock()
+    subprocess_mock.check_call.side_effect = tester
+    subprocess_mock.check_output.side_effect = tester
+    monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
+    return tester
 
-    def __call__(self, cmd):
-        if cmd == self.args:
-            self.called = True
-        else:
-            return subprocess.run(cmd, check=True)
 
-
-def test_export(backup_packaged_project, monkeypatch):
-    # mock call to: sam deploy --guided
-    pass_call = PassCall('sam', 'deploy', '--guided')
-    monkeypatch.setattr(_commander.subprocess, 'check_call', pass_call)
-
+def test_export(backup_packaged_project, mock_sam_calls):
     Path('requirements.lock.txt').touch()
     subprocess.run(['ploomber', 'build'], check=True)
     subprocess.run(
@@ -85,19 +80,37 @@ def test_export(backup_packaged_project, monkeypatch):
     exporter = AWSLambdaExporter('soopervisor.yaml', 'serve')
     exporter.add()
     _edit_generated_files()
-    runner = CliRunner()
+    exporter.export(mode=None, until=None, skip_tests=False)
 
-    result = runner.invoke(cli.export, ['serve'], catch_exceptions=False)
+    assert mock_sam_calls.calls == [
+        ('pytest', 'serve'),
+        ('python', '-m', 'build', '--wheel', '.'),
+        ('sam', 'build'),
+        ('sam', 'deploy', '--guided'),
+    ]
 
-    assert pass_call.called
-    assert result.exit_code == 0
+
+def test_skip_tests(backup_packaged_project, mock_sam_calls):
+    Path('requirements.lock.txt').touch()
+    subprocess.run(['ploomber', 'build'], check=True)
+    subprocess.run(
+        ['cp', 'products/model.pickle', 'src/my_project/model.pickle'],
+        check=True)
+
+    exporter = AWSLambdaExporter('soopervisor.yaml', 'serve')
+    exporter.add()
+    _edit_generated_files()
+    exporter.export(mode=None, until=None, skip_tests=True)
+
+    assert mock_sam_calls.calls == [
+        ('python', '-m', 'build', '--wheel', '.'),
+        ('sam', 'build'),
+        ('sam', 'deploy', '--guided'),
+    ]
 
 
 def test_generate_reqs_lock_txt_from_env_lock_yml(backup_packaged_project,
-                                                  monkeypatch, capsys):
-    # mock call to: sam deploy --guided
-    pass_call = PassCall('sam', 'deploy', '--guided')
-    monkeypatch.setattr(_commander.subprocess, 'check_call', pass_call)
+                                                  mock_sam_calls, capsys):
 
     Path('environment.lock.yml').write_text("""
 dependencies:
@@ -117,8 +130,7 @@ dependencies:
     exporter.add()
     _edit_generated_files()
 
-    exporter.export()
-    # TODO: mock lambda calls that builds docker image
+    exporter.export(mode=None, until=None, skip_tests=False)
 
     captured = capsys.readouterr()
     assert 'Missing requirements.lock.txt file.' in captured.out

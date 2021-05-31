@@ -52,7 +52,7 @@ class AirflowExporter(abc.AbstractExporter):
         pass
 
     @staticmethod
-    def _export(cfg, env_name, mode, until):
+    def _export(cfg, env_name, mode, until, skip_tests):
         """
         Copies the current source code to the target environment folder.
         The code along with the DAG declaration file can be copied to
@@ -67,10 +67,8 @@ class AirflowExporter(abc.AbstractExporter):
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
 
-            pkg_name, target_image = commons.docker.build(e,
-                                                          cfg,
-                                                          env_name,
-                                                          until=until)
+            pkg_name, target_image = commons.docker.build(
+                e, cfg, env_name, until=until, skip_tests=skip_tests)
 
             dag_dict = generate_airflow_spec(tasks, args, target_image)
 

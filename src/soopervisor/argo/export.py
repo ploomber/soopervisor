@@ -40,7 +40,7 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
             e.success('Done')
 
     @staticmethod
-    def _export(cfg, env_name, mode, until):
+    def _export(cfg, env_name, mode, until, skip_tests):
         """
         Build and upload Docker image. Export Argo YAML spec.
         """
@@ -57,7 +57,8 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
             pkg_name, target_image = docker.build(e,
                                                   cfg,
                                                   env_name,
-                                                  until=until)
+                                                  until=until,
+                                                  skip_tests=skip_tests)
 
             e.info('Generating Argo Workflows YAML spec')
             _make_argo_spec(tasks=tasks,

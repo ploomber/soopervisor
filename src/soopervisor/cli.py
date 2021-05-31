@@ -58,11 +58,15 @@ def add(name, backend):
               '-ub',
               is_flag=True,
               help='Only build docker image')
+@click.option('--skip-tests',
+              '-s',
+              is_flag=True,
+              help='Skip docker image tests')
 @click.option('--mode',
               '-m',
               type=click.Choice(Mode.get_values()),
               default=Mode.incremental.value)
-def export(name, until_build, mode):
+def export(name, until_build, mode, skip_tests):
     """
     Export a target platform for execution/deployment
     """
@@ -79,7 +83,9 @@ def export(name, until_build, mode):
         mode = None
 
     Exporter = exporter.for_backend(backend)
-    Exporter('soopervisor.yaml', env_name=name).export(mode=mode, until=until)
+    Exporter('soopervisor.yaml', env_name=name).export(mode=mode,
+                                                       until=until,
+                                                       skip_tests=skip_tests)
 
 
 if __name__ == '__main__':

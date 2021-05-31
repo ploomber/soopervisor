@@ -61,7 +61,7 @@ class AWSBatchExporter(abc.AbstractExporter):
 
     @staticmethod
     @requires(['boto3'], name='AWSBatchExporter')
-    def _export(cfg, env_name, mode, until):
+    def _export(cfg, env_name, mode, until, skip_tests):
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
             tasks, args = commons.load_tasks(mode=mode)
@@ -71,7 +71,11 @@ class AWSBatchExporter(abc.AbstractExporter):
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
 
-            pkg_name, remote_name = docker.build(e, cfg, env_name, until=until)
+            pkg_name, remote_name = docker.build(e,
+                                                 cfg,
+                                                 env_name,
+                                                 until=until,
+                                                 skip_tests=skip_tests)
 
             e.info('Submitting jobs to AWS Batch')
 

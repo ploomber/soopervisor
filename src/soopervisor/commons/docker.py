@@ -7,7 +7,27 @@ from ploomber.io._commander import CommanderStop
 from soopervisor.commons import source
 
 
-def build(e, cfg, name, until):
+def build(e, cfg, name, until, skip_tests=False):
+    """Build a docker image
+
+    Parameters
+    ----------
+    e : Commander
+        Commander instance
+
+    cfg
+        Configuration
+
+    name : str
+        Target environment name
+
+    until : str
+        Stop after certain starge
+
+    skip_tests : bool, default=False
+        Skip image testing (check dag loading and File.client configuration)
+    """
+
     # if this is a pkg, get the name
     try:
         pkg_name = default.find_package_name()
@@ -60,31 +80,34 @@ def build(e, cfg, name, until):
           image_local,
           description='Building image')
 
-    e.run('docker',
-          'run',
-          image_local,
-          'ploomber',
-          'status',
-          description='Testing image',
-          error_message='Error while testing your docker image with',
-          hint=f'Use "docker run -it {image_local} /bin/bash" to '
-          'start an interactive session to debug your image')
+    if not skip_tests:
+        # test "ploomber status" in docker image
+        e.run('docker',
+              'run',
+              image_local,
+              'ploomber',
+              'status',
+              description='Testing image',
+              error_message='Error while testing your docker image with',
+              hint=f'Use "docker run -it {image_local} /bin/bash" to '
+              'start an interactive session to debug your image')
 
-    test_cmd = ('from ploomber.spec import DAGSpec; '
-                'print("File" in DAGSpec.find().to_dag().clients)')
-    e.run('docker',
-          'run',
-          image_local,
-          'python',
-          '-c',
-          test_cmd,
-          description='Testing File client',
-          error_message='Missing File client',
-          hint=f'Run "docker run -it {image_local} /bin/bash" to '
-          'to debug your image. Ensure a File client is configured',
-          capture_output=True,
-          expected_output='True\n',
-          show_cmd=False)
+        # check that the pipeline in the image has a configured File.client
+        test_cmd = ('from ploomber.spec import DAGSpec; '
+                    'print("File" in DAGSpec.find().to_dag().clients)')
+        e.run('docker',
+              'run',
+              image_local,
+              'python',
+              '-c',
+              test_cmd,
+              description='Testing File client',
+              error_message='Missing File client',
+              hint=f'Run "docker run -it {image_local} /bin/bash" to '
+              'to debug your image. Ensure a File client is configured',
+              capture_output=True,
+              expected_output='True\n',
+              show_cmd=False)
 
     if until == 'build':
         raise CommanderStop('Done. Run "docker images" to see your image.')

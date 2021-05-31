@@ -316,3 +316,19 @@ def test_stops_if_no_tasks(monkeypatch, backup_packaged_project, capsys):
 
     captured = capsys.readouterr()
     assert 'has no tasks to submit.' in captured.out
+
+
+def test_skip_tests(mock_batch, monkeypatch_docker, monkeypatch,
+                    backup_packaged_project, capsys):
+    # Path('setup.py').unlink()
+    boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
+    monkeypatch.setattr(batch.boto3, 'client',
+                        lambda name, region_name: boto3_mock)
+
+    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
+    exporter.add()
+    exporter.export(mode='incremental', skip_tests=True)
+
+    captured = capsys.readouterr()
+    assert 'Testing image' not in captured.out
+    assert 'Testing File client' not in captured.out

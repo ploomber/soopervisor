@@ -16,13 +16,14 @@ from soopervisor import abc
 class AWSLambdaExporter(abc.AbstractExporter):
     CONFIG_CLASS = AWSLambdaConfig
 
-    def export(self, mode=None, until=None):
+    def export(self, mode=None, until=None, skip_tests=False):
         if mode is not None:
             raise ValueError("AWS Lambda does not support 'mode'")
 
         return self._export(cfg=self._cfg,
                             env_name=self._env_name,
-                            until=until)
+                            until=until,
+                            skip_tests=skip_tests)
 
     @staticmethod
     def _validate(cfg, dag, env_name):
@@ -54,7 +55,7 @@ class AWSLambdaExporter(abc.AbstractExporter):
                 warn_if_not_installed(name)
 
     @staticmethod
-    def _export(cfg, env_name, until):
+    def _export(cfg, env_name, until, skip_tests):
 
         # TODO: validate project structure: src/*/model.*, etc...
 
@@ -89,8 +90,9 @@ class AWSLambdaExporter(abc.AbstractExporter):
 
             e.cp('requirements.lock.txt')
 
-            # TODO: ensure user has pytest
-            e.run('pytest', env_name, description='Testing')
+            # TODO: ensure user has pytest before running
+            if not skip_tests:
+                e.run('pytest', env_name, description='Testing')
 
             e.rm('dist', 'build')
             e.run('python',
