@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+0.4.2dev
+--------
+
 0.4.1 (2021-05-31)
 ------------------
 * Adds ``--mode`` option to ``soopervisor export``
