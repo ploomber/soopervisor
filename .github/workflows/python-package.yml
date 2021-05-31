@@ -22,7 +22,6 @@ jobs:
         flake8
     - name: Install dependencies
       run: |
-        pip install git+https://github.com/ploomber/ploomber@params
         pip install invoke
         pip install -e tests/assets/my_project
         pip install ".[dev]"
