@@ -136,6 +136,13 @@ configuration details will change but the API remains the same:
 
 
 .. toctree::
+   :caption: API
+   :hidden:
+
+   api/cli
+
+
+.. toctree::
    :caption: External links
    :hidden:
 
