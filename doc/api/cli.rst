@@ -14,7 +14,7 @@ Adds a new target environment:
     soopervisor add {name} --backend {backend}
 
 Where ``{backend}`` is one of ``aws-batch``, ``aws-lambda``,
-``argo-workflows``, and ``airflow``.
+``argo-workflows``, or ``airflow``.
 
 
 ``soopervisor export``

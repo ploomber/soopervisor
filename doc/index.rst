@@ -91,7 +91,7 @@ Then, configure the development environment:
 
    ``ploomber install`` automatically generates the
    ``environment.lock.yml`` or ``requirements.lock.txt`` file. If you prefer so,
-   you may skip ``ploomber install`` and generate the lock files yourself.
+   you may skip ``ploomber install`` and create the lock files yourself.
 
 Usage
 =====
@@ -111,11 +111,11 @@ After filling in some basic configuration settings, export the pipeline with:
    soopervisor export training
 
 Soopervisor will take care of packaging your code and submitting it for
-execution. If using Argo Workflows, it will create a Docker image, upload it to
-the configured registry, generate an Argo's YAML spec and submit the workflow.
+execution. Using Argo Workflows will create a Docker image, upload it to
+the configured registry, generate an Argo's YAML spec, and submit the workflow.
 
-Depending on the selected backend (Argo, Airflow, AWS Batch or AWS Lambda),
-configuration details will change but the API remains the same:
+Depending on the selected backend (Argo, Airflow, AWS Batch, or AWS Lambda),
+configuration details will change, but the API remains the same:
 ``soopervisor add``, then ``soopervisor export``.
 
 
@@ -132,7 +132,7 @@ configuration details will change but the API remains the same:
    :caption: Online inference
    :hidden:
 
-   tutorials/aws-batch
+   tutorials/aws-lambda
 
 
 .. toctree::
