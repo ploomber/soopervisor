@@ -136,6 +136,14 @@ configuration details will change, but the API remains the same:
 
 
 .. toctree::
+   :caption: User Guide
+   :hidden:
+
+   user-guide/packaged-or-not.rst
+   user-guide/build-process
+
+
+.. toctree::
    :caption: API
    :hidden:
 
