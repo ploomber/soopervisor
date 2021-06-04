@@ -113,6 +113,27 @@ def test_copy_override_gitignore_with_include(cmdr, tmp_empty):
     assert set(Path(p) for p in source.glob_all('dist')) == expected
 
 
+def test_copy_override_gitignore_with_include_entire_folder(cmdr, tmp_empty):
+    Path('file').touch()
+    Path('dir').mkdir()
+    Path('dir', 'secrets.txt').touch()
+    Path('dir', 'more-secrets.txt').touch()
+
+    Path('.gitignore').write_text('dir')
+    git_init()
+
+    source.copy(cmdr, '.', 'dist', include=['dir'])
+
+    expected = set(
+        Path(p) for p in (
+            'dist/file',
+            'dist/dir/secrets.txt',
+            'dist/dir/more-secrets.txt',
+        ))
+
+    assert set(Path(p) for p in source.glob_all('dist')) == expected
+
+
 def test_no_git_but_exclude(cmdr, tmp_empty):
     Path('file').touch()
     Path('secrets.txt').touch()
@@ -121,6 +142,35 @@ def test_no_git_but_exclude(cmdr, tmp_empty):
 
     expected = set(Path(p) for p in ('dist/file', ))
 
+    assert set(Path(p) for p in source.glob_all('dist')) == expected
+
+
+def test_no_git_but_exclude_entire_folder(cmdr, tmp_empty):
+    Path('file').touch()
+    Path('dir').mkdir()
+    Path('dir', 'secrets.txt').touch()
+    Path('dir', 'more-secrets.txt').touch()
+
+    source.copy(cmdr, '.', 'dist', exclude=['dir'])
+
+    expected = set(Path(p) for p in ('dist/file', ))
+    assert set(Path(p) for p in source.glob_all('dist')) == expected
+
+
+def test_ignores_pycache(cmdr, tmp_empty):
+    Path('file').touch()
+    dir_ = Path('__pycache__')
+    dir_.mkdir()
+    (dir_ / 'file').touch()
+    (dir_ / 'another').touch()
+    dir_another = Path('subdir', '__pycache__')
+    dir_another.mkdir(parents=True)
+    (dir_another / 'file').touch()
+    (dir_another / 'another').touch()
+
+    source.copy(cmdr, '.', 'dist')
+
+    expected = set(Path(p) for p in ('dist/file', ))
     assert set(Path(p) for p in source.glob_all('dist')) == expected
 
 

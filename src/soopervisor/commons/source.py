@@ -44,6 +44,10 @@ def is_relative_to(path, prefix):
         return True
 
 
+def is_relative_to_any(path, prefixes):
+    return any(is_relative_to(path, prefix) for prefix in prefixes)
+
+
 def glob_all(path, exclude=None):
     hidden = iglob(str(Path(path) / '**' / '.*'), recursive=True)
     normal = iglob(str(Path(path) / '**'), recursive=True)
@@ -56,6 +60,8 @@ def glob_all(path, exclude=None):
 def copy(cmdr, src, dst, include=None, exclude=None):
     include = set() if include is None else set(include)
     exclude = set() if exclude is None else set(exclude)
+    exclude_dirs = set(p for p in exclude if Path(p).is_dir())
+    include_dirs = set(p for p in include if Path(p).is_dir())
 
     overlap = set(include) & set(exclude)
 
@@ -78,18 +84,17 @@ def copy(cmdr, src, dst, include=None, exclude=None):
 
     for f in glob_all(path=src, exclude=dst):
         tracked_by_git = tracked is None or f in tracked
-        excluded = f in exclude
-        included = f in include
+        excluded = f in exclude or is_relative_to_any(f, exclude_dirs)
+        included = f in include or is_relative_to_any(f, include_dirs)
         # never include .git or .gitignore
-        never_include = Path(f).name.startswith('.git')
+        never_include = Path(f).name.startswith('.git') or '__pycache__' in f
 
         if ((tracked_by_git or included) and not excluded
                 and not never_include):
             target = Path(dst, f)
             target.parent.mkdir(exist_ok=True, parents=True)
             shutil.copy(f, dst=target)
-        else:
-            print(f'ignoring {f}')
+            print(f'Copying {f} -> {target}')
 
 
 def compress_dir(src, dst):
