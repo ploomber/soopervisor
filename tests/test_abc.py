@@ -35,7 +35,8 @@ def test_creates_soopervisor_yaml_if_it_doesnt_exist(tmp_empty):
     assert cfg['some_env'] == {
         'default': 'value',
         'backend': 'backend-value',
-        'include': None
+        'include': None,
+        'exclude': None,
     }
 
 

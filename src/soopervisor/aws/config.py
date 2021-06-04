@@ -25,6 +25,7 @@ class AWSBatchConfig(AbstractConfig):
                    region_name='your-region-name').dict()
         data['backend'] = cls.get_backend_value()
         del data['include']
+        del data['exclude']
         return data
 
 

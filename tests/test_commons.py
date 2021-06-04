@@ -7,9 +7,16 @@ import pytest
 from click import ClickException
 from ploomber.spec import DAGSpec
 from ploomber.executors import Serial
+from ploomber.io._commander import Commander
 
 from soopervisor.commons import source, conda
 from soopervisor import commons
+
+
+@pytest.fixture
+def cmdr():
+    with Commander() as cmdr:
+        yield cmdr
 
 
 def git_init():
@@ -20,54 +27,130 @@ def git_init():
     subprocess.check_call(['git', 'commit', '-m', 'commit'])
 
 
-def test_copy(tmp_empty):
+def test_glob_all_excludes_directories(tmp_empty):
+    Path('dir').mkdir()
+    Path('dir', 'a').touch()
+
+    assert set(Path(p) for p in source.glob_all('.')) == {Path('dir', 'a')}
+
+
+def test_global_all_excludes_from_arg(tmp_empty):
+    Path('dir').mkdir()
+    Path('dir', 'a').touch()
+    Path('excluded').mkdir()
+    Path('excluded', 'should-not-appear').touch()
+
+    assert set(Path(p) for p in source.glob_all('.', exclude='excluded')) == {
+        Path('dir', 'a')
+    }
+
+
+def test_copy(cmdr, tmp_empty):
     Path('file').touch()
     Path('dir').mkdir()
     Path('dir', 'another').touch()
     git_init()
-    source.copy('.', 'dist')
+    source.copy(cmdr, '.', 'dist')
 
-    expected = set(
-        Path(p) for p in (
-            'dist',
-            'dist/file',
-            'dist/dir',
-            'dist/dir/another',
-        ))
+    expected = set(Path(p) for p in (
+        'dist/file',
+        'dist/dir/another',
+    ))
     assert set(Path(p) for p in source.glob_all('dist')) == expected
 
 
-def test_copy_with_gitignore(tmp_empty):
+def test_copy_with_gitignore(cmdr, tmp_empty):
     Path('file').touch()
     Path('ignoreme').touch()
 
     Path('.gitignore').write_text('ignoreme')
     git_init()
-    source.copy('.', 'dist')
+    source.copy(cmdr, '.', 'dist')
 
-    expected = set(Path(p) for p in (
-        'dist/',
-        'dist/file',
-    ))
+    expected = set({Path('dist/file')})
     assert set(Path(p) for p in source.glob_all('dist')) == expected
 
 
-def test_include(tmp_empty):
+def test_error_if_exclude_and_include_overlap(cmdr, tmp_empty):
+
+    with pytest.raises(ClickException) as excinfo:
+        source.copy(cmdr, '.', 'dist', exclude=['file'], include=['file'])
+
+    expected = ("include and exclude must "
+                "not have overlapping elements: {'file'}")
+    assert expected == str(excinfo.value)
+
+
+def test_override_git_with_exclude(cmdr, tmp_empty):
+    Path('file').touch()
+    Path('secrets.txt').touch()
+
+    # let git track everything
+    Path('.gitignore').touch()
+    git_init()
+
+    # exclude some file
+    source.copy(cmdr, '.', 'dist', exclude=['file'])
+
+    expected = set({Path('dist/secrets.txt')})
+    assert set(Path(p) for p in source.glob_all('dist')) == expected
+
+
+def test_copy_override_gitignore_with_include(cmdr, tmp_empty):
     Path('file').touch()
     Path('secrets.txt').touch()
 
     Path('.gitignore').write_text('secrets.txt')
     git_init()
 
-    source.copy('.', 'dist', include=['secrets.txt'])
+    source.copy(cmdr, '.', 'dist', include=['secrets.txt'])
 
-    expected = set(
-        Path(p) for p in (
-            'dist/',
-            'dist/file',
-            'dist/secrets.txt',
-        ))
+    expected = set(Path(p) for p in (
+        'dist/file',
+        'dist/secrets.txt',
+    ))
+
     assert set(Path(p) for p in source.glob_all('dist')) == expected
+
+
+def test_no_git_but_exclude(cmdr, tmp_empty):
+    Path('file').touch()
+    Path('secrets.txt').touch()
+
+    source.copy(cmdr, '.', 'dist', exclude=['secrets.txt'])
+
+    expected = set(Path(p) for p in ('dist/file', ))
+
+    assert set(Path(p) for p in source.glob_all('dist')) == expected
+
+
+def test_warns_if_fails_to_get_git_tracked_files(tmp_empty, capsys):
+    Path('file').touch()
+    Path('secrets.txt').touch()
+
+    with Commander() as cmdr:
+        source.copy(cmdr, '.', 'dist')
+
+    captured = capsys.readouterr()
+
+    assert 'Unable to get git tracked files' in captured.out
+
+
+def test_warns_on_dirty_git(tmp_empty, capsys):
+    Path('file').touch()
+    Path('secrets.txt').touch()
+
+    Path('.gitignore').write_text('secrets.txt')
+    git_init()
+
+    Path('new-file').touch()
+
+    with Commander() as cmdr:
+        source.copy(cmdr, '.', 'dist')
+
+    captured = capsys.readouterr()
+
+    assert 'Your git repository contains untracked' in captured.out
 
 
 def test_compress_dir(tmp_empty):
@@ -81,10 +164,7 @@ def test_compress_dir(tmp_empty):
     with tarfile.open('dist/project-name.tar.gz', 'r:gz') as tar:
         tar.extractall('.')
 
-    expected = set(Path(p) for p in (
-        'project-name',
-        'project-name/file',
-    ))
+    expected = {Path('project-name/file')}
     assert set(Path(p) for p in source.glob_all('project-name')) == expected
 
 

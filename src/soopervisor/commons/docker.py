@@ -56,14 +56,17 @@ def build(e, cfg, name, until, skip_tests=False):
         e.rm('dist', 'build', Path('src', pkg_name, f'{pkg_name}.egg-info'))
         e.run('python', '-m', 'build', '--sdist', description='Packaging code')
 
-        # raise error if include is not None? use MANIFEST.instead
+        # raise error if include is not None? and suggest to use MANIFEST.in
+        # instead
     else:
-        # TODO: warn on unsaved changes (new files will not be included
-        # since they are not yet tracked on git)
         e.rm('dist')
         target = Path('dist', pkg_name)
         e.info('Packaging code')
-        source.copy('.', target, include=cfg.include)
+        source.copy(cmdr=e,
+                    src='.',
+                    dst=target,
+                    include=cfg.include,
+                    exclude=cfg.exclude)
         source.compress_dir(target, Path('dist', f'{pkg_name}.tar.gz'))
 
     e.cp('dist')

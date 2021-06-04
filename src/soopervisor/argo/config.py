@@ -72,4 +72,5 @@ class ArgoConfig(abc.AbstractConfig):
         data['backend'] = cls.get_backend_value()
         del data['mounted_volumes']
         del data['include']
+        del data['exclude']
         return data

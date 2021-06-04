@@ -36,7 +36,7 @@ class AWSLambdaExporter(abc.AbstractExporter):
         except ValueError as e:
             raise ClickException(
                 'AWS Lambda is only supported in packaged projects. '
-                'See the documentation to see an example.') from e
+                'See the documentation for an example.') from e
 
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:

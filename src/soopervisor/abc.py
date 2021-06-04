@@ -18,6 +18,7 @@ class AbstractConfig(BaseModel, abc.ABC):
     Configuration schema
     """
     include: Optional[List[str]] = None
+    exclude: Optional[List[str]] = None
 
     class Config:
         extra = 'forbid'

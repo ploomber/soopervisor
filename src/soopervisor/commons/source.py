@@ -15,35 +15,81 @@ def git_tracked_files():
                          stderr=subprocess.PIPE)
 
     if not res.returncode:
-        return res.stdout.decode().splitlines()
+        return res.stdout.decode().splitlines(), None
     else:
-        raise ClickException(
-            'Could not obtain git tracked files. Non-packaged projects'
-            ' must be in a git repository, create one with "git init".'
-            f' Error message: {res.stderr.decode()}')
+        return None, res.stderr.decode().strip()
 
 
-def glob_all(path):
+def git_is_dirty():
+    """
+    Returns True if there are git untracked files (new files that haven't been
+    committed yet)
+    """
+    res = subprocess.run(['git', 'status', '--short'],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+
+    return not (res.returncode or '??' not in res.stdout.decode())
+
+
+def is_relative_to(path, prefix):
+    if prefix is None:
+        return False
+
+    try:
+        Path(path).relative_to(prefix)
+    except ValueError:
+        return False
+    else:
+        return True
+
+
+def glob_all(path, exclude=None):
     hidden = iglob(str(Path(path) / '**' / '.*'), recursive=True)
     normal = iglob(str(Path(path) / '**'), recursive=True)
-    return chain(hidden, normal)
+
+    for path in chain(hidden, normal):
+        if Path(path).is_file() and not is_relative_to(path, exclude):
+            yield path
 
 
-def copy(src, dst, include=None):
-    # TODO: warn if git is dirty (new files wont be included)
-
-    tracked = git_tracked_files()
+def copy(cmdr, src, dst, include=None, exclude=None):
     include = set() if include is None else set(include)
+    exclude = set() if exclude is None else set(exclude)
 
-    for f in glob_all(path=src):
-        if (f not in tracked
-                and f not in include) or Path(f).name == '.gitignore':
-            print(f'ignoring {f}')
-        else:
+    overlap = set(include) & set(exclude)
+
+    if overlap:
+        raise ClickException('include and exclude must not have '
+                             f'overlapping elements: {overlap}')
+
+    if git_is_dirty():
+        cmdr.warn_on_exit('Your git repository contains untracked '
+                          'files, which will be ignored when building the '
+                          'Docker image. Commit them if needed.')
+
+    tracked, error = git_tracked_files()
+
+    if error:
+        cmdr.warn_on_exit(
+            f'Unable to get git tracked files: {error}. Everything '
+            'will be included, except for files in the \'exclude\' section '
+            'of soopervisor.yaml')
+
+    for f in glob_all(path=src, exclude=dst):
+        tracked_by_git = tracked is None or f in tracked
+        excluded = f in exclude
+        included = f in include
+        # never include .git or .gitignore
+        never_include = Path(f).name.startswith('.git')
+
+        if ((tracked_by_git or included) and not excluded
+                and not never_include):
             target = Path(dst, f)
             target.parent.mkdir(exist_ok=True, parents=True)
-            print(f'copying {f} -> {target}')
             shutil.copy(f, dst=target)
+        else:
+            print(f'ignoring {f}')
 
 
 def compress_dir(src, dst):

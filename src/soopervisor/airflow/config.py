@@ -16,4 +16,5 @@ class AirflowConfig(abc.AbstractConfig):
         data = cls(repository='your-repository/name').dict()
         data['backend'] = cls.get_backend_value()
         del data['include']
+        del data['exclude']
         return data

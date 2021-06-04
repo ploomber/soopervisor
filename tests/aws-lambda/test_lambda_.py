@@ -97,7 +97,7 @@ def test_export_non_packaged_project(tmp_sample_project):
         exporter.add()
 
     expected = ('AWS Lambda is only supported in packaged projects.'
-                ' See the documentation to see an example.')
+                ' See the documentation for an example.')
     assert expected == str(excinfo.value)
 
 

@@ -45,4 +45,5 @@ def test_sample_project_from_empty_config(tmp_empty):
         'repository': 'your-repository/name',
         'mounted_volumes': None,
         'include': None,
+        'exclude': None,
     }

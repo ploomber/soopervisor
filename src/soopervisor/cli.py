@@ -37,7 +37,7 @@ def add(name, backend):
     backend = Backend(backend)
 
     if Path('soopervisor.yaml').exists():
-        cfg = yaml.load(Path('soopervisor.yaml').read_text())
+        cfg = yaml.safe_load(Path('soopervisor.yaml').read_text())
 
         if name in cfg:
             raise click.ClickException(f'A {name!r} section in the '
