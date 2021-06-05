@@ -3,6 +3,8 @@ CHANGELOG
 
 0.4.2dev
 --------
+* Adds ``exclude`` to ignore files/directories from docker image
+* Adds user guide section to documentation
 
 0.4.1 (2021-05-31)
 ------------------
