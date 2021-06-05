@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+0.4.3dev
+--------
+
 0.4.2 (2021-06-04)
 ------------------
 * Adds ``exclude`` to ignore files/directories from docker image
