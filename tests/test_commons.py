@@ -20,6 +20,11 @@ def cmdr():
 
 
 def git_init():
+    # to prevent overwriting the repo's settings
+    if 'soopervisor' in str(Path('.').resolve()):
+        raise ValueError('This doesnt look like a tmp directory. '
+                         'Did you forget the tmp_empty fixture?')
+
     subprocess.check_call(['git', 'init'])
     subprocess.check_call(['git', 'config', 'user.email', 'ci@ploomberio'])
     subprocess.check_call(['git', 'config', 'user.name', 'Ploomber'])
