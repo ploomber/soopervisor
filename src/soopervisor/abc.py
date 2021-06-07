@@ -9,8 +9,9 @@ from typing import Optional, List
 import click
 import yaml
 from pydantic import BaseModel
+from ploomber.io._commander import Commander
 
-from ploomber.spec import DAGSpec
+from soopervisor import commons
 
 
 class AbstractConfig(BaseModel, abc.ABC):
@@ -115,10 +116,12 @@ class AbstractExporter(abc.ABC):
         self._env_name = env_name
 
         # initialize dag (needed for validation)
-        # TODO: implement logic to the corresponding env.{target-name}.yaml
-        # to simulate what's going to happen
-        self._dag = DAGSpec.find(lazy_import=True).to_dag().render(
-            force=True, show_progress=False)
+        # TODO: _export also has to find_spec, maybe load it here and
+        # pass it directly to _export?
+        with Commander() as cmdr:
+            spec = commons.find_spec(cmdr=cmdr, name=env_name)
+
+        self._dag = spec.to_dag().render(force=True, show_progress=False)
 
         # ensure that the project and the config make sense
         self.validate()

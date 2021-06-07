@@ -8,6 +8,28 @@ from ploomber.exceptions import DAGSpecNotFound
 from soopervisor.enum import Mode
 
 
+def find_spec(cmdr, name):
+    """
+    Find spec to use. It first tries to load a file with pipeline.{name}.yaml,
+    if that doesn't exist, it tries to load a pipeline.yaml
+    """
+    cmdr.info('Loading DAG')
+
+    try:
+        spec = DAGSpec._find_relative(name=name)
+        cmdr.print(f'Found {spec.path!s}. Loading...')
+    except DAGSpecNotFound:
+        cmdr.print(f'No pipeline.{name}.yaml found, '
+                   'looking for pipeline.yaml instead')
+        spec = None
+
+    if spec is None:
+        spec = DAGSpec._find_relative()
+        cmdr.print(f'Found {spec.path!s}. Loading...')
+
+    return spec
+
+
 def load_tasks(cmdr, name=None, mode='incremental'):
     """Load tasks names and their upstream dependencies
 
@@ -38,20 +60,11 @@ def load_tasks(cmdr, name=None, mode='incremental'):
     """
     valid = Mode.get_values()
 
+    spec = find_spec(cmdr=cmdr, name=name)
+    dag = spec.to_dag()
+
     if mode not in valid:
         raise ValueError(f'mode must be one of {valid!r}')
-
-    try:
-        spec = DAGSpec._find_relative(name=name)
-    except DAGSpecNotFound:
-        cmdr.print(f'No pipeline.{name}.yaml found, '
-                   'looking for pipeline.yaml instead')
-        spec = None
-
-    if spec is None:
-        spec = DAGSpec._find_relative()
-
-    dag = spec.to_dag()
 
     if mode == 'incremental':
         dag.render(remote=True)

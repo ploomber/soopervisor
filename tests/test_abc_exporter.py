@@ -1,7 +1,8 @@
+import os
 from pathlib import Path
 
 import pytest
-from ploomber.exceptions import DAGSpecInitializationError
+from ploomber.exceptions import DAGSpecNotFound
 from click import ClickException
 
 from soopervisor.abc import AbstractExporter, AbstractConfig
@@ -44,10 +45,17 @@ def test_error_if_missing_environment_lock_yml(tmp_sample_project):
 def test_error_if_dag_fails_to_initialize(tmp_sample_project):
     Path('pipeline.yaml').unlink()
 
-    with pytest.raises(DAGSpecInitializationError) as excinfo:
+    with pytest.raises(DAGSpecNotFound) as excinfo:
         ConcreteExporter('soopervisor.yaml', env_name='some_env')
 
-    assert 'Error initializing DAG from' in str(excinfo.value)
+    assert 'Could not find dag spec with name pipeline.yaml' in str(
+        excinfo.value)
+
+
+def test_initializes_pipeline_with_name_if_exists(tmp_sample_project):
+    os.rename('pipeline.yaml', 'pipeline.serve.yaml')
+
+    assert ConcreteExporter('soopervisor.yaml', env_name='serve')
 
 
 # TODO: submit without adding first

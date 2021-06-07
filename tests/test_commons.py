@@ -335,7 +335,7 @@ def test_load_tasks_missing_remote_metadata(cmdr, tmp_fast_pipeline,
     assert args == args_expected
 
 
-def test_invalid_mode(cmdr):
+def test_invalid_mode(cmdr, tmp_fast_pipeline):
     with pytest.raises(ValueError) as excinfo:
         commons.load_tasks(cmdr=cmdr, mode='unknown')
 
