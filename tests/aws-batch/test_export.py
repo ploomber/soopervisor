@@ -1,5 +1,5 @@
 import os
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 import json
 from pathlib import Path
 
@@ -254,6 +254,9 @@ def monkeypatch_docker(monkeypatch):
 def test_export(mock_batch, monkeypatch_docker, monkeypatch,
                 backup_packaged_project, mode, args):
     Path('setup.py').unlink()
+    commander_mock = MagicMock()
+    monkeypatch.setattr(batch, 'Commander',
+                        lambda workspace, templates_path: commander_mock)
     boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
     monkeypatch.setattr(batch.boto3, 'client',
                         lambda name, region_name: boto3_mock)
@@ -269,7 +272,10 @@ def test_export(mock_batch, monkeypatch_docker, monkeypatch,
     # get jobs information
     jobs_info = mock_batch.describe_jobs(jobs=[job['jobId']
                                                for job in jobs])['jobs']
-    load_tasks_mock.assert_called_once_with(mode=mode)
+
+    load_tasks_mock.assert_called_once_with(cmdr=commander_mock.__enter__(),
+                                            name='train',
+                                            mode=mode)
 
     submitted = index_submit_job_by_task_name(
         boto3_mock.submit_job.call_args_list)
@@ -297,12 +303,13 @@ def test_export(mock_batch, monkeypatch_docker, monkeypatch,
         'fit': {'features'}
     }
 
+    entry = '--entry-point src/my_project/pipeline.yaml'
     assert commands == {
-        'get': ['ploomber', 'task', 'get'] + args,
-        'sepal-area': ['ploomber', 'task', 'sepal-area'] + args,
-        'petal-area': ['ploomber', 'task', 'petal-area'] + args,
-        'features': ['ploomber', 'task', 'features'] + args,
-        'fit': ['ploomber', 'task', 'fit'] + args
+        'get': ['ploomber', 'task', 'get', entry] + args,
+        'sepal-area': ['ploomber', 'task', 'sepal-area', entry] + args,
+        'petal-area': ['ploomber', 'task', 'petal-area', entry] + args,
+        'features': ['ploomber', 'task', 'features', entry] + args,
+        'fit': ['ploomber', 'task', 'fit', entry] + args
     }
 
 

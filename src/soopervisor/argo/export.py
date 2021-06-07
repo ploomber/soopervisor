@@ -45,22 +45,24 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
         Build and upload Docker image. Export Argo YAML spec.
         """
         with Commander(workspace=env_name,
-                       templates_path=('soopervisor', 'assets')) as e:
+                       templates_path=('soopervisor', 'assets')) as cmdr:
 
-            tasks, args = commons.load_tasks(mode=mode)
+            tasks, args = commons.load_tasks(cmdr=cmdr,
+                                             name=env_name,
+                                             mode=mode)
 
             if not tasks:
                 raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
 
-            pkg_name, target_image = docker.build(e,
+            pkg_name, target_image = docker.build(cmdr,
                                                   cfg,
                                                   env_name,
                                                   until=until,
                                                   skip_tests=skip_tests)
 
-            e.info('Generating Argo Workflows YAML spec')
+            cmdr.info('Generating Argo Workflows YAML spec')
             _make_argo_spec(tasks=tasks,
                             args=args,
                             env_name=env_name,
@@ -68,8 +70,8 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
                             pkg_name=pkg_name,
                             target_image=target_image)
 
-            e.info('Submitting jobs to Argo Workflows')
-            e.success('Done. Submitted to Argo Workflows')
+            cmdr.info('Submitting jobs to Argo Workflows')
+            cmdr.success('Done. Submitted to Argo Workflows')
 
 
 # TODO: delete

@@ -1,3 +1,4 @@
+import os
 import tarfile
 import subprocess
 from pathlib import Path
@@ -286,19 +287,23 @@ def dag_build():
 
 
 @pytest.mark.parametrize('mode, tasks_expected, args_expected', [
-    ['incremental', {}, []],
-    ['regular', {
-        'root': [],
-        'another': ['root']
-    }, []],
-    ['force', {
-        'root': [],
-        'another': ['root']
-    }, ['--force']],
+    ['incremental', {}, ['--entry-point pipeline.yaml']],
+    [
+        'regular', {
+            'root': [],
+            'another': ['root']
+        }, ['--entry-point pipeline.yaml']
+    ],
+    [
+        'force', {
+            'root': [],
+            'another': ['root']
+        }, ['--entry-point pipeline.yaml', '--force']
+    ],
 ])
-def test_load_tasks(tmp_fast_pipeline, add_current_to_sys_path, dag_build,
-                    mode, tasks_expected, args_expected):
-    tasks, args = commons.load_tasks(mode=mode)
+def test_load_tasks(cmdr, tmp_fast_pipeline, add_current_to_sys_path,
+                    dag_build, mode, tasks_expected, args_expected):
+    tasks, args = commons.load_tasks(cmdr=cmdr, mode=mode)
     assert tasks == tasks_expected
     assert args == args_expected
 
@@ -306,28 +311,46 @@ def test_load_tasks(tmp_fast_pipeline, add_current_to_sys_path, dag_build,
 @pytest.mark.parametrize('mode, tasks_expected, args_expected', [
     ['incremental', {
         'another': []
-    }, []],
-    ['regular', {
-        'root': [],
-        'another': ['root']
-    }, []],
-    ['force', {
-        'root': [],
-        'another': ['root']
-    }, ['--force']],
+    }, ['--entry-point pipeline.yaml']],
+    [
+        'regular', {
+            'root': [],
+            'another': ['root']
+        }, ['--entry-point pipeline.yaml']
+    ],
+    [
+        'force', {
+            'root': [],
+            'another': ['root']
+        }, ['--entry-point pipeline.yaml', '--force']
+    ],
 ])
-def test_load_tasks_missing_remote_metadata(tmp_fast_pipeline,
+def test_load_tasks_missing_remote_metadata(cmdr, tmp_fast_pipeline,
                                             add_current_to_sys_path, dag_build,
                                             mode, tasks_expected,
                                             args_expected):
     Path('remote', 'out', 'another').unlink()
-    tasks, args = commons.load_tasks(mode=mode)
+    tasks, args = commons.load_tasks(cmdr=cmdr, mode=mode)
     assert tasks == tasks_expected
     assert args == args_expected
 
 
-def test_invalid_mode():
+def test_invalid_mode(cmdr):
     with pytest.raises(ValueError) as excinfo:
-        commons.load_tasks(mode='unknown')
+        commons.load_tasks(cmdr=cmdr, mode='unknown')
 
     assert 'mode must be one of' in str(excinfo.value)
+
+
+def test_loads_pipeline_with_name(cmdr, tmp_fast_pipeline):
+    os.rename('pipeline.yaml', 'pipeline.train.yaml')
+    _, args = commons.load_tasks(cmdr, name='train')
+    assert args == ['--entry-point pipeline.train.yaml']
+
+
+def test_loads_pipeline_in_package_with_name(cmdr, backup_packaged_project):
+    os.rename(Path('src', 'my_project', 'pipeline.yaml'),
+              Path('src', 'my_project', 'pipeline.train.yaml'))
+    _, args = commons.load_tasks(cmdr, name='train')
+
+    assert args == ['--entry-point src/my_project/pipeline.train.yaml']

@@ -60,7 +60,7 @@ class AirflowExporter(abc.AbstractExporter):
         """
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
-            tasks, args = commons.load_tasks(mode=mode)
+            tasks, args = commons.load_tasks(cmdr=e, name=env_name, mode=mode)
 
             if not tasks:
                 raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '

@@ -2,7 +2,7 @@ import os
 import subprocess
 from pathlib import Path
 from copy import copy
-from unittest.mock import Mock
+from unittest.mock import Mock, ANY
 
 import yaml
 import pytest
@@ -65,7 +65,7 @@ def test_export(mock_docker_calls, backup_packaged_project, monkeypatch, mode,
     spec = yaml.safe_load(yaml_str)
     dag = DAGSpec.find().to_dag()
 
-    load_tasks_mock.assert_called_once_with(mode=mode)
+    load_tasks_mock.assert_called_once_with(cmdr=ANY, name='serve', mode=mode)
 
     # make sure the "source" key is represented in literal style
     # (https://yaml-multiline.info/) to make the generated script more readable
@@ -74,8 +74,9 @@ def test_export(mock_docker_calls, backup_packaged_project, monkeypatch, mode,
     run_task_template = spec['spec']['templates'][0]
     tasks = spec['spec']['templates'][1]['dag']['tasks']
 
-    assert run_task_template['script'][
-        'source'] == 'ploomber task {{inputs.parameters.task_name}}' + args
+    cmd = ('ploomber task {{inputs.parameters.task_name}}'
+           ' --entry-point src/my_project/pipeline.yaml')
+    assert run_task_template['script']['source'] == cmd + args
 
     assert spec['spec']['volumes'] == []
     assert run_task_template['script']['volumeMounts'] == []

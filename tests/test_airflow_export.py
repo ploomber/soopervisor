@@ -1,7 +1,7 @@
 import os
 import subprocess
 import importlib
-from unittest.mock import Mock
+from unittest.mock import Mock, ANY
 
 from airflow import DAG
 from airflow.providers.docker.operators.docker import DockerOperator
@@ -96,7 +96,9 @@ def test_airflow_export_sample_project(monkeypatch, mock_docker_calls,
     mod = importlib.import_module('sample_project')
     dag = mod.dag
 
-    load_tasks_mock.assert_called_once_with(mode='incremental')
+    load_tasks_mock.assert_called_once_with(cmdr=ANY,
+                                            name='serve',
+                                            mode='incremental')
     assert isinstance(dag, DAG)
     assert set(dag.task_dict) == {'clean', 'plot', 'raw'}
     assert set(type(t) for t in dag.tasks) == {DockerOperator}
@@ -160,10 +162,12 @@ def test_export_airflow_callables(monkeypatch, mock_docker_calls_callables,
             }
 
     # check generated scripts
-    assert dag.task_dict['get'].command == 'ploomber task get' + args
-    assert dag.task_dict['features'].command == 'ploomber task features' + args
-    assert dag.task_dict['fit'].command == 'ploomber task fit' + args
-    assert dag.task_dict['join'].command == 'ploomber task join' + args
+    td = dag.task_dict
+    template = 'ploomber task {} --entry-point pipeline.yaml'
+    assert td['get'].command == template.format('get') + args
+    assert td['features'].command == template.format('features') + args
+    assert td['fit'].command == template.format('fit') + args
+    assert td['join'].command == template.format('join') + args
 
 
 def test_stops_if_no_tasks(monkeypatch, mock_docker_calls, tmp_sample_project,

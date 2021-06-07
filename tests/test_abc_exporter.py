@@ -47,7 +47,7 @@ def test_error_if_dag_fails_to_initialize(tmp_sample_project):
     with pytest.raises(DAGSpecInitializationError) as excinfo:
         ConcreteExporter('soopervisor.yaml', env_name='some_env')
 
-    assert str(excinfo.value) == 'Error initializing DAG from pipeline.yaml'
+    assert 'Error initializing DAG from' in str(excinfo.value)
 
 
 # TODO: submit without adding first

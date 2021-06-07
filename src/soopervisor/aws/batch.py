@@ -63,21 +63,23 @@ class AWSBatchExporter(abc.AbstractExporter):
     @requires(['boto3'], name='AWSBatchExporter')
     def _export(cfg, env_name, mode, until, skip_tests):
         with Commander(workspace=env_name,
-                       templates_path=('soopervisor', 'assets')) as e:
-            tasks, args = commons.load_tasks(mode=mode)
+                       templates_path=('soopervisor', 'assets')) as cmdr:
+            tasks, args = commons.load_tasks(cmdr=cmdr,
+                                             name=env_name,
+                                             mode=mode)
 
             if not tasks:
                 raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
 
-            pkg_name, remote_name = docker.build(e,
+            pkg_name, remote_name = docker.build(cmdr,
                                                  cfg,
                                                  env_name,
                                                  until=until,
                                                  skip_tests=skip_tests)
 
-            e.info('Submitting jobs to AWS Batch')
+            cmdr.info('Submitting jobs to AWS Batch')
 
             submit_dag(tasks=tasks,
                        args=args,
@@ -86,9 +88,9 @@ class AWSBatchExporter(abc.AbstractExporter):
                        job_queue=cfg.job_queue,
                        container_properties=cfg.container_properties,
                        region_name=cfg.region_name,
-                       cmdr=e)
+                       cmdr=cmdr)
 
-            e.success('Done. Submitted to AWS Batch')
+            cmdr.success('Done. Submitted to AWS Batch')
 
 
 def submit_dag(
