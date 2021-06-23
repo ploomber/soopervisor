@@ -253,7 +253,6 @@ def monkeypatch_docker(monkeypatch):
 )
 def test_export(mock_batch, monkeypatch_docker, monkeypatch,
                 backup_packaged_project, mode, args):
-    Path('setup.py').unlink()
     commander_mock = MagicMock()
     monkeypatch.setattr(batch, 'Commander',
                         lambda workspace, templates_path: commander_mock)
@@ -327,7 +326,6 @@ def test_stops_if_no_tasks(monkeypatch, backup_packaged_project, capsys):
 
 def test_skip_tests(mock_batch, monkeypatch_docker, monkeypatch,
                     backup_packaged_project, capsys):
-    # Path('setup.py').unlink()
     boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
     monkeypatch.setattr(batch.boto3, 'client',
                         lambda name, region_name: boto3_mock)
@@ -339,3 +337,16 @@ def test_skip_tests(mock_batch, monkeypatch_docker, monkeypatch,
     captured = capsys.readouterr()
     assert 'Testing image' not in captured.out
     assert 'Testing File client' not in captured.out
+
+
+def test_dockerfile_when_no_setup_py(mock_batch, monkeypatch_docker,
+                                     monkeypatch, tmp_sample_project):
+    boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
+    monkeypatch.setattr(batch.boto3, 'client',
+                        lambda name, region_name: boto3_mock)
+
+    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
+    exporter.add()
+
+    dockerfile = Path('train', 'Dockerfile').read_text()
+    assert 'RUN pip install *.tar.gz --no-deps' not in dockerfile

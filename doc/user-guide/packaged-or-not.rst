@@ -20,7 +20,7 @@ good option for small projects. To create one:
 Packaged
 --------
 
-Packaged projects have more structured and require more configuration files.
+Packaged projects have more structure and require more configuration files.
 The main advantage is they allow you to organize your work better.
 
 For example, if you have some Python modules that you reuse in several files,

@@ -344,6 +344,10 @@ def test_invalid_mode(cmdr, tmp_fast_pipeline):
 
 def test_loads_pipeline_with_name(cmdr, tmp_fast_pipeline):
     os.rename('pipeline.yaml', 'pipeline.train.yaml')
+
+    # we need this to set our project root
+    Path('pipeline.yaml').touch()
+
     _, args = commons.load_tasks(cmdr, name='train')
     assert args == ['--entry-point pipeline.train.yaml']
 

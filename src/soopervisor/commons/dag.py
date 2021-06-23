@@ -3,7 +3,7 @@ Loading dags
 """
 from ploomber.constants import TaskStatus
 from ploomber.spec import DAGSpec
-from ploomber.exceptions import DAGSpecNotFound
+from ploomber.exceptions import DAGSpecInvalidError
 
 from soopervisor.enum import Mode
 
@@ -16,18 +16,18 @@ def find_spec(cmdr, name):
     cmdr.info('Loading DAG')
 
     try:
-        spec = DAGSpec._find_relative(name=name)
+        spec, relative_path = DAGSpec._find_relative(name=name)
         cmdr.print(f'Found {spec.path!s}. Loading...')
-    except DAGSpecNotFound:
+    except DAGSpecInvalidError:
         cmdr.print(f'No pipeline.{name}.yaml found, '
                    'looking for pipeline.yaml instead')
         spec = None
 
     if spec is None:
-        spec = DAGSpec._find_relative()
+        spec, relative_path = DAGSpec._find_relative()
         cmdr.print(f'Found {spec.path!s}. Loading...')
 
-    return spec
+    return spec, relative_path
 
 
 def load_tasks(cmdr, name=None, mode='incremental'):
@@ -60,7 +60,7 @@ def load_tasks(cmdr, name=None, mode='incremental'):
     """
     valid = Mode.get_values()
 
-    spec = find_spec(cmdr=cmdr, name=name)
+    spec, relative_path = find_spec(cmdr=cmdr, name=name)
     dag = spec.to_dag()
 
     if mode not in valid:
@@ -86,7 +86,7 @@ def load_tasks(cmdr, name=None, mode='incremental'):
     for t in tasks:
         out[t] = [name for name in dag[t].upstream.keys() if name in tasks]
 
-    args = [f'--entry-point {spec.path}']
+    args = [f'--entry-point {relative_path}']
 
     if mode == 'force':
         args.append('--force')

@@ -119,7 +119,7 @@ class AbstractExporter(abc.ABC):
         # TODO: _export also has to find_spec, maybe load it here and
         # pass it directly to _export?
         with Commander() as cmdr:
-            spec = commons.find_spec(cmdr=cmdr, name=env_name)
+            spec, _ = commons.find_spec(cmdr=cmdr, name=env_name)
 
         self._dag = spec.to_dag().render(force=True, show_progress=False)
 

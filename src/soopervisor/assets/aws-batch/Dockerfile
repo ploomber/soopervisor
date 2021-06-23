@@ -16,5 +16,7 @@ WORKDIR /project/
 # extract to get any config files at the root
 RUN tar --strip-components=1 -zxvf *.tar.gz
 
+{% if setup_py %}
 # install from the source distribution
 RUN pip install *.tar.gz --no-deps
+{% endif %}

@@ -3,6 +3,9 @@ CHANGELOG
 
 0.4.3dev
 --------
+* load_tasks tries to initialize a spec matching the target env name (e.g., ``training`` target looks for ``pipeline.train.yaml``
+* Compatibility fixes with Ploomber 0.12
+* Fixes an error that caused AWS Batch Dockerfile to include a line to install project as a package even if there was no ``setup.py`` file
 
 0.4.2 (2021-06-04)
 ------------------

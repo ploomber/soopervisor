@@ -50,7 +50,8 @@ class AWSBatchExporter(abc.AbstractExporter):
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
             e.copy_template('aws-batch/Dockerfile',
-                            conda=Path('environment.lock.yml').exists())
+                            conda=Path('environment.lock.yml').exists(),
+                            setup_py=Path('setup.py').exists())
             e.success('Done')
             e.print(
                 f'Fill in the configuration in the {env_name!r} '
