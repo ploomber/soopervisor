@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.4.3dev
---------
+0.5 (2021-07-09)
+----------------
 * load_tasks tries to initialize a spec matching the target env name (e.g., ``training`` target looks for ``pipeline.train.yaml``
 * Compatibility fixes with Ploomber (requires >=0.12.1)
 * Fixes an error that caused Dockerfile to include a line to install project as a package even if there was no ``setup.py`` file
