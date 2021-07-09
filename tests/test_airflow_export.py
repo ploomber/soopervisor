@@ -2,6 +2,7 @@ import os
 import subprocess
 import importlib
 from unittest.mock import Mock, ANY
+from pathlib import Path
 
 from airflow import DAG
 from airflow.providers.docker.operators.docker import DockerOperator
@@ -200,3 +201,13 @@ def test_skip_tests(monkeypatch, mock_docker_calls, tmp_sample_project,
     captured = capsys.readouterr()
     assert 'Testing image' not in captured.out
     assert 'Testing File client' not in captured.out
+
+
+def test_dockerfile_when_no_setup_py(tmp_sample_project, no_sys_modules_cache):
+    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
+                               env_name='serve')
+
+    exporter.add()
+
+    dockerfile = Path('serve', 'Dockerfile').read_text()
+    assert 'RUN pip install *.tar.gz --no-deps' not in dockerfile
