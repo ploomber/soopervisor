@@ -42,7 +42,13 @@ def test_add(tmp_sample_project):
     assert Path('serve', 'Dockerfile').exists()
 
 
-# TODO: test with tmp_sample_project (non-packaged-project)
+def test_dockerfile_when_no_setup_py(tmp_sample_project):
+    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
+                                     env_name='serve')
+    exporter.add()
+
+    dockerfile = Path('serve', 'Dockerfile').read_text()
+    assert 'RUN pip install *.tar.gz --no-deps' not in dockerfile
 
 
 @pytest.mark.parametrize('mode, args', [
