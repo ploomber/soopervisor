@@ -29,7 +29,7 @@ REQUIRES = [
     'pydantic',
     'Jinja2',
     'pyyaml',
-    'ploomber>=0.9.3',
+    'ploomber>=0.12.1',
 ]
 
 AWS = ['boto3']
