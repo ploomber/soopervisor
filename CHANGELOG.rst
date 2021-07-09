@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+0.5.1dev
+--------
+
 0.5 (2021-07-09)
 ----------------
 * load_tasks tries to initialize a spec matching the target env name (e.g., ``training`` target looks for ``pipeline.train.yaml``
