@@ -38,7 +38,7 @@ def test_error_if_missing_environment_lock_yml(tmp_sample_project):
     with pytest.raises(ClickException) as excinfo:
         ConcreteExporter('soopervisor.yaml', env_name='some_env')
 
-    assert 'Expected environment.lock.yml or requirements.txt.lock' in str(
+    assert 'Expected requirements.txt.lock or environment.lock.yml' in str(
         excinfo.value)
 
 

@@ -134,11 +134,7 @@ class AbstractExporter(abc.ABC):
         Verify project has the right structure before running the script.
         This runs as a sanity check in the development machine
         """
-        if not Path('environment.lock.yml').exists() and not Path(
-                'requirements.lock.txt').exists():
-            raise click.ClickException('Expected environment.lock.yml or '
-                                       'requirements.txt.lock at the root '
-                                       'directory. Add one.')
+        commons.dependencies.check_lock_files_exist()
 
     def add(self):
         # check that env_name folder does not exist

@@ -10,6 +10,7 @@ from click.exceptions import ClickException
 from soopervisor.aws.util import warn_if_not_installed
 from soopervisor.aws.config import AWSLambdaConfig
 from soopervisor.commons.conda import generate_reqs_txt_from_env_yml
+from soopervisor import commons
 from soopervisor import abc
 
 
@@ -75,23 +76,21 @@ class AWSLambdaExporter(abc.AbstractExporter):
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
 
-            if not Path('requirements.lock.txt').exists():
-                if Path('environment.lock.yml').exists():
-                    e.warn_on_exit(
-                        'Missing requirements.lock.txt file. '
-                        'Once was created from the pip '
-                        'section in the environment.lock.yml file but this '
-                        'may not work if there are missing dependencies. Add '
-                        'one or ensure environment.lock.yml includes all pip '
-                        'dependencies.')
+            commons.dependencies.check_lock_files_exist()
 
-                    generate_reqs_txt_from_env_yml(
-                        'environment.lock.yml', output='requirements.lock.txt')
-                    e.rm_on_exit('requirements.lock.txt')
-                else:
-                    raise ClickException('Expected environment.lock.yml or '
-                                         'requirements.txt.lock at the root '
-                                         'directory. Add one.')
+            if not Path('requirements.lock.txt').exists() and Path(
+                    'environment.lock.yml').exists():
+                e.warn_on_exit(
+                    'Missing requirements.lock.txt file. '
+                    'Once was created from the pip '
+                    'section in the environment.lock.yml file but this '
+                    'may not work if there are missing dependencies. Add '
+                    'one or ensure environment.lock.yml includes all pip '
+                    'dependencies.')
+
+                generate_reqs_txt_from_env_yml('environment.lock.yml',
+                                               output='requirements.lock.txt')
+                e.rm_on_exit('requirements.lock.txt')
 
             e.cp('requirements.lock.txt')
 

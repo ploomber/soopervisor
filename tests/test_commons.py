@@ -10,7 +10,7 @@ from ploomber.spec import DAGSpec
 from ploomber.executors import Serial
 from ploomber.io._commander import Commander
 
-from soopervisor.commons import source, conda
+from soopervisor.commons import source, conda, dependencies
 from soopervisor import commons
 
 
@@ -358,3 +358,13 @@ def test_loads_pipeline_in_package_with_name(cmdr, backup_packaged_project):
     _, args = commons.load_tasks(cmdr, name='train')
 
     assert args == ['--entry-point src/my_project/pipeline.train.yaml']
+
+
+def test_check_lock_files_exist(tmp_empty):
+
+    with pytest.raises(ClickException) as excinfo:
+        dependencies.check_lock_files_exist()
+
+    expected = ('Expected requirements.txt.lock or environment.lock.yml at '
+                'the root directory')
+    assert expected in str(excinfo.value)
