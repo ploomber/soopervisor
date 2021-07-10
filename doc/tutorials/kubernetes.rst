@@ -34,7 +34,7 @@ We first create a local Kubernetes cluster and install Argo:
 
     # install argo
     kubectl create ns argo
-    kubectl apply -n argo -f https://raw.githubusercontent.com/argoproj/argo/stable/manifests/quick-start-postgres.yaml
+    kubectl apply -n argo -f https://raw.githubusercontent.com/argoproj/argo-workflows/stable/manifests/quick-start-postgres.yaml
 
 
 Submit a sample workflow to make sure Argo is working:
@@ -172,7 +172,7 @@ Create a cluster and install Argo:
 
     # install argo
     kubectl create ns argo
-    kubectl apply -n argo -f https://raw.githubusercontent.com/argoproj/argo/stable/manifests/quick-start-postgres.yaml
+    kubectl apply -n argo -f https://raw.githubusercontent.com/argoproj/argo-workflows/stable/manifests/quick-start-postgres.yaml
 
     # create storage bucket (choose whatever name you want)
     gsutil mb gs://YOUR-BUCKET-NAME
