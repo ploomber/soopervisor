@@ -30,6 +30,10 @@ REQUIRES = [
     'Jinja2',
     'pyyaml',
     'ploomber>=0.12.1',
+    # sdist is generated using python -m build, so adding this here.
+    # I can remoe it if I change all references to use python setup.py sdist
+    # instead
+    'build',
 ]
 
 AWS = ['boto3']
