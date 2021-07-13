@@ -300,6 +300,13 @@ You may keep track of execution by opening the UI. Check out the bucket to see o
 Optional: Mounting a shared disk
 ********************************
 
+.. note::
+
+    If you use a shared disk instead of storing artifacts in S3 or Google Cloud
+    Storage, you must execute the pipeline with the ``--skip-tests`` flag. e.g.,
+    ``soopervisor export training --skip-tests``, otherwise the command will
+    fail if your project does not have a remote storage client configured.
+
 In the example, we configured the ``pipeline.yaml`` file to use Google Cloud
 Storage to store artifacts, this serves two purposes: 1) Make artifacts
 available to us upon execution, and 2) Make artifacts available to dowstream
