@@ -3,6 +3,12 @@ CHANGELOG
 
 0.5.1dev
 --------
+* Better error message when lock files do not exist
+* Documentation note on when using shared disks (must pass ``--skip-tests``)
+* Adds ``build`` as a dependency
+* Check for lock files before creating ``soopervisor.yaml``
+* Fixes ``docker.build`` issue that caused a ``pipeline.yaml`` to be used even when the environment required one with another name
+* Fixes error that caused AWS batch args to be passed as a single str
 
 0.5 (2021-07-09)
 ----------------
