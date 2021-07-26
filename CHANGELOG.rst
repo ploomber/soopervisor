@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.5.1dev
---------
+0.5.1 (2021-07-26)
+------------------
 * Better error message when lock files do not exist
 * Documentation note on when using shared disks (must pass ``--skip-tests``)
 * Adds ``build`` as a dependency
