@@ -74,13 +74,11 @@ class AWSBatchExporter(abc.AbstractExporter):
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
 
-            _, entry_point = cli_args[0].split(' ')
-
             pkg_name, remote_name = docker.build(cmdr,
                                                  cfg,
                                                  env_name,
                                                  until=until,
-                                                 entry_point=entry_point,
+                                                 entry_point=cli_args[1],
                                                  skip_tests=skip_tests)
 
             cmdr.info('Submitting jobs to AWS Batch')

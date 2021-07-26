@@ -318,13 +318,13 @@ def test_export(mock_batch, monkeypatch_docker, monkeypatch,
         'fit': {'features'}
     }
 
-    entry = '--entry-point src/my_project/pipeline.yaml'
+    entry = ['--entry-point', 'src/my_project/pipeline.yaml']
     assert commands == {
-        'get': ['ploomber', 'task', 'get', entry] + args,
-        'sepal-area': ['ploomber', 'task', 'sepal-area', entry] + args,
-        'petal-area': ['ploomber', 'task', 'petal-area', entry] + args,
-        'features': ['ploomber', 'task', 'features', entry] + args,
-        'fit': ['ploomber', 'task', 'fit', entry] + args
+        'get': ['ploomber', 'task', 'get'] + entry + args,
+        'sepal-area': ['ploomber', 'task', 'sepal-area'] + entry + args,
+        'petal-area': ['ploomber', 'task', 'petal-area'] + entry + args,
+        'features': ['ploomber', 'task', 'features'] + entry + args,
+        'fit': ['ploomber', 'task', 'fit'] + entry + args
     }
 
 

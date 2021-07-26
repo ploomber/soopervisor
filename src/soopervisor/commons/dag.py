@@ -86,7 +86,7 @@ def load_tasks(cmdr, name=None, mode='incremental'):
     for t in tasks:
         out[t] = [name for name in dag[t].upstream.keys() if name in tasks]
 
-    args = [f'--entry-point {relative_path}']
+    args = ['--entry-point', relative_path]
 
     if mode == 'force':
         args.append('--force')

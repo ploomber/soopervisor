@@ -287,18 +287,18 @@ def dag_build():
 
 
 @pytest.mark.parametrize('mode, tasks_expected, args_expected', [
-    ['incremental', {}, ['--entry-point pipeline.yaml']],
+    ['incremental', {}, ['--entry-point', 'pipeline.yaml']],
     [
         'regular', {
             'root': [],
             'another': ['root']
-        }, ['--entry-point pipeline.yaml']
+        }, ['--entry-point', 'pipeline.yaml']
     ],
     [
         'force', {
             'root': [],
             'another': ['root']
-        }, ['--entry-point pipeline.yaml', '--force']
+        }, ['--entry-point', 'pipeline.yaml', '--force']
     ],
 ])
 def test_load_tasks(cmdr, tmp_fast_pipeline, add_current_to_sys_path,
@@ -311,18 +311,18 @@ def test_load_tasks(cmdr, tmp_fast_pipeline, add_current_to_sys_path,
 @pytest.mark.parametrize('mode, tasks_expected, args_expected', [
     ['incremental', {
         'another': []
-    }, ['--entry-point pipeline.yaml']],
+    }, ['--entry-point', 'pipeline.yaml']],
     [
         'regular', {
             'root': [],
             'another': ['root']
-        }, ['--entry-point pipeline.yaml']
+        }, ['--entry-point', 'pipeline.yaml']
     ],
     [
         'force', {
             'root': [],
             'another': ['root']
-        }, ['--entry-point pipeline.yaml', '--force']
+        }, ['--entry-point', 'pipeline.yaml', '--force']
     ],
 ])
 def test_load_tasks_missing_remote_metadata(cmdr, tmp_fast_pipeline,
@@ -349,7 +349,7 @@ def test_loads_pipeline_with_name(cmdr, tmp_fast_pipeline):
     Path('pipeline.yaml').touch()
 
     _, args = commons.load_tasks(cmdr, name='train')
-    assert args == ['--entry-point pipeline.train.yaml']
+    assert args == ['--entry-point', 'pipeline.train.yaml']
 
 
 def test_loads_pipeline_in_package_with_name(cmdr, backup_packaged_project):
@@ -357,7 +357,7 @@ def test_loads_pipeline_in_package_with_name(cmdr, backup_packaged_project):
               Path('src', 'my_project', 'pipeline.train.yaml'))
     _, args = commons.load_tasks(cmdr, name='train')
 
-    assert args == ['--entry-point src/my_project/pipeline.train.yaml']
+    assert args == ['--entry-point', 'src/my_project/pipeline.train.yaml']
 
 
 def test_check_lock_files_exist(tmp_empty):

@@ -57,13 +57,11 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
 
-            _, entry_point = args[0].split(' ')
-
             pkg_name, target_image = docker.build(cmdr,
                                                   cfg,
                                                   env_name,
                                                   until=until,
-                                                  entry_point=entry_point,
+                                                  entry_point=args[1],
                                                   skip_tests=skip_tests)
 
             cmdr.info('Generating Argo Workflows YAML spec')
