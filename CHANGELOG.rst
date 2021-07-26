@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+0.5.2dev
+--------
+
 0.5.1 (2021-07-26)
 ------------------
 * Better error message when lock files do not exist
