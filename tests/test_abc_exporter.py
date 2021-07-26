@@ -40,6 +40,7 @@ def test_error_if_missing_environment_lock_yml(tmp_sample_project):
 
     assert 'Expected requirements.txt.lock or environment.lock.yml' in str(
         excinfo.value)
+    assert not Path('soopervisor.yaml').exists()
 
 
 def test_error_if_dag_fails_to_initialize(tmp_sample_project):

@@ -107,6 +107,9 @@ class AbstractExporter(abc.ABC):
     CONFIG_CLASS = None
 
     def __init__(self, path_to_config, env_name):
+        # ensure that the project and the config make sense
+        self.validate()
+
         # initialize configuration and a few checks on it
         self._cfg = self.CONFIG_CLASS.from_file_with_root_key(
             path_to_config=path_to_config,
@@ -122,9 +125,6 @@ class AbstractExporter(abc.ABC):
             spec, _ = commons.find_spec(cmdr=cmdr, name=env_name)
 
         self._dag = spec.to_dag().render(force=True, show_progress=False)
-
-        # ensure that the project and the config make sense
-        self.validate()
 
         # validate specific details about the target
         self._validate(self._cfg, self._dag, self._env_name)
