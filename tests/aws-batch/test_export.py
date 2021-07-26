@@ -2,6 +2,7 @@ import os
 from unittest.mock import MagicMock, Mock
 import json
 from pathlib import Path
+import shutil
 
 import yaml
 import pytest
@@ -224,10 +225,7 @@ def index_commands_by_name(submitted):
     }
 
 
-@pytest.fixture
-def monkeypatch_docker(monkeypatch):
-    cmd = ('from ploomber.spec import '
-           'DAGSpec; print("File" in DAGSpec.find().to_dag().clients)')
+def _monkeypatch_docker(monkeypatch, cmd):
     tester = _commander_tester.CommanderTester(
         run=[
             ('python', '-m', 'build', '--sdist'),
@@ -241,6 +239,24 @@ def monkeypatch_docker(monkeypatch):
     subprocess_mock.check_call.side_effect = tester
     subprocess_mock.check_output.side_effect = tester
     monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
+
+    return tester
+
+
+@pytest.fixture
+def monkeypatch_docker(monkeypatch):
+    cmd = ('from ploomber.spec import '
+           'DAGSpec; print("File" in '
+           'DAGSpec("src/my_project/pipeline.yaml").to_dag().clients)')
+    yield _monkeypatch_docker(monkeypatch, cmd)
+
+
+@pytest.fixture
+def monkeypatch_serve_docker(monkeypatch):
+    cmd = ('from ploomber.spec import '
+           'DAGSpec; print("File" in '
+           'DAGSpec("src/my_project/pipeline.serve.yaml").to_dag().clients)')
+    yield _monkeypatch_docker(monkeypatch, cmd)
 
 
 @pytest.mark.parametrize(
@@ -313,7 +329,7 @@ def test_export(mock_batch, monkeypatch_docker, monkeypatch,
 
 
 def test_stops_if_no_tasks(monkeypatch, backup_packaged_project, capsys):
-    load_tasks_mock = Mock(return_value=([], []))
+    load_tasks_mock = Mock(return_value=([], ['--entry-point pipeline.yaml']))
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
     exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
@@ -337,6 +353,25 @@ def test_skip_tests(mock_batch, monkeypatch_docker, monkeypatch,
     captured = capsys.readouterr()
     assert 'Testing image' not in captured.out
     assert 'Testing File client' not in captured.out
+
+
+# TODO: check with non-packaged project
+def test_checks_the_right_spec(mock_batch, monkeypatch_serve_docker,
+                               monkeypatch, backup_packaged_project):
+    shutil.copy('src/my_project/pipeline.yaml',
+                'src/my_project/pipeline.serve.yaml')
+
+    boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
+    monkeypatch.setattr(batch.boto3, 'client',
+                        lambda name, region_name: boto3_mock)
+
+    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'serve')
+    exporter.add()
+    exporter.export(mode='incremental')
+
+    expected = ('docker', 'run', 'my_project:0.1dev', 'ploomber', 'status',
+                '--entry-point', 'src/my_project/pipeline.serve.yaml')
+    assert monkeypatch_serve_docker.calls[2] == expected
 
 
 def test_dockerfile_when_no_setup_py(mock_batch, monkeypatch_docker,

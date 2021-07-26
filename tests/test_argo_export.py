@@ -1,3 +1,4 @@
+import shutil
 import os
 import subprocess
 from pathlib import Path
@@ -15,10 +16,7 @@ from soopervisor.argo.export import ArgoWorkflowsExporter, commons
 from soopervisor import cli
 
 
-@pytest.fixture
-def mock_docker_calls(monkeypatch):
-    cmd = ('from ploomber.spec import '
-           'DAGSpec; print("File" in DAGSpec.find().to_dag().clients)')
+def _mock_docker_calls(monkeypatch, cmd):
     tester = _commander_tester.CommanderTester(
         run=[
             ('python', '-m', 'build', '--sdist'),
@@ -32,6 +30,26 @@ def mock_docker_calls(monkeypatch):
     subprocess_mock.check_call.side_effect = tester
     subprocess_mock.check_output.side_effect = tester
     monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
+
+    return tester
+
+
+@pytest.fixture
+def mock_docker_calls(monkeypatch):
+    cmd = ('from ploomber.spec import '
+           'DAGSpec; print("File" in '
+           'DAGSpec("src/my_project/pipeline.yaml").to_dag().clients)')
+    tester = _mock_docker_calls(monkeypatch, cmd)
+    yield tester
+
+
+@pytest.fixture
+def mock_docker_calls_serve(monkeypatch):
+    cmd = ('from ploomber.spec import '
+           'DAGSpec; print("File" in '
+           'DAGSpec("src/my_project/pipeline.serve.yaml").to_dag().clients)')
+    tester = _mock_docker_calls(monkeypatch, cmd)
+    yield tester
 
 
 def test_add(tmp_sample_project):
@@ -211,3 +229,19 @@ def test_skip_tests(mock_docker_calls, backup_packaged_project, monkeypatch,
     captured = capsys.readouterr()
     assert 'Testing image' not in captured.out
     assert 'Testing File client' not in captured.out
+
+
+# TODO: check with non-packaged project
+def test_checks_the_right_spec(mock_docker_calls_serve,
+                               backup_packaged_project, monkeypatch):
+    shutil.copy('src/my_project/pipeline.yaml',
+                'src/my_project/pipeline.serve.yaml')
+
+    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
+                                     env_name='serve')
+    exporter.add()
+    exporter.export(mode='incremental')
+
+    expected = ('docker', 'run', 'my_project:0.1dev', 'ploomber', 'status',
+                '--entry-point', 'src/my_project/pipeline.serve.yaml')
+    assert mock_docker_calls_serve.calls[2] == expected

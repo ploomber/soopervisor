@@ -68,8 +68,15 @@ class AirflowExporter(abc.AbstractExporter):
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
 
+            _, entry_point = args[0].split(' ')
+
             pkg_name, target_image = commons.docker.build(
-                e, cfg, env_name, until=until, skip_tests=skip_tests)
+                e,
+                cfg,
+                env_name,
+                until=until,
+                entry_point=entry_point,
+                skip_tests=skip_tests)
 
             dag_dict = generate_airflow_spec(tasks, args, target_image)
 

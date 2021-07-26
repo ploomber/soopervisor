@@ -6,7 +6,7 @@ from ploomber.io._commander import CommanderStop
 from soopervisor.commons import source, dependencies
 
 
-def build(e, cfg, name, until, skip_tests=False):
+def build(e, cfg, name, until, entry_point, skip_tests=False):
     """Build a docker image
 
     Parameters
@@ -22,6 +22,9 @@ def build(e, cfg, name, until, skip_tests=False):
 
     until : str
         Stop after certain starge
+
+    entry_point : str
+        Entry point to use path/to/pipeline.yaml
 
     skip_tests : bool, default=False
         Skip image testing (check dag loading and File.client configuration)
@@ -87,6 +90,8 @@ def build(e, cfg, name, until, skip_tests=False):
               image_local,
               'ploomber',
               'status',
+              '--entry-point',
+              entry_point,
               description='Testing image',
               error_message='Error while testing your docker image with',
               hint=f'Use "docker run -it {image_local} /bin/bash" to '
@@ -94,7 +99,9 @@ def build(e, cfg, name, until, skip_tests=False):
 
         # check that the pipeline in the image has a configured File.client
         test_cmd = ('from ploomber.spec import DAGSpec; '
-                    'print("File" in DAGSpec.find().to_dag().clients)')
+                    f'print("File" in DAGSpec("{entry_point}")'
+                    '.to_dag().clients)')
+
         e.run('docker',
               'run',
               image_local,

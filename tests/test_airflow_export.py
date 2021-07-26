@@ -1,3 +1,4 @@
+import shutil
 import os
 import subprocess
 import importlib
@@ -20,19 +21,42 @@ def git_init():
     subprocess.check_call(['git', 'commit', '-m', 'commit'])
 
 
-@pytest.fixture
-def mock_docker_calls(monkeypatch):
-    cmd = ('from ploomber.spec import '
-           'DAGSpec; print("File" in DAGSpec.find().to_dag().clients)')
-    tester = _commander_tester.CommanderTester(return_value={
-        ('docker', 'run', 'sample_project:latest', 'python', '-c', cmd):
-        b'True\n'
-    })
+def _mock_docker_calls(monkeypatch, cmd, proj):
+    tester = _commander_tester.CommanderTester(
+        return_value={
+            ('docker', 'run', f'{proj}:latest', 'python', '-c', cmd): b'True\n'
+        })
 
     subprocess_mock = Mock()
     subprocess_mock.check_call.side_effect = tester
     subprocess_mock.check_output.side_effect = tester
     monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
+
+    return tester
+
+
+@pytest.fixture
+def mock_docker_calls(monkeypatch):
+    cmd = ('from ploomber.spec import '
+           'DAGSpec; print("File" in '
+           'DAGSpec("pipeline.yaml").to_dag().clients)')
+    yield _mock_docker_calls(monkeypatch, cmd, 'sample_project')
+
+
+@pytest.fixture
+def mock_docker_calls_serve(monkeypatch):
+    cmd = ('from ploomber.spec import '
+           'DAGSpec; print("File" in '
+           'DAGSpec("pipeline.serve.yaml").to_dag().clients)')
+    yield _mock_docker_calls(monkeypatch, cmd, 'sample_project')
+
+
+@pytest.fixture
+def mock_docker_calls_callables(monkeypatch):
+    cmd = ('from ploomber.spec import '
+           'DAGSpec; print("File" in '
+           'DAGSpec("pipeline.yaml").to_dag().clients)')
+    yield _mock_docker_calls(monkeypatch, cmd, 'callables')
 
 
 # need to modify the env.airflow.yaml name
@@ -111,21 +135,6 @@ def test_airflow_export_sample_project(monkeypatch, mock_docker_calls,
             }
 
 
-@pytest.fixture
-def mock_docker_calls_callables(monkeypatch):
-    cmd = ('from ploomber.spec import '
-           'DAGSpec; print("File" in DAGSpec.find().to_dag().clients)')
-    tester = _commander_tester.CommanderTester(return_value={
-        ('docker', 'run', 'callables:latest', 'python', '-c', cmd):
-        b'True\n'
-    })
-
-    subprocess_mock = Mock()
-    subprocess_mock.check_call.side_effect = tester
-    subprocess_mock.check_output.side_effect = tester
-    monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
-
-
 @pytest.mark.parametrize('mode, args', [
     ['incremental', ''],
     ['regular', ''],
@@ -201,6 +210,22 @@ def test_skip_tests(monkeypatch, mock_docker_calls, tmp_sample_project,
     captured = capsys.readouterr()
     assert 'Testing image' not in captured.out
     assert 'Testing File client' not in captured.out
+
+
+# TODO: check with packaged project
+def test_checks_the_right_spec(monkeypatch, mock_docker_calls_serve,
+                               tmp_sample_project, no_sys_modules_cache):
+    shutil.copy('pipeline.yaml', 'pipeline.serve.yaml')
+
+    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
+                               env_name='serve')
+
+    exporter.add()
+    exporter.export(mode='incremental')
+
+    expected = ('docker', 'run', 'sample_project:latest', 'ploomber', 'status',
+                '--entry-point', 'pipeline.serve.yaml')
+    assert mock_docker_calls_serve.calls[1] == expected
 
 
 def test_dockerfile_when_no_setup_py(tmp_sample_project, no_sys_modules_cache):
