@@ -28,7 +28,7 @@ author = 'Ploomber'
 extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
-    "sphinx_inline_tabs",
+    'sphinx_inline_tabs',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

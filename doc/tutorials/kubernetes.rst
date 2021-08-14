@@ -8,7 +8,7 @@ via `Argo Workflows <https://argoproj.github.io/argo/>`_. locally using
 If you encounter any issues with this
 tutorial, `let us know <https://github.com/ploomber/soopervisor/issues/new?title=Argo%20Workflows%20tutorial%20problem>`_.
 
-.. _minikube-example:
+`Click here to see the Argo Community Meeting talk <https://youtu.be/FnpXyg-5W_c>`_.
 
 Example 1: minikube
 -------------------

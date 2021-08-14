@@ -28,6 +28,8 @@ def test(c):
 
 @task
 def doc(c, open_=True):
+    """Build docs
+    """
     with c.cd('doc'):
         c.run('make html')
         if open_:
@@ -50,4 +52,6 @@ def upload(c, tag, production=True):
 
 @task
 def doc_auto(c):
+    """Start hot reloading docs
+    """
     c.run('sphinx-autobuild doc doc/_build/html')

@@ -8,6 +8,8 @@ Batch.
 If you encounter any issues with this
 tutorial, `let us know <https://github.com/ploomber/soopervisor/issues/new?title=AWS%20Batch%20tutorial%20problem>`_.
 
+`Click here to see a recorded demo <https://youtu.be/XCgX1AszVF4>`_.
+
 Pre-requisites
 --------------
 
