@@ -206,7 +206,7 @@ def test_warns_on_dirty_git(tmp_empty, capsys):
 
     captured = capsys.readouterr()
 
-    assert 'Your git repository contains untracked' in captured.out
+    assert 'Your git repository contains uncommitted' in captured.out
 
 
 def test_compress_dir(tmp_empty):

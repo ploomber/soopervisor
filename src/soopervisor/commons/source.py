@@ -70,7 +70,7 @@ def copy(cmdr, src, dst, include=None, exclude=None):
                              f'overlapping elements: {overlap}')
 
     if git_is_dirty():
-        cmdr.warn_on_exit('Your git repository contains untracked '
+        cmdr.warn_on_exit('Your git repository contains uncommitted '
                           'files, which will be ignored when building the '
                           'Docker image. Commit them if needed.')
 
