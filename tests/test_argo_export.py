@@ -36,18 +36,20 @@ def _mock_docker_calls(monkeypatch, cmd):
 
 @pytest.fixture
 def mock_docker_calls(monkeypatch):
+    path = str(Path('src', 'my_project', 'pipeline.yaml'))
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
-           'DAGSpec("src/my_project/pipeline.yaml").to_dag().clients)')
+           f'DAGSpec("{path}").to_dag().clients)')
     tester = _mock_docker_calls(monkeypatch, cmd)
     yield tester
 
 
 @pytest.fixture
 def mock_docker_calls_serve(monkeypatch):
+    path = str(Path('src', 'my_project', 'pipeline.serve.yaml'))
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
-           'DAGSpec("src/my_project/pipeline.serve.yaml").to_dag().clients)')
+           f'DAGSpec("{path}").to_dag().clients)')
     tester = _mock_docker_calls(monkeypatch, cmd)
     yield tester
 
@@ -98,8 +100,8 @@ def test_export(mock_docker_calls, backup_packaged_project, monkeypatch, mode,
     run_task_template = spec['spec']['templates'][0]
     tasks = spec['spec']['templates'][1]['dag']['tasks']
 
-    cmd = ('ploomber task {{inputs.parameters.task_name}}'
-           ' --entry-point src/my_project/pipeline.yaml')
+    cmd = ('ploomber task {{inputs.parameters.task_name}} --entry-point ' +
+           str(Path('src', 'my_project', 'pipeline.yaml')))
     assert run_task_template['script']['source'] == cmd + args
 
     assert spec['spec']['volumes'] == []
@@ -243,5 +245,6 @@ def test_checks_the_right_spec(mock_docker_calls_serve,
     exporter.export(mode='incremental')
 
     expected = ('docker', 'run', 'my_project:0.1dev', 'ploomber', 'status',
-                '--entry-point', 'src/my_project/pipeline.serve.yaml')
+                '--entry-point',
+                str(Path('src', 'my_project', 'pipeline.serve.yaml')))
     assert mock_docker_calls_serve.calls[2] == expected

@@ -153,7 +153,8 @@ def test_export_airflow_callables(monkeypatch, mock_docker_calls_callables,
     exporter.add()
     exporter.export(mode=mode)
 
-    monkeypatch.syspath_prepend('serve')
+    monkeypatch.syspath_prepend(Path('serve').resolve())
+
     mod = importlib.import_module('callables')
     dag = mod.dag
 

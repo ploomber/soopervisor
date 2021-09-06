@@ -1,19 +1,23 @@
 """
 Setup tasks (requires invoke: pip install invoke)
 """
+import platform
 import versioneer
 from invoke import task
 
+_DEFAULT_VERSION = '3.9'
+
 
 @task
-def setup(c, version='3.8'):
+def setup(c, version=_DEFAULT_VERSION):
     """Configure development environment
     """
-    suffix = '' if version == '3.8' else version.replace('.', '-')
+    suffix = '' if version == _DEFAULT_VERSION else version.replace('.', '-')
     name = f'soopervisor{suffix}'
     c.run(f'conda create --name {name} python={version} --yes')
-    c.run('eval "$(conda shell.bash hook)" '
-          f'&& conda activate {name} '
+    c.run('eval "$(conda shell.bash hook)" && '
+          if platform.system() != 'Windows' else ''
+          f'conda activate {name} '
           '&& pip install --editable .[dev]'
           '&& pip install --editable tests/assets/my_project')
     print(f'Done! Activate your environment with:\nconda activate {name}')
@@ -21,7 +25,7 @@ def setup(c, version='3.8'):
 
 @task
 def test(c):
-    """Run all tests except the ones that use Docker
+    """Run tests
     """
     c.run('pytest tests', pty=True)
 

@@ -56,12 +56,14 @@ def test_copy(cmdr, tmp_empty):
     Path('dir').mkdir()
     Path('dir', 'another').touch()
     git_init()
+
     source.copy(cmdr, '.', 'dist')
 
     expected = set(Path(p) for p in (
         'dist/file',
         'dist/dir/another',
     ))
+
     assert set(Path(p) for p in source.glob_all('dist')) == expected
 
 
@@ -178,6 +180,15 @@ def test_ignores_pycache(cmdr, tmp_empty):
 
     expected = set(Path(p) for p in ('dist/file', ))
     assert set(Path(p) for p in source.glob_all('dist')) == expected
+
+
+def test_git_tracked_files(tmp_empty):
+    Path('file').touch()
+    Path('dir').mkdir()
+    Path('dir', 'another').touch()
+    git_init()
+
+    assert {'dir/another', 'file'} == set(source.git_tracked_files()[0])
 
 
 def test_warns_if_fails_to_get_git_tracked_files(tmp_empty, capsys):
@@ -357,7 +368,10 @@ def test_loads_pipeline_in_package_with_name(cmdr, backup_packaged_project):
               Path('src', 'my_project', 'pipeline.train.yaml'))
     _, args = commons.load_tasks(cmdr, name='train')
 
-    assert args == ['--entry-point', 'src/my_project/pipeline.train.yaml']
+    assert args == [
+        '--entry-point',
+        str(Path('src/my_project/pipeline.train.yaml'))
+    ]
 
 
 def test_check_lock_files_exist(tmp_empty):

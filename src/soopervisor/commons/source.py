@@ -1,7 +1,7 @@
 import tarfile
 import os.path
 import shutil
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from itertools import chain
 from glob import iglob
 import subprocess
@@ -10,6 +10,14 @@ from click.exceptions import ClickException
 
 
 def git_tracked_files():
+    """
+    Returns
+    -------
+    list or None
+        List of tracked files or None if an error happened
+    None of str
+        None if successfully retrieved tracked files, str if an error happened
+    """
     res = subprocess.run(['git', 'ls-tree', '-r', 'HEAD', '--name-only'],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
@@ -57,6 +65,10 @@ def glob_all(path, exclude=None):
             yield path
 
 
+def to_posix_str(path):
+    return str(PurePosixPath(*Path(path).parts))
+
+
 def copy(cmdr, src, dst, include=None, exclude=None):
     include = set() if include is None else set(include)
     exclude = set() if exclude is None else set(exclude)
@@ -83,7 +95,7 @@ def copy(cmdr, src, dst, include=None, exclude=None):
             'of soopervisor.yaml')
 
     for f in glob_all(path=src, exclude=dst):
-        tracked_by_git = tracked is None or f in tracked
+        tracked_by_git = tracked is None or to_posix_str(f) in tracked
         excluded = f in exclude or is_relative_to_any(f, exclude_dirs)
         included = f in include or is_relative_to_any(f, include_dirs)
         # never include .git or .gitignore

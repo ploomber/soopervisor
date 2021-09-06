@@ -245,18 +245,34 @@ def _monkeypatch_docker(monkeypatch, cmd):
 
 @pytest.fixture
 def monkeypatch_docker(monkeypatch):
+    path = str(Path('src', 'my_project', 'pipeline.yaml'))
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
-           'DAGSpec("src/my_project/pipeline.yaml").to_dag().clients)')
+           f'DAGSpec("{path}").to_dag().clients)')
     yield _monkeypatch_docker(monkeypatch, cmd)
 
 
 @pytest.fixture
 def monkeypatch_serve_docker(monkeypatch):
+    path = str(Path('src', 'my_project', 'pipeline.serve.yaml'))
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
-           'DAGSpec("src/my_project/pipeline.serve.yaml").to_dag().clients)')
+           f'DAGSpec("{path}").to_dag().clients)')
     yield _monkeypatch_docker(monkeypatch, cmd)
+
+
+@pytest.fixture
+def monkeypatch_docker_client(monkeypatch):
+    """
+    We're using an old moto version because newer ones are not working
+    (https://github.com/spulec/moto/issues/1793). The version we're using
+    (1.3.14) calls docker.from_env but since GitHub macOS machines don't
+    have docker installed and installing it takes too long, we mock the call
+
+    https://github.com/actions/virtual-environments/issues/17
+    https://github.com/marketplace/actions/setup-docker - this takes too long
+    """
+    monkeypatch.setattr(moto.batch.models.docker, 'from_env', Mock())
 
 
 @pytest.mark.parametrize(
@@ -268,7 +284,9 @@ def monkeypatch_serve_docker(monkeypatch):
     ],
 )
 def test_export(mock_batch, monkeypatch_docker, monkeypatch,
-                backup_packaged_project, mode, args):
+                monkeypatch_docker_client, backup_packaged_project, mode,
+                args):
+
     commander_mock = MagicMock()
     monkeypatch.setattr(batch, 'Commander',
                         lambda workspace, templates_path: commander_mock)
@@ -318,7 +336,7 @@ def test_export(mock_batch, monkeypatch_docker, monkeypatch,
         'fit': {'features'}
     }
 
-    entry = ['--entry-point', 'src/my_project/pipeline.yaml']
+    entry = ['--entry-point', str(Path('src', 'my_project', 'pipeline.yaml'))]
     assert commands == {
         'get': ['ploomber', 'task', 'get'] + entry + args,
         'sepal-area': ['ploomber', 'task', 'sepal-area'] + entry + args,
@@ -341,7 +359,8 @@ def test_stops_if_no_tasks(monkeypatch, backup_packaged_project, capsys):
 
 
 def test_skip_tests(mock_batch, monkeypatch_docker, monkeypatch,
-                    backup_packaged_project, capsys):
+                    monkeypatch_docker_client, backup_packaged_project,
+                    capsys):
     boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
     monkeypatch.setattr(batch.boto3, 'client',
                         lambda name, region_name: boto3_mock)
@@ -357,7 +376,8 @@ def test_skip_tests(mock_batch, monkeypatch_docker, monkeypatch,
 
 # TODO: check with non-packaged project
 def test_checks_the_right_spec(mock_batch, monkeypatch_serve_docker,
-                               monkeypatch, backup_packaged_project):
+                               monkeypatch, monkeypatch_docker_client,
+                               backup_packaged_project):
     shutil.copy('src/my_project/pipeline.yaml',
                 'src/my_project/pipeline.serve.yaml')
 
@@ -370,7 +390,8 @@ def test_checks_the_right_spec(mock_batch, monkeypatch_serve_docker,
     exporter.export(mode='incremental')
 
     expected = ('docker', 'run', 'my_project:0.1dev', 'ploomber', 'status',
-                '--entry-point', 'src/my_project/pipeline.serve.yaml')
+                '--entry-point',
+                str(Path('src', 'my_project', 'pipeline.serve.yaml')))
     assert monkeypatch_serve_docker.calls[2] == expected
 
 

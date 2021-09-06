@@ -14,5 +14,5 @@ tasks:
   
   - source: notebooks/fit.py
     product:
-      nb: "{{cwd}}/products/report.html"
+      nb: "{{cwd}}/products/report.ipynb"
       model: "{{cwd}}/products/model.pickle"

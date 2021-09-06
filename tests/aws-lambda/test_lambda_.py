@@ -1,3 +1,4 @@
+import shutil
 import json
 from pathlib import Path
 import subprocess
@@ -72,10 +73,11 @@ def mock_sam_calls(monkeypatch):
 
 def test_export(backup_packaged_project, mock_sam_calls):
     Path('requirements.lock.txt').touch()
+
+    # FIXME: these two lines are executed in some other tests, but it's
+    # better to only do it once
     subprocess.run(['ploomber', 'build'], check=True)
-    subprocess.run(
-        ['cp', 'products/model.pickle', 'src/my_project/model.pickle'],
-        check=True)
+    shutil.copy('products/model.pickle', 'src/my_project/model.pickle')
 
     exporter = AWSLambdaExporter('soopervisor.yaml', 'serve')
     exporter.add()
@@ -104,9 +106,7 @@ def test_export_non_packaged_project(tmp_sample_project):
 def test_skip_tests(backup_packaged_project, mock_sam_calls):
     Path('requirements.lock.txt').touch()
     subprocess.run(['ploomber', 'build'], check=True)
-    subprocess.run(
-        ['cp', 'products/model.pickle', 'src/my_project/model.pickle'],
-        check=True)
+    shutil.copy('products/model.pickle', 'src/my_project/model.pickle')
 
     exporter = AWSLambdaExporter('soopervisor.yaml', 'serve')
     exporter.add()
@@ -133,9 +133,7 @@ dependencies:
 """)
 
     subprocess.run(['ploomber', 'build'], check=True)
-    subprocess.run(
-        ['cp', 'products/model.pickle', 'src/my_project/model.pickle'],
-        check=True)
+    shutil.copy('products/model.pickle', 'src/my_project/model.pickle')
 
     exporter = AWSLambdaExporter('soopervisor.yaml', 'serve')
     exporter.add()
