@@ -9,6 +9,10 @@ Soopervisor
    :target: https://github.com/ploomber/soopervisor/workflows/CI%20macOS/badge.svg
    :alt: CI macOS badge
 
+.. image:: https://github.com/ploomber/soopervisor/workflows/CI%20Windows/badge.svg
+   :target: https://github.com/ploomber/soopervisor/workflows/CI%20Windows/badge.svg
+   :alt: CI Windows badge
+
 
 Soopervisor runs `Ploomber <github.com/ploomber/ploomber>`_ pipelines
 for batch processing (large-scale training or batch serving) or online
