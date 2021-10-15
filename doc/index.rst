@@ -9,6 +9,9 @@ inference.
 
    pip install soopervisor
 
+
+Watch our presentation at EuroPython 2021: `Develop and Deploy a Machine Learning Pipeline in 30 Minutes With Ploomber <https://youtu.be/O8tqiCkIWPs>`_.
+
 Supported platforms
 ===================
 
