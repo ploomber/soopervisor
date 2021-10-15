@@ -39,6 +39,7 @@ REQUIRES = [
 AWS = ['boto3']
 
 DEV = [
+    'invoke',
     # TEST
     'pytest',
     'Faker',
