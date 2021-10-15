@@ -16,7 +16,6 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        pip install git+https://github.com/ploomber/ploomber@dev
         pip install invoke
         pip install -e tests/assets/my_project
         pip install ".[dev]"
