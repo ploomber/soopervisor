@@ -16,7 +16,7 @@ def setup(c, version=_DEFAULT_VERSION):
     name = f'soopervisor{suffix}'
     c.run(f'conda create --name {name} python={version} --yes')
     start = ('eval "$(conda shell.bash hook)" && '
-          if platform.system() != 'Windows' else '')
+             if platform.system() != 'Windows' else '')
     c.run(f'{start}'
           f'conda activate {name} '
           '&& pip install --editable .[dev]'
