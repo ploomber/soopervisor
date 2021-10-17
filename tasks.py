@@ -2,7 +2,6 @@
 Setup tasks (requires invoke: pip install invoke)
 """
 import platform
-import versioneer
 from invoke import task
 
 _DEFAULT_VERSION = '3.9'
@@ -45,6 +44,7 @@ def doc(c, open_=True):
 def new(c):
     """Release a new version
     """
+    from pkgmt import versioneer
     versioneer.version(project_root='.', tag=True)
 
 
@@ -52,6 +52,7 @@ def new(c):
 def upload(c, tag, production=True):
     """Upload to PyPI
     """
+    from pkgmt import versioneer
     versioneer.upload(tag, production=production)
 
 

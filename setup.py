@@ -39,6 +39,7 @@ REQUIRES = [
 AWS = ['boto3']
 
 DEV = [
+    'pkgmt',
     'invoke',
     # TEST
     'pytest',
