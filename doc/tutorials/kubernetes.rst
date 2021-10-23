@@ -1,6 +1,9 @@
 Kubernetes (Argo)
 =================
 
+.. note:: **Got questions?** Reach out to us on `Slack <http://community.ploomber.io/>`_.
+
+
 This tutorial shows how to run a pipeline in Kubernetes
 via `Argo Workflows <https://argoproj.github.io/argo/>`_. locally using
 ``minikube`` or in Google Cloud.

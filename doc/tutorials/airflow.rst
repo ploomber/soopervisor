@@ -1,6 +1,8 @@
 Airflow
 =======
 
+.. note:: **Got questions?** Reach out to us on `Slack <http://community.ploomber.io/>`_.
+
 This tutorial shows you how to export a Ploomber pipeline to Airflow.
 
 If you encounter any issues with this

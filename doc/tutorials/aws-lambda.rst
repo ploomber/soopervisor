@@ -1,6 +1,8 @@
 AWS Lambda
 ==========
 
+.. note:: **Got questions?** Reach out to us on `Slack <http://community.ploomber.io/>`_.
+
 `AWS Lambda <https://aws.amazon.com/lambda/>`_ is a serverless compute service.
 It allows you to deploy functions in the cloud without worrying about servers
 or scaling. It is a great (and cheap) option to deploy Machine Learning

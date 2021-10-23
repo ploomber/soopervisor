@@ -1,6 +1,8 @@
 AWS Batch
 =========
 
+.. note:: **Got questions?** Reach out to us on `Slack <http://community.ploomber.io/>`_.
+
 `AWS Batch <https://aws.amazon.com/batch/>`_ is a managed service for batch
 computing. This tutorial shows you how to submit a Ploomber pipeline to AWS
 Batch.
