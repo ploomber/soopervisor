@@ -15,5 +15,6 @@ grouped.columns = ['Mean age', 'Mean hours per week worked']
 grouped.head()
 # -
 
-ax = grouped.plot.barh()
+# +
+# some plotting code...
 # -

@@ -129,6 +129,7 @@ configuration details will change, but the API remains the same:
    tutorials/kubernetes
    tutorials/aws-batch
    tutorials/airflow
+   tutorials/slurm
 
 
 .. toctree::
