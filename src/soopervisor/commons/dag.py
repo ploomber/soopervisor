@@ -4,6 +4,7 @@ Loading dags
 from ploomber.constants import TaskStatus
 from ploomber.spec import DAGSpec
 from ploomber.exceptions import DAGSpecInvalidError
+from ploomber.products import File
 
 from soopervisor.enum import Mode
 
@@ -67,7 +68,13 @@ def load_tasks(cmdr, name=None, mode='incremental'):
         raise ValueError(f'mode must be one of {valid!r}')
 
     if mode == 'incremental':
-        dag.render(remote=True)
+
+        # what if user has a shared disk but still wants to upload artifacts?
+        # maybe add a way to force this
+        if dag.clients.get(File):
+            dag.render(remote=True)
+        else:
+            dag.render()
 
         tasks = []
 
