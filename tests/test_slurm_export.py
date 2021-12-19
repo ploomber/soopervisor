@@ -41,10 +41,22 @@ def test_slurm_export_sample_project(monkeypatch, tmp_sample_project):
         call(['sbatch', '--parsable', '_job.sh'],
              capture_output=True,
              check=True),
-        call(['sbatch', '--dependency=afterok:0', '--parsable', '_job.sh'],
+        call([
+            'sbatch',
+            '--dependency=afterok:0',
+            '--parsable',
+            '--kill-on-invalid-dep=yes',
+            '_job.sh',
+        ],
              capture_output=True,
              check=True),
-        call(['sbatch', '--dependency=afterok:1', '--parsable', '_job.sh'],
+        call([
+            'sbatch',
+            '--dependency=afterok:1',
+            '--parsable',
+            '--kill-on-invalid-dep=yes',
+            '_job.sh',
+        ],
              capture_output=True,
              check=True)
     ])

@@ -11,6 +11,7 @@ from soopervisor.shell.config import SlurmConfig
 
 
 # TODO: check ploomber version
+# TODO: submit all tasks to a single node
 class SlurmExporter(abc.AbstractExporter):
     CONFIG_CLASS = SlurmConfig
 
@@ -81,9 +82,15 @@ def _submit_to_slurm(tasks, args, workspace):
             # if yes, then use --dependency=afterok:
             ids = ':'.join([name2id[task_name] for task_name in upstream])
             # docs: https://hpc.nih.gov/docs/job_dependencies.html
+            # https://slurm.schedmd.com/sbatch.html
+            # sbatch [options] script [args...]
             cmd = [
-                'sbatch', f'--dependency=afterok:{ids}', '--parsable',
-                '_job.sh'
+                'sbatch',
+                f'--dependency=afterok:{ids}',
+                '--parsable',
+                # kill job if upstream dependencies fail
+                '--kill-on-invalid-dep=yes',
+                '_job.sh',
             ]
         else:
             # if no, just submit
