@@ -4,10 +4,7 @@ Slurm
 Pre-requisites
 --------------
 
-* ``conda`` `See instructions here <https://docs.conda.io/en/latest/miniconda.html>`_
 * `docker and docker-compose <https://docs.docker.com/get-docker/>`_
-* `git <https://git-scm.com/book/en/v2/Getting-Started-Installing-Git>`_
-* Install Ploomber with ``pip install ploomber``
 
 
 Setting up the project
@@ -15,11 +12,9 @@ Setting up the project
 
 .. note:: These instructions are based on `this article <https://medium.com/analytics-vidhya/slurm-cluster-with-docker-9f242deee601>`_.
 
-First, let's create a SLURM cluster for testing.
+First, let's create a SLURM cluster for testing. Create the following ``docker-compose.yml`` file:
 
-Create the following ``docker-compose.yml`` file:
-
-.. code-block:: yml
+.. code-block:: yaml
 
     services:
       slurmjupyter:
@@ -80,7 +75,16 @@ Now, start the cluster:
 
     docker-compose up -d
 
-Connect to the cluster:
+
+.. tip::
+
+    Once the cluster is up, go `http://localhost:8888 <http://localhost:8888>`_
+    to open JupyterLab, where you can edit files, open terminals, and monitor
+    Slurm jobs (Click on Slurm Queue under HPC Tools in the Launcher menu) from
+    your browser.
+
+
+Let's connect to the cluster to submit the jobs:
 
 .. code-block:: sh
 
@@ -96,44 +100,89 @@ Configure the environment:
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
     bash ~/Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda
     
-    # start conda
+    # init conda
     eval "$($HOME/miniconda/bin/conda shell.bash hook)"
-    
+
+    # create and activate env
+    conda env create --name myenv
+    conda activate myenv
+
     # install ploomber and soopervisor in the base environment
-    pip install ploomber soopervisor
-    pip install git+https://github.com/ploomber/soopervisor@slurm
+    pip install ploomber
+    # install soopervisor from the slurm branch
+    pip install git+https://github.com/ploomber/soopervisor
     
     # download sample pipeline to example/
     ploomber examples -n templates/ml-basic -o example
     cd example
 
-    # add environment
-    soopervisor add training --backend slurm
-    
-    # create the project's virtual env
-    python -m venv myproj
-    source myproj/bin/activate
+    # install project dependencies
     pip install -r requirements.txt
 
-   # submit jobs
-   soopervisor export training
+    # register a soopervisor environment with the SLURM backend
+    soopervisor add cluster --backend slurm
 
 
-Note: since we need to load the dag to define the task's status, the environment
-must have all dependencies if there are functions tasks
-Note: slurm should not have the docker image arguments when running "soopervisor export"
-Note: define a custom config, include/exclude are not relevant for SLURM config
+The ``soopervisor add`` creates a ``cluster/`` directory with a
+``template.sh`` file, this is a template that Soopervisor uses to submit
+the tasks in your pipeline. If should contain the placeholders
+``{{name}}``, and ``{{command}}``, which Soopervisor will replace by the
+task name and the command to execute such a task, respectively. You can
+customize it to suit your needs.
 
-monitor frmo localhost
-
-
-see example/output
+For example, since we want the tasks to run in the ``conda`` environment
+we created, edit the ``template.sh`` so it looks like this:
 
 .. code-block:: sh
+
+    #!/bin/bash
+    #SBATCH --job-name={{name}}
+    #SBATCH --output=result.out
+    #
+
+    # activate myenv
+    conda activate myenv
+    srun {{command}}
+
+We can now submit the tasks:
+
+
+.. code-block:: sh
+
+   soopervisor export cluster
+
+Once jobs finish execution, you'll see the outputs in the ``output`` directory.
+
+.. tip::
+
+   If you execute ``soopervisor export cluster``, only tasks whose source code
+   has changed will be executed again, to force execution of all tasks, run
+   ``soopervisor export cluster --mode force``
+
+
+.. note::
+
+    When scheduling jobs, ``soopervisor`` calls the ``sbatch`` command and
+    passes the  ``--kill-on-invalid-dep=yes``, this causes tasks to abort if
+    any of its dependencies fails. For example, if you have a ``load -> clean``
+    pipeline and ``load`` fails, ``clean`` is aborted.
+
+
+.. important::
+
+    For Ploomber to determine which tasks to schedule, it needs to parse your
+    pipeline and check each task's status. **If your pipeline has functions
+    as tasks**, the Python environment where you execute ``soopervisor export``
+    must have all dependencies required to import those functions. e.g., if a
+    function ``train_model`` uses ``sklearn``, then ``sklearn`` must be
+    installed. If your pipeline only contains scripts/notebooks, this is not
+    required.
+
 
 Stop the cluster:
 
 .. code-block:: sh
 
      docker-compose stop
+
 
