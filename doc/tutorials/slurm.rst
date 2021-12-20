@@ -119,7 +119,6 @@ Configure the environment:
    soopervisor export training
 
 
-Note: current implementation expects a lock file, otherwise it refuses to run
 Note: since we need to load the dag to define the task's status, the environment
 must have all dependencies if there are functions tasks
 Note: slurm should not have the docker image arguments when running "soopervisor export"

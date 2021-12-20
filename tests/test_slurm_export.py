@@ -52,6 +52,12 @@ def test_slurm_export_errors_if_missing_placeholder_in_template(
     assert error in str(excinfo.value)
 
 
+def test_slurm_export_doesnt_require_lock_files(monkeypatch_slurm,
+                                                tmp_sample_project):
+    Path('environment.lock.yml').unlink()
+    SlurmExporter(path_to_config='soopervisor.yaml', env_name='serve')
+
+
 def test_slurm_export_sample_project(monkeypatch_slurm, tmp_sample_project):
     load_tasks_mock, run_mock = monkeypatch_slurm
 

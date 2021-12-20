@@ -44,7 +44,12 @@ class SlurmExporter(abc.AbstractExporter):
     def _validate(cfg, dag, env_name):
         pass
 
-    # def validate(self):
+    def validate(self):
+        """
+        Override method from the abstract class, since it validates lock files
+        exist, but we don't need those for SLURM
+        """
+        pass
 
     @staticmethod
     def _export(cfg, env_name, mode, until, skip_tests):
