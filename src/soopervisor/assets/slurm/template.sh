@@ -4,4 +4,4 @@
 #
 
 source myproj/bin/activate
-srun ploomber task {{name}} {{args}}
+srun {{command}}

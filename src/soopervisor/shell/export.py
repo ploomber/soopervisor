@@ -2,12 +2,23 @@ from pathlib import Path
 import subprocess
 
 from ploomber.io._commander import Commander, CommanderStop
-from jinja2 import Template
+from jinja2 import Template, meta
 import click
 
 from soopervisor import abc
 from soopervisor import commons
 from soopervisor.shell.config import SlurmConfig
+from soopervisor import validate
+
+
+def _check_template_variables(env, source):
+    return meta.find_undeclared_variables(env.parse(source))
+
+
+def _validate_template(env, source):
+    vars = _check_template_variables(env, source)
+    validate.keys({'command', 'name'}, vars,
+                  'Error validating template.sh, missing placeholders')
 
 
 # TODO: check ploomber version
@@ -33,6 +44,8 @@ class SlurmExporter(abc.AbstractExporter):
     def _validate(cfg, dag, env_name):
         pass
 
+    # def validate(self):
+
     @staticmethod
     def _export(cfg, env_name, mode, until, skip_tests):
         """
@@ -40,6 +53,8 @@ class SlurmExporter(abc.AbstractExporter):
         """
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as cmdr:
+            template = Path(env_name, 'template.sh').read_text()
+            _validate_template(cmdr._env, template)
 
             tasks, args = commons.load_tasks(cmdr=cmdr,
                                              name=env_name,
@@ -74,7 +89,8 @@ def _submit_to_slurm(tasks, args, workspace):
 
         # generate script and save
         job_sh = Template(Path(workspace, 'template.sh').read_text())
-        script = job_sh.render(name=name, args=' '.join(args))
+        ploomber_command = ' '.join(['ploomber', 'task', name] + args)
+        script = job_sh.render(name=name, command=ploomber_command)
         Path('_job.sh').write_text(script)
 
         # does the task have dependencies?
