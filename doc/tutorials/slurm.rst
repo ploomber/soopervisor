@@ -1,6 +1,11 @@
 Slurm
 =====
 
+.. important::
+
+    This integration requires ploomber 0.13.7 or higher (To upgrade:
+    ``pip install ploomber --upgrade``)
+
 Pre-requisites
 --------------
 
