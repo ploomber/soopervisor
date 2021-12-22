@@ -1,3 +1,5 @@
+import fnmatch
+import os
 from pathlib import Path
 import subprocess
 
@@ -19,6 +21,25 @@ def _validate_template(env, source):
     vars = _check_template_variables(env, source)
     validate.keys({'command', 'name'}, vars,
                   'Error validating template.sh, missing placeholders')
+
+
+def _script_name_for_task_name(name, workspace):
+    """
+    Returns the path to the script to use based on the task name
+    """
+    name_sh = f'{name}.sh'
+    exact_match = Path(workspace, name_sh)
+
+    if exact_match.is_file():
+        return exact_match
+
+    files = sorted(os.listdir(workspace))
+
+    for file in files:
+        if fnmatch.fnmatch(name_sh, file.replace('__', '*')):
+            return Path(workspace, file)
+
+    return Path(workspace, 'template.sh')
 
 
 # TODO: check ploomber version
@@ -92,8 +113,11 @@ def _submit_to_slurm(tasks, args, workspace):
     # iterate over tasks
     for name, upstream in tasks.items():
 
+        # determine which script file to use
+        script_sh = _script_name_for_task_name(name, workspace)
         # generate script and save
-        job_sh = Template(Path(workspace, 'template.sh').read_text())
+        job_sh = Template(script_sh.read_text())
+
         ploomber_command = ' '.join(['ploomber', 'task', name] + args)
         script = job_sh.render(name=name, command=ploomber_command)
         Path('_job.sh').write_text(script)

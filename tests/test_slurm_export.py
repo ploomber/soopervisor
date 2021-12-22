@@ -3,9 +3,12 @@ import os
 from unittest.mock import Mock, ANY, call
 
 import pytest
+from jinja2 import Template
 
 from ploomber.spec import DAGSpec
-from soopervisor.shell.export import SlurmExporter, commons, subprocess
+from soopervisor.shell.export import (SlurmExporter, commons, subprocess,
+                                      _script_name_for_task_name)
+from soopervisor.shell import export
 
 
 @pytest.fixture
@@ -22,6 +25,35 @@ def monkeypatch_slurm(monkeypatch):
     monkeypatch.setattr(subprocess, 'run', run_mock)
 
     return load_tasks_mock, run_mock
+
+
+@pytest.mark.parametrize('name, files, match, workspace', [
+    ['a', ('a.sh', 'b.sh'), 'a.sh', 'workspace'],
+    ['fit-regression', ('fit-__.sh', 'clean-__.sh'), 'fit-__.sh', '.'],
+    ['fit-regression', ('fit-nn.sh', 'clean-__.sh'), 'template.sh', 'ws'],
+    [
+        'task-name',
+        ('task-name.sh', 'task-__.sh', '__-name.sh'), 'task-name.sh', 'ws'
+    ],
+    ['task-name', ('task-__.sh', ), 'task-__.sh', 'ws'],
+    ['model-fit', ('__-fit.sh', 'model-__.sh'), '__-fit.sh', 'ws'],
+],
+                         ids=[
+                             'exact-match',
+                             'glob-like',
+                             'default',
+                             'exact-match-over-glob-like',
+                             'glob-like-over-default',
+                             'glob-like-order',
+                         ])
+def test_script_name_for_task_name(tmp_empty, name, files, match, workspace):
+    Path(workspace).mkdir(parents=True, exist_ok=True)
+
+    for file in files:
+        Path(workspace, file).touch()
+
+    assert (_script_name_for_task_name(name,
+                                       workspace) == Path(workspace, match))
 
 
 def test_slurm_add_sample_project(monkeypatch, tmp_sample_project,
@@ -106,6 +138,36 @@ srun ploomber task plot --entry-point pipeline.yaml\
 """
 
     assert Path('_job.sh').read_text() == expected
+
+
+def test_slurm_export_sample_project_matches_script_file(
+        monkeypatch_slurm, monkeypatch, tmp_sample_project):
+    load_tasks_mock, run_mock = monkeypatch_slurm
+
+    # mock template constructor so we know which files were used
+    template_mock = Mock(wraps=Template)
+    monkeypatch.setattr(export, 'Template', template_mock)
+
+    exporter = SlurmExporter(path_to_config='soopervisor.yaml',
+                             env_name='serve')
+    exporter.add()
+
+    # exact match
+    Path('serve', 'raw.sh').write_text('raw {{command}} {{name}}')
+
+    # glob-like
+    Path('serve', '__an.sh').write_text('clean {{command}} {{name}}')
+
+    # default
+    Path('serve', 'template.sh').write_text('plot {{command}} {{name}}')
+
+    exporter.export(mode='incremental')
+
+    template_mock.assert_has_calls([
+        call('raw {{command}} {{name}}'),
+        call('clean {{command}} {{name}}'),
+        call('plot {{command}} {{name}}'),
+    ])
 
 
 def test_slurm_export_sample_project_incremental(monkeypatch,
