@@ -41,7 +41,7 @@ Let's now pull some sample code:
     # get the sample projects
     git clone https://github.com/ploomber/projects
 
-    cd projects/ml-intermediate/
+    cd projects/templates/ml-intermediate/
 
 
 Since each task executes in a different Docker container, we have to configure

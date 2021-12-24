@@ -53,7 +53,7 @@ We'll now fetch an example pipeline:
 .. code-block:: sh
 
     git clone https://github.com/ploomber/projects
-    cd projects/ml-online/
+    cd projects/templates/ml-online/
 
 Configure the development environment:
 

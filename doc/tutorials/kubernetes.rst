@@ -204,7 +204,7 @@ Let's now run a Ploomber sample Machine Learning pipeline:
 
     # get the sample projects
     git clone https://github.com/ploomber/projects
-    cd projects/ml-online/
+    cd projects/templates/ml-online/
 
     # configure development environment
     ploomber install
