@@ -17,6 +17,7 @@ class Backend(Enum, metaclass=CustomEnum):
     aws_lambda = 'aws-lambda'
     argo_workflows = 'argo-workflows'
     airflow = 'airflow'
+    kubeflow = 'kubeflow'
     slurm = 'slurm'
 
     @classmethod
