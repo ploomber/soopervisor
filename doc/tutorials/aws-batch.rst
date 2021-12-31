@@ -1,7 +1,7 @@
 AWS Batch
 =========
 
-.. note:: **Got questions?** Reach out to us on `Slack <http://community.ploomber.io/>`_.
+.. note:: **Got questions?** Reach out to us on `Slack <https://ploomber.io/community/>`_.
 
 `AWS Batch <https://aws.amazon.com/batch/>`_ is a managed service for batch
 computing. This tutorial shows you how to submit a Ploomber pipeline to AWS
@@ -23,8 +23,8 @@ Pre-requisites
 * Install Ploomber with ``pip install ploomber``
 
 ``soopervisor`` takes your pipeline, packages it, creates a Docker image,
-uploads it and submits it for execution; however, you still have to configure
-the AWS Batch environment. Specifically, you must configure a compute
+uploads it, and submits it for execution; however, you still have to configure
+the AWS Batch environment. Specifically, you must configure a computing
 environment and a job queue. `Refer to this guide for instructions. <https://docs.aws.amazon.com/batch/latest/userguide/Batch_GetStarted.html>`_
 
 .. note:: Only EC2 compute environments are supported.

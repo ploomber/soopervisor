@@ -1,17 +1,19 @@
 Kubernetes (Argo)
 =================
 
-.. note:: **Got questions?** Reach out to us on `Slack <http://community.ploomber.io/>`_.
+.. note:: **Got questions?** Reach out to us on `Slack <https://ploomber.io/community/>`_.
 
 
 This tutorial shows how to run a pipeline in Kubernetes
-via `Argo Workflows <https://argoproj.github.io/argo/>`_. locally using
+via `Argo Workflows <https://argoproj.github.io/workflows>`_. locally using
 ``minikube`` or in Google Cloud.
 
 If you encounter any issues with this
 tutorial, `let us know <https://github.com/ploomber/soopervisor/issues/new?title=Argo%20Workflows%20tutorial%20problem>`_.
 
 `Click here to see the Argo Community Meeting talk <https://youtu.be/FnpXyg-5W_c>`_.
+
+.. _minikube-example:
 
 Example 1: minikube
 -------------------
@@ -250,7 +252,7 @@ in module ``src/ml_online/clients.py`` to get the client. Edit the
 ``clients.py`` to add your bucket name:
 
 
-.. code-bucket:: python
+.. code-block:: python
 
     def get_gcloud():
         # edit YOUR-BUCKET-NAME

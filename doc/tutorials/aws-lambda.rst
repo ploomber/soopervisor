@@ -1,7 +1,7 @@
 AWS Lambda
 ==========
 
-.. note:: **Got questions?** Reach out to us on `Slack <http://community.ploomber.io/>`_.
+.. note:: **Got questions?** Reach out to us on `Slack <https://ploomber.io/community/>`_.
 
 `AWS Lambda <https://aws.amazon.com/lambda/>`_ is a serverless compute service.
 It allows you to deploy functions in the cloud without worrying about servers

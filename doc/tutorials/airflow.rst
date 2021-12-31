@@ -1,7 +1,7 @@
 Airflow
 =======
 
-.. note:: **Got questions?** Reach out to us on `Slack <http://community.ploomber.io/>`_.
+.. note:: **Got questions?** Reach out to us on `Slack <https://ploomber.io/community/>`_.
 
 This tutorial shows you how to export a Ploomber pipeline to Airflow.
 
@@ -13,20 +13,21 @@ tutorial, `let us know <https://github.com/ploomber/soopervisor/issues/new?title
 
     This tutorial uses cloud storage (S3 or Google Cloud Storage). If you're
     looking for an example that doesn't require any cloud services. Check out
-    the minikube example: :ref:`minikube-example`
+    the ``minikube`` example: :ref:`minikube-example`
 
 
 Pre-requisites
 **************
-* `airflow <https://airflow.apache.org/docs/apache-airflow/stable/start/index.html>`_
-* ``conda`` `See instruction shere <https://docs.conda.io/en/latest/miniconda.html>`_
+
+* `Airflow <https://airflow.apache.org/docs/apache-airflow/stable/start/index.html>`_
+* ``conda`` `See instructions here <https://docs.conda.io/en/latest/miniconda.html>`_
 * `docker <https://docs.docker.com/get-docker/>`_
 * `git <https://git-scm.com/book/en/v2/Getting-Started-Installing-Git>`_
 * Install Ploomber with ``pip install ploomber``
 
 .. note::
 
-    When installating Airflow, you must install Docker dependencies,
+    When installing Airflow, you must install Docker dependencies,
     ``pip install "apache-airflow[docker]"`` should work
 
 
