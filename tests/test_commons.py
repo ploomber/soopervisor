@@ -379,6 +379,6 @@ def test_check_lock_files_exist(tmp_empty):
     with pytest.raises(ClickException) as excinfo:
         dependencies.check_lock_files_exist()
 
-    expected = ('Expected requirements.txt.lock or environment.lock.yml at '
+    expected = ('Expected requirements.lock.txt or environment.lock.yml at '
                 'the root directory')
     assert expected in str(excinfo.value)
