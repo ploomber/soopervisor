@@ -11,6 +11,7 @@ import boto3
 
 from soopervisor.aws import batch
 from soopervisor.aws.batch import commons
+from soopervisor.exceptions import ConfigurationError
 from ploomber.io import _commander, _commander_tester
 from ploomber.util import util
 
@@ -372,6 +373,20 @@ def test_skip_tests(mock_batch, monkeypatch_docker, monkeypatch,
     captured = capsys.readouterr()
     assert 'Testing image' not in captured.out
     assert 'Testing File client' not in captured.out
+
+
+def test_validates_repository(mock_batch, monkeypatch_docker, monkeypatch,
+                              monkeypatch_docker_client,
+                              backup_packaged_project):
+    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
+    exporter.add()
+
+    with pytest.raises(ConfigurationError) as excinfo:
+        exporter.export(mode='incremental')
+
+    assert str(
+        excinfo.value) == ("Invalid repository 'your-repository/name' "
+                           "in soopervisor.yaml, please add a valid value.")
 
 
 # TODO: check with non-packaged project

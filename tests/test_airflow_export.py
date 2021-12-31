@@ -11,6 +11,7 @@ from ploomber.io import _commander, _commander_tester
 import pytest
 
 from soopervisor.airflow.export import AirflowExporter, commons
+from soopervisor.exceptions import ConfigurationError
 
 
 def git_init():
@@ -196,6 +197,21 @@ def test_stops_if_no_tasks(monkeypatch, mock_docker_calls, tmp_sample_project,
 
     captured = capsys.readouterr()
     assert 'has no tasks to submit.' in captured.out
+
+
+def test_validates_repository(monkeypatch, mock_docker_calls,
+                              tmp_sample_project, no_sys_modules_cache):
+    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
+                               env_name='serve')
+
+    exporter.add()
+
+    with pytest.raises(ConfigurationError) as excinfo:
+        exporter.export(mode='incremental')
+
+    assert str(
+        excinfo.value) == ("Invalid repository 'your-repository/name' "
+                           "in soopervisor.yaml, please add a valid value.")
 
 
 def test_skip_tests(monkeypatch, mock_docker_calls, tmp_sample_project,

@@ -3,7 +3,9 @@ from pathlib import Path
 
 from ploomber.util import default
 from ploomber.io._commander import CommanderStop
+
 from soopervisor.commons import source, dependencies
+from soopervisor.exceptions import ConfigurationError
 
 
 def build(e, cfg, name, until, entry_point, skip_tests=False):
@@ -29,6 +31,11 @@ def build(e, cfg, name, until, entry_point, skip_tests=False):
     skip_tests : bool, default=False
         Skip image testing (check dag loading and File.client configuration)
     """
+    # raise an error if the user didn't change the default value
+    if cfg.repository == 'your-repository/name':
+        raise ConfigurationError(
+            f'Invalid repository {cfg.repository!r} '
+            'in soopervisor.yaml, please add a valid value.')
 
     # if this is a pkg, get the name
     try:
@@ -119,7 +126,6 @@ def build(e, cfg, name, until, entry_point, skip_tests=False):
     if until == 'build':
         raise CommanderStop('Done. Run "docker images" to see your image.')
 
-    # TODO: validate format of cfg.repository
     if cfg.repository:
         image_target = f'{cfg.repository}:{version}'
         e.run('docker',

@@ -14,6 +14,7 @@ from click.testing import CliRunner
 
 from soopervisor.argo.export import ArgoWorkflowsExporter, commons
 from soopervisor import cli
+from soopervisor.exceptions import ConfigurationError
 
 
 def _mock_docker_calls(monkeypatch, cmd):
@@ -231,6 +232,19 @@ def test_skip_tests(mock_docker_calls, backup_packaged_project, monkeypatch,
     captured = capsys.readouterr()
     assert 'Testing image' not in captured.out
     assert 'Testing File client' not in captured.out
+
+
+def test_validates_repository(mock_docker_calls, tmp_sample_project):
+    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
+                                     env_name='serve')
+    exporter.add()
+
+    with pytest.raises(ConfigurationError) as excinfo:
+        exporter.export(mode='incremental', until=None, skip_tests=True)
+
+    assert str(
+        excinfo.value) == ("Invalid repository 'your-repository/name' "
+                           "in soopervisor.yaml, please add a valid value.")
 
 
 # TODO: check with non-packaged project
