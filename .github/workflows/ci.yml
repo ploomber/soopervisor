@@ -20,6 +20,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8
         flake8
+    - name: Search for broken links in docs
+      run: |
+        pip install pkgmt
+        pkgmt check-links
     - name: Install dependencies
       run: |
         pip install invoke

@@ -1,2 +1,6 @@
 [tool.pytest.ini_options]
 addopts = "--pdbcls=IPython.terminal.debugger:Pdb"
+
+[tool.pkgmt.check_links]
+extensions = ["rst"]
+ignore_substrings = ["127.0.0.1", "localhost", "gcr.io", "googleapis.com"]
