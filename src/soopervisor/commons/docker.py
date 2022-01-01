@@ -8,6 +8,13 @@ from soopervisor.commons import source, dependencies
 from soopervisor.exceptions import ConfigurationError
 
 
+def _validate_repository(repository):
+    if repository == 'your-repository/name':
+        raise ConfigurationError(
+            f'Invalid repository {repository!r} '
+            'in soopervisor.yaml, please add a valid value.')
+
+
 def build(e, cfg, name, until, entry_point, skip_tests=False):
     """Build a docker image
 
@@ -32,10 +39,7 @@ def build(e, cfg, name, until, entry_point, skip_tests=False):
         Skip image testing (check dag loading and File.client configuration)
     """
     # raise an error if the user didn't change the default value
-    if cfg.repository == 'your-repository/name':
-        raise ConfigurationError(
-            f'Invalid repository {cfg.repository!r} '
-            'in soopervisor.yaml, please add a valid value.')
+    _validate_repository(cfg.repository)
 
     # if this is a pkg, get the name
     try:

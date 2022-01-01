@@ -37,6 +37,12 @@ def _mock_docker_calls(monkeypatch, cmd, proj):
 
 
 @pytest.fixture
+def skip_repo_validation(monkeypatch):
+    # do not validate repository (using the default value will raise an error)
+    monkeypatch.setattr(commons.docker, '_validate_repository', lambda x: x)
+
+
+@pytest.fixture
 def mock_docker_calls(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
@@ -105,7 +111,8 @@ def test_airflow_add_sample_project(monkeypatch, tmp_sample_project,
 
 def test_airflow_export_sample_project(monkeypatch, mock_docker_calls,
                                        tmp_sample_project,
-                                       no_sys_modules_cache):
+                                       no_sys_modules_cache,
+                                       skip_repo_validation):
     load_tasks_mock = Mock(wraps=commons.load_tasks)
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
@@ -143,8 +150,8 @@ def test_airflow_export_sample_project(monkeypatch, mock_docker_calls,
 ],
                          ids=['incremental', 'regular', 'force'])
 def test_export_airflow_callables(monkeypatch, mock_docker_calls_callables,
-                                  tmp_callables, no_sys_modules_cache, mode,
-                                  args):
+                                  tmp_callables, no_sys_modules_cache,
+                                  skip_repo_validation, mode, args):
     exporter = AirflowExporter(path_to_config='soopervisor.yaml',
                                env_name='serve')
 
@@ -215,7 +222,7 @@ def test_validates_repository(monkeypatch, mock_docker_calls,
 
 
 def test_skip_tests(monkeypatch, mock_docker_calls, tmp_sample_project,
-                    no_sys_modules_cache, capsys):
+                    no_sys_modules_cache, skip_repo_validation, capsys):
     exporter = AirflowExporter(path_to_config='soopervisor.yaml',
                                env_name='serve')
 
@@ -231,7 +238,8 @@ def test_skip_tests(monkeypatch, mock_docker_calls, tmp_sample_project,
 
 # TODO: check with packaged project
 def test_checks_the_right_spec(monkeypatch, mock_docker_calls_serve,
-                               tmp_sample_project, no_sys_modules_cache):
+                               tmp_sample_project, no_sys_modules_cache,
+                               skip_repo_validation):
     shutil.copy('pipeline.yaml', 'pipeline.serve.yaml')
 
     exporter = AirflowExporter(path_to_config='soopervisor.yaml',
