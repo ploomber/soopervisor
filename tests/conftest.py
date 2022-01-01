@@ -11,6 +11,8 @@ from copy import copy
 import my_project
 import pytest
 
+from soopervisor import commons
+
 
 def _path_to_tests():
     return Path(__file__).absolute().parent
@@ -184,3 +186,9 @@ def add_current_to_sys_path():
     sys.path.insert(0, os.path.abspath('.'))
     yield sys.path
     sys.path = old
+
+
+@pytest.fixture
+def skip_repo_validation(monkeypatch):
+    # do not validate repository (using the default value will raise an error)
+    monkeypatch.setattr(commons.docker, '_validate_repository', lambda x: x)

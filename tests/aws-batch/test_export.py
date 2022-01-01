@@ -285,8 +285,8 @@ def monkeypatch_docker_client(monkeypatch):
     ],
 )
 def test_export(mock_batch, monkeypatch_docker, monkeypatch,
-                monkeypatch_docker_client, backup_packaged_project, mode,
-                args):
+                monkeypatch_docker_client, backup_packaged_project, mode, args,
+                skip_repo_validation):
 
     commander_mock = MagicMock()
     monkeypatch.setattr(batch, 'Commander',
@@ -360,8 +360,8 @@ def test_stops_if_no_tasks(monkeypatch, backup_packaged_project, capsys):
 
 
 def test_skip_tests(mock_batch, monkeypatch_docker, monkeypatch,
-                    monkeypatch_docker_client, backup_packaged_project,
-                    capsys):
+                    monkeypatch_docker_client, backup_packaged_project, capsys,
+                    skip_repo_validation):
     boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
     monkeypatch.setattr(batch.boto3, 'client',
                         lambda name, region_name: boto3_mock)
@@ -392,7 +392,7 @@ def test_validates_repository(mock_batch, monkeypatch_docker, monkeypatch,
 # TODO: check with non-packaged project
 def test_checks_the_right_spec(mock_batch, monkeypatch_serve_docker,
                                monkeypatch, monkeypatch_docker_client,
-                               backup_packaged_project):
+                               backup_packaged_project, skip_repo_validation):
     shutil.copy('src/my_project/pipeline.yaml',
                 'src/my_project/pipeline.serve.yaml')
 

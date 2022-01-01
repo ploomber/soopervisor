@@ -79,7 +79,7 @@ def test_dockerfile_when_no_setup_py(tmp_sample_project):
 ],
                          ids=['incremental', 'regular', 'force'])
 def test_export(mock_docker_calls, backup_packaged_project, monkeypatch, mode,
-                args):
+                args, skip_repo_validation):
     load_tasks_mock = Mock(wraps=commons.load_tasks)
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
@@ -135,7 +135,8 @@ def test_export(mock_docker_calls, backup_packaged_project, monkeypatch, mode,
     ])
 
 
-def test_custom_volumes(mock_docker_calls, backup_packaged_project):
+def test_custom_volumes(mock_docker_calls, backup_packaged_project,
+                        skip_repo_validation):
     exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
                                      env_name='serve')
     exporter.add()
@@ -223,7 +224,7 @@ def test_stops_if_no_tasks(mock_docker_calls, backup_packaged_project,
 
 
 def test_skip_tests(mock_docker_calls, backup_packaged_project, monkeypatch,
-                    capsys):
+                    capsys, skip_repo_validation):
     exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
                                      env_name='serve')
     exporter.add()
@@ -249,7 +250,8 @@ def test_validates_repository(mock_docker_calls, tmp_sample_project):
 
 # TODO: check with non-packaged project
 def test_checks_the_right_spec(mock_docker_calls_serve,
-                               backup_packaged_project, monkeypatch):
+                               backup_packaged_project, monkeypatch,
+                               skip_repo_validation):
     shutil.copy('src/my_project/pipeline.yaml',
                 'src/my_project/pipeline.serve.yaml')
 

@@ -37,12 +37,6 @@ def _mock_docker_calls(monkeypatch, cmd, proj):
 
 
 @pytest.fixture
-def skip_repo_validation(monkeypatch):
-    # do not validate repository (using the default value will raise an error)
-    monkeypatch.setattr(commons.docker, '_validate_repository', lambda x: x)
-
-
-@pytest.fixture
 def mock_docker_calls(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
