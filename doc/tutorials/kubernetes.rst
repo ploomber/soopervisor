@@ -71,13 +71,19 @@ store everything there:
     Then, open: https://127.0.0.1:2746
 
 
+Let's install ``ploomber``:
+
+.. code-block:: sh
+
+    pip install ploomber
+
 Let's now run a Ploomber sample Machine Learning pipeline:
 
 .. code-block:: sh
 
     # get example
-    git clone https://github.com/ploomber/projects
-    cd projects/templates/ml-online/
+    ploomber examples -n templates/ml-online -o ml-online
+    cd ml-online
 
     # configure development environment
     ploomber install
@@ -199,14 +205,19 @@ Submit a sample workflow to make sure Argo is working:
 
     Then, open: https://127.0.0.1:2746
 
+Install ``ploomber``:
+
+.. code-block:: sh
+
+    pip install ploomber
 
 Let's now run a Ploomber sample Machine Learning pipeline:
 
 .. code-block:: sh
 
-    # get the sample projects
-    git clone https://github.com/ploomber/projects
-    cd projects/templates/ml-online/
+    # get example
+    ploomber examples -n templates/ml-online -o ml-online
+    cd ml-online
 
     # configure development environment
     ploomber install

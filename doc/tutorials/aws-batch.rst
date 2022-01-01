@@ -39,7 +39,7 @@ First, let's install ``ploomber``:
 
     pip install ploomber
 
-We'll now fetch an example pipeline:
+Fetch an example pipeline:
 
 .. code-block:: sh
 

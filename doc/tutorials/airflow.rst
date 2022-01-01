@@ -34,15 +34,20 @@ Pre-requisites
 Instructions
 ------------
 
+First, let's install ``ploomber``:
+
+.. code-block:: sh
+
+    pip install ploomber
+
 
 Let's now pull some sample code:
 
 .. code-block:: sh
 
-    # get the sample projects
-    git clone https://github.com/ploomber/projects
-
-    cd projects/templates/ml-intermediate/
+    # get example
+    ploomber examples -n templates/ml-intermediate -o ml-intermediate
+    cd ml-intermediate
 
 
 Since each task executes in a different Docker container, we have to configure
