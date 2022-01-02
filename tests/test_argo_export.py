@@ -179,6 +179,33 @@ def test_custom_volumes(mock_docker_calls, backup_packaged_project,
     }]
 
 
+def test_export_with_null_repository(mock_docker_calls,
+                                     backup_packaged_project,
+                                     skip_repo_validation, capsys):
+    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
+                                     env_name='serve')
+    exporter.add()
+
+    # set empty repository
+    spec = yaml.safe_load(Path('soopervisor.yaml').read_text())
+    spec['serve']['repository'] = None
+    Path('soopervisor.yaml').write_text(yaml.safe_dump(spec))
+
+    # reload exporter
+    ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
+                          env_name='serve').export(mode='incremental',
+                                                   until=None)
+
+    spec = yaml.safe_load(Path('serve/argo.yaml').read_text())
+
+    script = spec['spec']['templates'][0]['script']
+
+    assert script['imagePullPolicy'] == 'Never'
+
+    captured = capsys.readouterr()
+    assert 'null repository found in soopervisor.yaml' in captured.out
+
+
 # move to project's CI
 @pytest.mark.skip
 @pytest.mark.parametrize(
