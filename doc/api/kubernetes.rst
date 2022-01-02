@@ -16,7 +16,7 @@ Example
         - name: shared-folder
           spec:
             hostPath:
-            path: /host
+              path: /host
 
 
 Schema
