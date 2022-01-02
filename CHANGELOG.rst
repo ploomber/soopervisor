@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.5.2dev
---------
+0.5.2 (2022-01-02)
+------------------
 * Clearer error message when pending ``git commit``
 * Clearer error message when the user does not change docker repository default value (#29)
 * Argo spec sets ``imagePullPolicy`` to ``Never`` if repository is ``null``
