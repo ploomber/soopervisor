@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+0.5.3dev
+--------
+
 0.5.2 (2022-01-02)
 ------------------
 * Clearer error message when pending ``git commit``
