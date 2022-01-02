@@ -3,6 +3,11 @@ CHANGELOG
 
 0.5.2dev
 --------
+* Clearer error message when pending ``git commit``
+* Clearer error message when the user does not change docker repository default value (#29)
+* Argo spec sets ``imagePullPolicy`` to ``Never`` if repository is ``null``
+* Documents Kubernetes/Argo configuration schema
+* General documentation improvements
 
 0.5.1 (2021-07-26)
 ------------------
