@@ -17,6 +17,14 @@ from soopervisor import commons
 class AbstractConfig(BaseModel, abc.ABC):
     """
     Configuration schema
+
+    Parameters
+    ----------
+    include : list of str
+        Files/directories to include in the Docker image
+
+    exclude : list of str
+        Files/directories to exclude from the Docker image
     """
     include: Optional[List[str]] = None
     exclude: Optional[List[str]] = None

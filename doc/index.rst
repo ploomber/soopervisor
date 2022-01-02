@@ -152,6 +152,7 @@ configuration details will change, but the API remains the same:
    :hidden:
 
    api/cli
+   api/kubernetes
 
 
 .. toctree::
