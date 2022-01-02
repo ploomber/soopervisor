@@ -8,267 +8,201 @@ This tutorial shows you how to export a Ploomber pipeline to Airflow.
 If you encounter any issues with this
 tutorial, `let us know <https://github.com/ploomber/soopervisor/issues/new?title=Airflow%20tutorial%20problem>`_.
 
-
-.. note::
-
-    This tutorial uses cloud storage (S3 or Google Cloud Storage). If you're
-    looking for an example that doesn't require any cloud services. Check out
-    the ``minikube`` example: :ref:`minikube-example`
-
-
 Pre-requisites
-**************
+--------------
 
-* `Airflow <https://airflow.apache.org/docs/apache-airflow/stable/start/index.html>`_
-* ``conda`` `See instructions here <https://docs.conda.io/en/latest/miniconda.html>`_
 * `docker <https://docs.docker.com/get-docker/>`_
-* `git <https://git-scm.com/book/en/v2/Getting-Started-Installing-Git>`_
-* Install Ploomber with ``pip install ploomber``
-
-.. note::
-
-    When installing Airflow, you must install Docker dependencies,
-    ``pip install "apache-airflow[docker]"`` should work
 
 
-Instructions
-------------
+Building Docker image
+---------------------
 
-First, let's install ``ploomber``:
+We provide a Docker image so you can quickly run this example:
 
-.. code-block:: sh
+.. code-block:: bash
 
-    pip install ploomber
+    # get repository
+    git clone https://github.com/ploomber/soopervisor
+    cd soopervisor/tutorials/airflow
+
+    # create a directory to store the pipeline output
+    export SHARED_DIR=$HOME/ploomber-airflow
+    mkdir -p $SHARED_DIR
+
+    # build image
+    docker build --tag ploomber-airflow .
+
+    # start
+    docker run -p 8080:8080 --privileged=true \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        --volume $SHARED_DIR:/mnt/shared-folder \
+        --env SHARED_DIR \
+        -i -t ploomber-airflow
 
 
-Let's now pull some sample code:
+Create Kubernetes cluster
+-------------------------
 
-.. code-block:: sh
+By default, the Airflow integration exports each task in your pipeline as a
+Airflow task using the `KubernetesPodOperator <https://airflow.apache.org/docs/apache-airflow-providers-cncf-kubernetes/stable/operators.html>`_,
+so we need to create a Kubernetes cluster to run the example:
+
+The Docker image comes with ``k3d`` pre-installed; let's create a cluster:
+
+.. code-block:: bash
+
+    # create cluster
+    k3d cluster create mycluster --volume $SHARED_DIR:/host
+
+    # check cluster
+    kubectl get nodes
+
+
+Get sample Ploomber pipeline
+-----------------------------
+
+.. code-block:: bash
 
     # get example
     ploomber examples -n templates/ml-intermediate -o ml-intermediate
     cd ml-intermediate
 
-
-Since each task executes in a different Docker container, we have to configure
-cloud storage for tasks to share data. Modify the ``environment.yml`` file and
-add the appropriate dependency:
-
-.. code-block:: yaml
-
-    # content...
-    - pip:
-      # dependencies...
-
-      # add your dependency here
-      - boto3 # if you want to use S3
-      - google-cloud-storage # if you want to use Google Cloud Storage
-
-We also need to configure the pipeline to use cloud storage, open the
-``pipeline.yaml`` file and add the following next to the ``meta`` section.\
-
-.. tab:: S3
-
-    .. code-block:: yaml
-
-        meta:
-            # some content...
-
-        clients:
-            File: clients.get_s3
-
-.. tab:: GCloud
-
-    .. code-block:: yaml
-
-        meta:
-            # some content...
-
-        clients:
-            File: clients.get_gcloud
-
-Now, edit the ``clients.py`` file, you only need to change the ``bucket_name``
-parameter for the corresponding function. For example if using a bucket with
-name ``bucket-name`` and S3, ``clients.py`` should look like this:
+    cp environment.yml environment.lock.yml
+    # configure development environment
+    pip install ploomber soopervisor
+    pip install -r requirements.txt
 
 
-.. tab:: S3
+Configure target platform
+-------------------------
 
-    .. code-block:: python
+.. code-block:: bash
 
-        from ploomber.clients import S3Client
+    # add a new target platform
+    soopervisor add training --backend airflow
 
-        def get_s3():
-            return S3Client(bucket_name='bucket-name',
-                            parent='ml-intermediate',
-                            json_credentials_path='credentials.json')
+Usually, you'd manually edit ``soopervisor.yaml`` to configure your
+environment; for this example, let's use one that we
+`already configured <https://github.com/ploomber/soopervisor/blob/master/tutorials/airflow/soopervisor-airflow.yaml>`_,
+which tells soopervisor to mount a local directory to every pod so we can review results later:
 
-.. tab:: GCloud
+.. code-block:: bash
 
-    .. code-block:: python
-
-        from ploomber.clients import GCloudStorageClient
-
-        def get_gcloud():
-            return GCloudStorageClient(bucket_name='bucket-name',
-                                       parent='ml-online',
-                                       json_credentials_path='credentials.json')
+    cp ../soopervisor-airflow.yaml soopervisor.yaml
 
 
-To authenticate to the cloud storage service, add a ``credentials.json``
-file in the project root (same folder that has the ``environment.yml`` file.
+We must configure the project to store all outputs in the shared folder, so we
+copy the `pre-configured file <https://github.com/ploomber/soopervisor/blob/master/tutorials/airflow/env-airflow.yaml>`_:
+
+.. code-block:: bash
+
+    cp ../env-airflow.yaml env.yaml
 
 
-.. tab:: S3
-
-    .. code-block:: json
-
-        {
-            "aws_access_key_id": "YOUR-ACCESS-KEY-ID",
-            "aws_secret_access_key": "YOU-SECRET-ACCESS-KEY"
-        }
-
-
-.. tab:: GCloud
-
-    .. code-block:: json
+Submit pipeline
+---------------
     
-        {
-            "type": "service_account",
-            "project_id": "project-id",
-            "private_key_id": "private-key-id",
-            "private_key": "private-key",
-            "client_email": "client-email",
-            "client_id": "client-id",
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-            "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/service-account.iam.gserviceaccount.com"
-        }
-  
-  
+.. code-block:: bash
 
-Let's now create the virtual environment:
+    soopervisor export training --skip-tests
 
-.. code-block:: sh
-
-    # configure environment
-    conda env create --file environment.yml
-
-    # activate environment
-    conda activate ml-intermediate
-
-    # generate lock file
-    conda env export --no-build --file environment.lock.yml
+    # import image to the cluster
+    k3d image import ml-intermediate:latest --cluster mycluster
 
 
-Let's now verify that everything is configured correctly:
-
-.. code-block:: sh
-
-    ploomber status
-
-We now export the pipeline to Airflow:
-
-.. code-block:: sh
-
-    soopervisor add train --backend airflow
-
-
-.. note::
-
-    You don't have to install ``soopervisor`` manually; it should've been
-    installed when running ``ploomber install``. If missing, install it with
-    ``pip install soopervisor``.
-
-``soopervisor add`` creates a few new files. Let's configure
-``soopervisor.yaml`` which controls some settings:
-
-
-.. code-block:: yaml
-
-    train:
-      backend: airflow
-      # we will be using docker locally, we set this to null
-      repository: null
-      # make sure our credentials are included when building the image
-      include: [credentials.json]
-
-
-Build the Docker image (takes a few mins the first time):
-    
-.. code-block:: sh
-
-    soopervisor export train
-
-
-Once the export process finishes, you'll see a new ``train/`` folder with
+Once the export process finishes, you'll see a new ``training/`` folder with
 two files: ``ml-intermediate.py`` which is the Airflow DAG and
-``ml-intermediate.json`` which contains information for instantiating the DAG.
+``ml-intermediate.json`` which contains the DAG structure.
+
+Customizing Airflow DAG
+-----------------------
+
+.. code-block:: bash
+
+    cp ../ml-intermediate.py training/ml-intermediate.py
+
+
+Submitting pipeline
+-------------------
+
 To deploy, move those files to your ``AIRFLOW_HOME``.
 
-For example, if ``AIRFLOW_HOME`` is set to ``~/airflow``
-(this is the default value when installing Airflow):
+For example, ``AIRFLOW_HOME`` is ``~/airflow``:
 
-.. code-block:: sh
+.. code-block:: bash
 
-    mkdir -p ~/airflow/dags
-    cp train/ml-intermediate.py ~/airflow/dags
-    cp train/ml-intermediate.json ~/airflow/dags
+    mkdir -p /root/airflow/dags
+    cp training/ml-intermediate.py ~/airflow/dags
+    cp training/ml-intermediate.json ~/airflow/dags
 
-
-.. attention::
-
-    Due to a
-    `bug in the DockerOperator <https://github.com/apache/airflow/issues/13487>`_,
-    we must set ``enable_xcom_pickling = True`` in ``airflow.cfg`` file. By
-    default, this file is located at ``~/airflow/airflow.cfg``.
-
-We're ready to run the pipeline! Start the Airflow scheduler:
-
-.. code-block:: sh
-
-    airflow scheduler
-
-In a new terminal, start the web server:
-
-.. code-block:: sh
-
-    airflow webserver --port 8080
-
-.. note::
-
-    To log in to the web server, you must the credentials configured as part
-    of the setup process when running the ``airflow users create`` command.
+    ls /root/airflow/dags
 
 
 If everything is working, you should see the ``ml-intermediate`` DAG:
-
 
 .. code-block:: sh
 
     airflow dags list
 
-
 Let's trigger a run:
 
+.. airflow is not picking up the new dag, even though it shows after running "airfow dags list", I had to restart it
+
+.. code-block:: bash
+
+    pkill -f airflow
+    cd / && ./start_airflow.sh
 
 .. code-block:: sh
 
     airflow dags unpause ml-intermediate
     airflow dags trigger ml-intermediate
 
-You can check the status in the UI.
+
+**Congratulations! You just ran Ploomber on Airflow! 🎉**
+
+Monitoring execution status
+---------------------------
+
+You may track execution progress from Airflow's UI by opening
+http://localhost:8080 (Username: ``ploomber``, Password: ``ploomber``)
+
 
 Alternatively, with the following command:
 
 .. code-block:: sh
 
-    airflow dags state ml-intermediate "TIMESTAMP"
+    airflow dags state ml-intermediate {TIMESTAMP}
 
 
-.. note:: The TIMESTAMP is printed after running ``airflow dags trigger ml-intermediate``
-    
+The TIMESTAMP shows after running ``airflow dags trigger ml-intermediate``,
+for example, once you execute the ``airflow dags trigger`` command, you'll see
+something like this in the console:
+
+    Created <DagRun ml-intermediate @ 2022-01-02T18:05:19+00:00: manual__2022-01-02T18:05:19+00:00, externally triggered: True>
+
+
+Then, you can get the execution status with:
+
+.. code-block:: sh
+
+    airflow dags state ml-intermediate 2022-01-02T18:05:19+00:00
+
+
+Incremental builds
+------------------
+
+.. TODO
+
+
+Clean up
+--------
+
+To delete the cluster:
+
+.. code-block:: bash
+
+    k3d cluster delete mycluste
 
 
 Airflow DAG customization
@@ -278,3 +212,13 @@ The generated Airflow pipeline consists of ``DockerOperator`` tasks. You may
 edit the generated file (in our case ``serve/ml-intermediate.py`` and customize
 it to suit your needs. Since the Docker image is already configured, you can
 easily switch to ``KubernetesPodOperator`` tasks.
+
+Using the DockerOperator
+------------------------
+
+.. attention::
+
+    Due to a
+    `bug in the DockerOperator <https://github.com/apache/airflow/issues/13487>`_,
+    we must set ``enable_xcom_pickling = True`` in ``airflow.cfg`` file. By
+    default, this file is located at ``~/airflow/airflow.cfg``.

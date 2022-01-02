@@ -4,6 +4,7 @@ import subprocess
 import importlib
 from unittest.mock import Mock, ANY
 from pathlib import Path
+import json
 
 from airflow import DAG
 from airflow.providers.docker.operators.docker import DockerOperator
@@ -121,6 +122,14 @@ def test_airflow_export_sample_project(monkeypatch, mock_docker_calls,
                 'clean': {'raw'},
                 'plot': {'clean'}
             }
+
+    spec = json.loads(Path('serve', 'sample_project.json').read_text())
+
+    assert [t['command'] for t in spec['tasks']] == [
+        'ploomber task raw --entry-point pipeline.yaml',
+        'ploomber task clean --entry-point pipeline.yaml',
+        'ploomber task plot --entry-point pipeline.yaml'
+    ]
 
 
 @pytest.mark.parametrize('mode, args', [
