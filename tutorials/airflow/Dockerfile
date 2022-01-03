@@ -61,4 +61,3 @@ COPY env-airflow.yaml env-airflow.yaml
 COPY ml-intermediate.py ml-intermediate.py
 
 COPY start_airflow.sh start_airflow.sh
-CMD ./start_airflow.sh && /bin/bash

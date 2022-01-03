@@ -207,4 +207,3 @@ To delete the cluster:
 .. code-block:: bash
 
     k3d cluster delete mycluster
-

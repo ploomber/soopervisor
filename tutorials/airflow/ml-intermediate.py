@@ -27,18 +27,20 @@ path_to_spec = Path(__file__).parent / 'ml-intermediate.json'
 spec = json.loads(path_to_spec.read_text())
 
 for task in spec['tasks']:
-    KubernetesPodOperator(image=spec['image'],
-                          cmds=['bash', '-cx'],
-                          arguments=[task['command']],
-                          dag=dag,
-                          task_id=task['name'],
-                          name='ml-intermediate-pod',
-                          in_cluster=False,
-                          do_xcom_push=False,
-                          namespace='default',
-                          image_pull_policy='Never',
-                          volumes=[volume],
-                          volume_mounts=[volume_mount])
+    KubernetesPodOperator(
+        image=spec['image'],
+        cmds=['bash', '-cx'],
+        arguments=[task['command']],
+        dag=dag,
+        task_id=task['name'],
+        name='ml-intermediate-pod',
+        in_cluster=False,
+        do_xcom_push=False,
+        namespace='default',
+        # we want to pull the local image
+        image_pull_policy='Never',
+        volumes=[volume],
+        volume_mounts=[volume_mount])
 
 for task in spec['tasks']:
     t = dag.get_task(task['name'])
