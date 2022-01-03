@@ -28,10 +28,10 @@ def setup(c, version=_DEFAULT_VERSION):
 
 
 @task
-def test(c):
+def test(c, pty=True):
     """Run tests
     """
-    c.run('pytest tests', pty=True)
+    c.run('pytest tests', pty=pty)
 
 
 @task

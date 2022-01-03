@@ -26,4 +26,4 @@ jobs:
         pip install ".[dev]"
     - name: Test with pytest
       run: |
-        pytest tests
+        invoke test --no-pty
