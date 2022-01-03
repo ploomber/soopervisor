@@ -29,8 +29,7 @@ RUN install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 RUN curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash
 
 # install ploomber and soopervisor
-# RUN pip install ploomber soopervisor
-RUN pip install ploomber==0.13.7 git+https://github.com/ploomber/soopervisor@tutorials
+RUN pip install ploomber soopervisor
 
 # copy example and install dependencies
 RUN ploomber examples -n templates/ml-intermediate -o mli

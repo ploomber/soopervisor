@@ -31,12 +31,12 @@ We provide a Docker image so you can quickly run this example:
     docker build --tag ploomber-k8s .
 
     # start
-    docker run \
+    docker run -i -t \
         --privileged=true -v /var/run/docker.sock:/var/run/docker.sock \
         --volume $SHARED_DIR:/mnt/shared-folder \
         --env SHARED_DIR \
         -p 2746:2746 \
-        -i -t ploomber-k8s /bin/bash
+        ploomber-k8s /bin/bash
 
 Create Kubernetes cluster
 *************************
@@ -71,6 +71,7 @@ We now install argo; note that we are using a custom installation file
 .. tip::
     Optionally, submit sample Argo workflow to ensure everything is working:
 
+    .. skip-next
     .. code-block:: bash
 
         argo submit -n argo --watch https://raw.githubusercontent.com/argoproj/argo-workflows/master/examples/hello-world.yaml
@@ -156,6 +157,7 @@ Once the execution finishes, take a look at the generated artifacts:
 
     You may also watch the progress from the UI.
 
+    .. skip-next
     .. code-block:: sh
 
         # port forwarding to enable the UI
