@@ -31,7 +31,9 @@ def setup(c, version=_DEFAULT_VERSION):
 def test(c, pty=True):
     """Run tests
     """
-    c.run('pytest tests', pty=pty)
+    # run tests except test_tutorials.py - that one needs extra config,
+    # we're not running it as part of the CI
+    c.run('pytest tests --ignore=tests/test_tutorials.py', pty=pty)
 
 
 @task

@@ -47,6 +47,11 @@ def _path_to_tests():
 
 
 @pytest.fixture
+def root_path():
+    return _path_to_tests().parent
+
+
+@pytest.fixture
 def faker():
     return Faker()
 
