@@ -33,6 +33,7 @@ Supported platforms
 * Batch serving and large-scale training:
 
   * Kubernetes / Argo Workflows
+  * Airflow
   * AWS Batch
 
 * Online inference:
@@ -57,6 +58,6 @@ After filling in some basic configuration settings, export the pipeline with:
    soopervisor export training
 
 
-Depending on the selected backend (Argo, Airflow, AWS Batch or AWS Lambda),
-configuration details will change but the API remains the same:
+Depending on the selected backend (Argo, Airflow, AWS Batch, or AWS Lambda),
+configuration details will change, but the API remains the same:
 ``soopervisor add``, then ``soopervisor export``.
