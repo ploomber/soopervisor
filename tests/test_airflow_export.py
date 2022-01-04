@@ -179,6 +179,9 @@ def test_export_airflow_callables(monkeypatch, mock_docker_calls_callables,
     assert td['fit'].arguments == [template.format('fit') + args]
     assert td['join'].arguments == [template.format('join') + args]
 
+    assert {t.image for t in td.values()} == {'your-repository/name:latest'}
+    assert {tuple(t.cmds) for t in td.values()} == {('bash', '-cx')}
+
 
 def test_stops_if_no_tasks(monkeypatch, mock_docker_calls, tmp_sample_project,
                            no_sys_modules_cache, capsys):
