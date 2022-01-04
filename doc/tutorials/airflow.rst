@@ -37,6 +37,7 @@ We provide a Docker image so you can quickly run this example:
         -v /var/run/docker.sock:/var/run/docker.sock \
         --volume $SHARED_DIR:/mnt/shared-folder \
         --env SHARED_DIR \
+        --env PLOOMBER_STATS_ENABLED=false \
         ploomber-airflow /bin/bash
 
 
