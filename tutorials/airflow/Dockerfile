@@ -38,7 +38,6 @@ RUN pip install -r mli/requirements.txt
 # install airflow and extra dependencies
 RUN pip install apache-airflow
 RUN pip install apache-airflow-providers-cncf-kubernetes
-RUN pip install apache-airflow-providers-docker
 
 # configure airlow
 ENV AIRFLOW__CORE__LOAD_EXAMPLES=False
