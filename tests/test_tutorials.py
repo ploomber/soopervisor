@@ -1,5 +1,9 @@
 import subprocess
 
+# NOTE: to_testing_files_from_path depends the latest version of docutils
+# but sphinx or airflow may try to downgrade it. If you get the
+# AttributeError: 'Values' object has no attribute 'tab_width error, upgrade
+# docutils
 from pkgmt.testing.docker import to_testing_files_from_path
 
 
