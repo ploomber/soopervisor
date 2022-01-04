@@ -181,7 +181,7 @@ You'll see a message like this: ``Loaded DAG in 'incremental' mode has no tasks 
 Soopervisor checks the status of your pipeline and only schedules tasks that have changed
 since the last run; since all your tasks are the same, there is nothing to run!
 
-Let's now modify one of the tasks and submit again:
+Let's now modify one of the tasks and submit it again:
 
 .. code-block:: bash
 
@@ -193,9 +193,9 @@ Let's now modify one of the tasks and submit again:
     k3d image import ml-intermediate:latest --cluster mycluster
     argo submit -n argo --watch training/argo.yaml
 
-You'll see that this time, only the ``fit`` task ran, because that's the only
+You'll see that this time, only the ``fit`` task ran because that's the only
 tasks whose source code change, we call this incremental builds, and they're a
-great feature for quickly running experiments in your pipeline such as changing
+a great feature for quickly running experiments in your pipeline, such as changing
 model hyperparameters or adding new pre-processing methods; it saves a lot of
 time since you don't have to execute the entire pipeline every time.
 
