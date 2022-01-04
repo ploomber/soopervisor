@@ -34,13 +34,12 @@ for task in spec['tasks']:
         dag=dag,
         task_id=task['name'],
         name='ml-intermediate-pod',
+        volumes=[volume],
+        volume_mounts=[volume_mount],
         in_cluster=False,
         do_xcom_push=False,
-        namespace='default',
-        # we want to pull the local image
-        image_pull_policy='Never',
-        volumes=[volume],
-        volume_mounts=[volume_mount])
+        # to force local image pulling
+        image_pull_policy='Never')
 
 for task in spec['tasks']:
     t = dag.get_task(task['name'])
