@@ -279,7 +279,7 @@ Using the DockerOperator
 ------------------------
 
 If you prefer so, you may switch ``KubernetesPodOperator`` for
-``DockerOperator``. Simply edit the generated ``.py`` file:
+``DockerOperator``. Edit the generated ``.py`` file:
 
 .. code-block:: python
 
