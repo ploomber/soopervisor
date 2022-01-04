@@ -7,7 +7,9 @@ from pathlib import Path
 import json
 
 from airflow import DAG
-from airflow.providers.docker.operators.docker import DockerOperator
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod \
+    import KubernetesPodOperator
+from ploomber.io import _commander, _commander_tester
 import pytest
 
 from conftest import _mock_docker_calls
@@ -115,7 +117,7 @@ def test_airflow_export_sample_project(monkeypatch, mock_docker_calls,
                                             mode='incremental')
     assert isinstance(dag, DAG)
     assert set(dag.task_dict) == {'clean', 'plot', 'raw'}
-    assert set(type(t) for t in dag.tasks) == {DockerOperator}
+    assert set(type(t) for t in dag.tasks) == {KubernetesPodOperator}
     assert {n: t.upstream_task_ids
             for n, t in dag.task_dict.items()} == {
                 'raw': set(),
@@ -159,7 +161,7 @@ def test_export_airflow_callables(monkeypatch, mock_docker_calls_callables,
     # check tasks in dag
     assert set(dag.task_dict) == {'features', 'fit', 'get', 'join'}
     # check task's class
-    assert set(type(t) for t in dag.tasks) == {DockerOperator}
+    assert set(type(t) for t in dag.tasks) == {KubernetesPodOperator}
     # check dependencies
     assert {n: t.upstream_task_ids
             for n, t in dag.task_dict.items()} == {
@@ -172,10 +174,10 @@ def test_export_airflow_callables(monkeypatch, mock_docker_calls_callables,
     # check generated scripts
     td = dag.task_dict
     template = 'ploomber task {} --entry-point pipeline.yaml'
-    assert td['get'].command == template.format('get') + args
-    assert td['features'].command == template.format('features') + args
-    assert td['fit'].command == template.format('fit') + args
-    assert td['join'].command == template.format('join') + args
+    assert td['get'].arguments == [template.format('get') + args]
+    assert td['features'].arguments == [template.format('features') + args]
+    assert td['fit'].arguments == [template.format('fit') + args]
+    assert td['join'].arguments == [template.format('join') + args]
 
 
 def test_stops_if_no_tasks(monkeypatch, mock_docker_calls, tmp_sample_project,

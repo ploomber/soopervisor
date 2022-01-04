@@ -46,9 +46,12 @@ DEV = [
     'Faker',
     'yapf',
     'flake8',
-    # soopervisor works with airflow 1.X as well but this prevents pip
-    # from installing it (tests will not pass since imports are different)
-    'apache-airflow[docker]>=2',
+    # soopervisor works with airflow 1.X as well but we force the version
+    # to prevent pip from installing it (tests will not pass since imports are
+    # different)
+    'apache-airflow',
+    # KubernetesPodOperator
+    'apache-airflow-providers-cncf-kubernetes',
     # to validate argo specs
     'argo-workflows-dsl',
     # for testing aws (newer versions break)
