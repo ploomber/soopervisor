@@ -17,12 +17,14 @@ Supported platforms
 
 * Batch serving and large-scale training:
 
-  * Kubernetes / Argo Workflows
-  * AWS Batch
+  * :doc:`Argo/Kubernetes <tutorials/kubernetes>`
+  * :doc:`Airflow <tutorials/airflow>`
+  * :doc:`AWS Batch <tutorials/aws-batch>`
+  * :doc:`SLURM <tutorials/slurm>`
 
 * Online inference:
 
-  * AWS Lambda
+  * :doc:`AWS Lambda <tutorials/aws-lambda>`
 
 
 Standard layout

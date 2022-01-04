@@ -1,13 +1,20 @@
 Slurm
 =====
 
+.. tip:: **Got questions?** Reach out to us on `Slack <https://ploomber.io/community/>`_.
+
+This tutorial shows you how to export a Ploomber pipeline to `SLURM <https://slurm.schedmd.com/documentation.html>`_.
+
+If you encounter any issues with this
+tutorial, `let us know <https://github.com/ploomber/soopervisor/issues/new?title=SLURM%20tutorial%20problem>`_.
+
+Pre-requisites
+--------------
+
 .. important::
 
     This integration requires ploomber 0.13.7 or higher (To upgrade:
     ``pip install ploomber --upgrade``)
-
-Pre-requisites
---------------
 
 * `docker and docker-compose <https://docs.docker.com/get-docker/>`_
 
