@@ -25,5 +25,7 @@ jobs:
         pip install -e tests/assets/my_project
         pip install ".[dev]"
     - name: Test with pytest
+      env:
+        PLOOMBER_STATS_ENABLED: false
       run: |
         invoke test
