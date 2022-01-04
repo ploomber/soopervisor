@@ -9,7 +9,6 @@ import json
 from airflow import DAG
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod \
     import KubernetesPodOperator
-from ploomber.io import _commander, _commander_tester
 import pytest
 
 from conftest import _mock_docker_calls
