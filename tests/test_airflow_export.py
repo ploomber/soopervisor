@@ -7,9 +7,9 @@ from pathlib import Path
 
 from airflow import DAG
 from airflow.providers.docker.operators.docker import DockerOperator
-from ploomber.io import _commander, _commander_tester
 import pytest
 
+from conftest import _mock_docker_calls
 from soopervisor.airflow.export import AirflowExporter, commons
 from soopervisor.exceptions import ConfigurationError
 
@@ -22,26 +22,12 @@ def git_init():
     subprocess.check_call(['git', 'commit', '-m', 'commit'])
 
 
-def _mock_docker_calls(monkeypatch, cmd, proj):
-    tester = _commander_tester.CommanderTester(
-        return_value={
-            ('docker', 'run', f'{proj}:latest', 'python', '-c', cmd): b'True\n'
-        })
-
-    subprocess_mock = Mock()
-    subprocess_mock.check_call.side_effect = tester
-    subprocess_mock.check_output.side_effect = tester
-    monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
-
-    return tester
-
-
 @pytest.fixture
 def mock_docker_calls(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
            'DAGSpec("pipeline.yaml").to_dag().clients)')
-    yield _mock_docker_calls(monkeypatch, cmd, 'sample_project')
+    yield _mock_docker_calls(monkeypatch, cmd, 'sample_project', 'latest')
 
 
 @pytest.fixture
@@ -49,7 +35,7 @@ def mock_docker_calls_serve(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
            'DAGSpec("pipeline.serve.yaml").to_dag().clients)')
-    yield _mock_docker_calls(monkeypatch, cmd, 'sample_project')
+    yield _mock_docker_calls(monkeypatch, cmd, 'sample_project', 'latest')
 
 
 @pytest.fixture
@@ -57,7 +43,7 @@ def mock_docker_calls_callables(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
            'DAGSpec("pipeline.yaml").to_dag().clients)')
-    yield _mock_docker_calls(monkeypatch, cmd, 'callables')
+    yield _mock_docker_calls(monkeypatch, cmd, 'callables', 'latest')
 
 
 # need to modify the env.airflow.yaml name

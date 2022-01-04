@@ -7,11 +7,30 @@ import os
 import shutil
 from pathlib import Path
 from copy import copy
+from unittest.mock import Mock
 
 import my_project
 import pytest
+from ploomber.io import _commander, _commander_tester
 
 from soopervisor import commons
+
+
+def _mock_docker_calls(monkeypatch, cmd, proj, tag):
+    tester = _commander_tester.CommanderTester(
+        run=[
+            ('python', '-m', 'build', '--sdist'),
+        ],
+        return_value={
+            ('docker', 'run', f'{proj}:{tag}', 'python', '-c', cmd): b'True\n'
+        })
+
+    subprocess_mock = Mock()
+    subprocess_mock.check_call.side_effect = tester
+    subprocess_mock.check_output.side_effect = tester
+    monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
+
+    return tester
 
 
 def _path_to_tests():
