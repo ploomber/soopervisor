@@ -13,7 +13,6 @@ from conftest import _mock_docker_calls
 from soopervisor.aws import batch
 from soopervisor.aws.batch import commons
 from soopervisor.exceptions import ConfigurationError
-from ploomber.io import _commander, _commander_tester
 from ploomber.util import util
 
 service_role = {

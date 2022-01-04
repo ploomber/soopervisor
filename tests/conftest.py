@@ -17,6 +17,15 @@ from soopervisor import commons
 
 
 def _mock_docker_calls(monkeypatch, cmd, proj, tag):
+    """
+    Mock subprocess calls made by ploomber.io._commander.Commander (which
+    is used interally by the soopervisor.commons.docker module).
+
+    This allows us to prevent actual CLI calls to "docker run". Instead, we
+    mock the call and return a value. However, this function will allow calls
+    to "python -m build --sdist" to pass. For details, see the CommanderTester
+    docstring in the ploomber package.
+    """
     tester = _commander_tester.CommanderTester(
         run=[
             ('python', '-m', 'build', '--sdist'),
