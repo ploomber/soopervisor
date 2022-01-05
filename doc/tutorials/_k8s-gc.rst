@@ -256,7 +256,6 @@ in ``/mnt/nfs/`` on each pod. Now, we must configure the pipeline to store all
 products in ``/mnt/nfs/``. Create an ``env.yaml`` file in the root folder
 (same folder that contains the ``setup.py`` file) with this content:
 
-
 .. code-block:: yaml
 
     sample: False
