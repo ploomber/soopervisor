@@ -38,7 +38,7 @@ We provide a Docker image so you can quickly run this example:
     # build image
     docker build --tag ploomber-workflow .
 
-    # start
+    # start (takes ~1 minute to be ready)
     docker run -i -t \
         --privileged=true -v /var/run/docker.sock:/var/run/docker.sock \
         --volume $SHARED_DIR:/mnt/shared-folder \
@@ -47,6 +47,12 @@ We provide a Docker image so you can quickly run this example:
         -p 2746:2746 \
         ploomber-workflow
 
+
+.. note::
+
+    We need to run ``docker run`` in privileged mode since we'll be running
+    ``docker`` commands inside the container.
+    `More on that here <https://www.docker.com/blog/docker-can-now-run-within-docker/>`_
 
 .. Upon initialization, JupyterLab will be running at https://127.0.0.1:8888
 

@@ -26,6 +26,12 @@ Supported platforms
 
   * :doc:`AWS Lambda <tutorials/aws-lambda>`
 
+From notebook to a production pipeline
+======================================
+
+We also have :doc:`an example <tutorials/workflow>` that shows how to use our ecosystem of tools to
+go **from a monolithic notebook to a pipeline deployed in Kubernetes.**
+
 
 Standard layout
 ===============
@@ -132,6 +138,7 @@ configuration details will change, but the API remains the same:
    tutorials/aws-batch
    tutorials/airflow
    tutorials/slurm
+   tutorials/workflow
 
 
 .. toctree::

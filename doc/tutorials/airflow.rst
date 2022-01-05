@@ -41,6 +41,13 @@ We provide a Docker image so you can quickly run this example:
         ploomber-airflow /bin/bash
 
 
+.. note::
+
+    We need to run ``docker run`` in privileged mode since we'll be running
+    ``docker`` commands inside the container.
+    `More on that here <https://www.docker.com/blog/docker-can-now-run-within-docker/>`_
+
+
 Create Kubernetes cluster
 -------------------------
 
