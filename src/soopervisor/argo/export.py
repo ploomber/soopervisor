@@ -72,8 +72,7 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
                             pkg_name=pkg_name,
                             target_image=target_image)
 
-            cmdr.info('Submitting jobs to Argo Workflows')
-            cmdr.success('Done. Submitted to Argo Workflows')
+            cmdr.success('Done.')
 
 
 # TODO: delete
