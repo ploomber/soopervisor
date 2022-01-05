@@ -65,7 +65,7 @@ Let's now run a Ploomber sample Machine Learning pipeline:
     ploomber examples -n templates/ml-online -o ml-online
     cd ml-online
 
-    # configure the development environment
+    # configure development environment
     ploomber install
 
     # activate environment
@@ -132,14 +132,14 @@ We are ready to execute the workflow:
     # authenticate to push docker image
     gcloud auth configure-docker
 
-    # packages code, create docker image, and upload it (takes a few minutes)
+    # packages code, create docker image and upload it (takes a few mins)
     soopervisor export training
 
     # submit workflow
     argo submit -n argo training/argo.yaml
 
 
-You may keep track of execution by opening the UI. Check out the bucket to see the output.
+You may keep track of execution by opening the UI. Check out the bucket to see output.
 
 **Congratulations! You just ran Ploomber on Kubernetes!**
 
@@ -171,11 +171,11 @@ Optional: Mounting a shared disk
 
 In the example, we configured the ``pipeline.yaml`` file to use Google Cloud
 Storage to store artifacts, this serves two purposes: 1) Make artifacts
-available to us upon execution, and 2) Make artifacts available to downstream
+available to us upon execution, and 2) Make artifacts available to dowstream
 tasks.
 
 This happens because pods run in isolation, if task B depends on task A, it
-will fetch A's output from cloud storage before execution. We can save download
+will fetch A's output from cloud storage before execution. We can save dowload
 time (and cut costs) by mounting a shared volume so that B doesn't have to
 download A's output. Ploomber automatically detects this change and only calls
 the cloud storage API for uploading.
@@ -187,7 +187,7 @@ Here's how to configure a shared disk:
     # create disk. make sure the zone matches your cluster
     gcloud compute disks create --size=10GB --zone=us-east1-b gce-nfs-disk
 
-    # configure the NFS server
+    # configure the nfs server
     curl -O https://raw.githubusercontent.com/ploomber/soopervisor/master/doc/assets/01-nfs-server.yaml
     kubectl apply -f 01-nfs-server.yaml
 
@@ -207,7 +207,7 @@ Here's how to configure a shared disk:
 
 .. code-block:: sh
 
-    # run sample workflow (uses NFS and creates an empty file on it)
+    # run sample workflow (uses nfs and creates an empty file on it)
     curl -O https://raw.githubusercontent.com/ploomber/soopervisor/master/doc/assets/dag.yaml
     argo submit -n argo --watch dag.yaml
 
@@ -216,7 +216,7 @@ Check the output:
 
 .. code-block:: sh
 
-    # get NFS-server pod name
+    # get nfs-server pod name
     kubectl get pod
 
     # replace with the name of the pod
@@ -251,10 +251,11 @@ to modify ``soopervisor.yaml``:
             persistentVolumeClaim:
               claimName: nfs
 
-This exposes ``/my-shared-folder`` subdirectory in our shared disk
+This exposes ``/my-shared-folder`` sub directory in our shared disk
 in ``/mnt/nfs/`` on each pod. Now, we must configure the pipeline to store all
 products in ``/mnt/nfs/``. Create an ``env.yaml`` file in the root folder
 (same folder that contains the ``setup.py`` file) with this content:
+
 
 .. code-block:: yaml
 

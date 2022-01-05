@@ -9,10 +9,10 @@ import pytest
 import moto
 import boto3
 
+from conftest import _mock_docker_calls
 from soopervisor.aws import batch
 from soopervisor.aws.batch import commons
 from soopervisor.exceptions import ConfigurationError
-from ploomber.io import _commander, _commander_tester
 from ploomber.util import util
 
 service_role = {
@@ -226,31 +226,13 @@ def index_commands_by_name(submitted):
     }
 
 
-def _monkeypatch_docker(monkeypatch, cmd):
-    tester = _commander_tester.CommanderTester(
-        run=[
-            ('python', '-m', 'build', '--sdist'),
-        ],
-        return_value={
-            ('docker', 'run', 'my_project:0.1dev', 'python', '-c', cmd):
-            b'True\n'
-        })
-
-    subprocess_mock = Mock()
-    subprocess_mock.check_call.side_effect = tester
-    subprocess_mock.check_output.side_effect = tester
-    monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
-
-    return tester
-
-
 @pytest.fixture
 def monkeypatch_docker(monkeypatch):
     path = str(Path('src', 'my_project', 'pipeline.yaml'))
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
            f'DAGSpec("{path}").to_dag().clients)')
-    yield _monkeypatch_docker(monkeypatch, cmd)
+    yield _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
 
 
 @pytest.fixture
@@ -259,7 +241,7 @@ def monkeypatch_serve_docker(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
            f'DAGSpec("{path}").to_dag().clients)')
-    yield _monkeypatch_docker(monkeypatch, cmd)
+    yield _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
 
 
 @pytest.fixture

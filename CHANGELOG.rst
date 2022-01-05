@@ -1,8 +1,14 @@
 CHANGELOG
 =========
 
-0.5.3dev
+0.6.1dev
 --------
+
+0.6 (2022-01-04)
+----------------
+* Adds support for SLURM
+* ``AirflowExporter`` uses ``KubernetesPodOperator`` by default (#33)
+* Simplified Airflow and Argo/k8s tutorials
 
 0.5.2 (2022-01-02)
 ------------------

@@ -53,9 +53,6 @@ DEV = [
     # KubernetesPodOperator
     'apache-airflow-providers-cncf-kubernetes',
     'kfp',
-    # soopervisor works with airflow 1.X as well but this prevents pip
-    # from installing it (tests will not pass since imports are different)
-    'apache-airflow[docker]>=2',
     # to validate argo specs
     'argo-workflows-dsl',
     # for testing aws (newer versions break)
