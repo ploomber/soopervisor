@@ -9,29 +9,12 @@ import yaml
 import pytest
 from argo.workflows.dsl import Workflow
 from ploomber.spec import DAGSpec
-from ploomber.io import _commander, _commander_tester
 from click.testing import CliRunner
 
+from conftest import _mock_docker_calls
 from soopervisor.argo.export import ArgoWorkflowsExporter, commons
 from soopervisor import cli
-
-
-def _mock_docker_calls(monkeypatch, cmd):
-    tester = _commander_tester.CommanderTester(
-        run=[
-            ('python', '-m', 'build', '--sdist'),
-        ],
-        return_value={
-            ('docker', 'run', 'my_project:0.1dev', 'python', '-c', cmd):
-            b'True\n'
-        })
-
-    subprocess_mock = Mock()
-    subprocess_mock.check_call.side_effect = tester
-    subprocess_mock.check_output.side_effect = tester
-    monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
-
-    return tester
+from soopervisor.exceptions import ConfigurationError
 
 
 @pytest.fixture
@@ -40,7 +23,7 @@ def mock_docker_calls(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
            f'DAGSpec("{path}").to_dag().clients)')
-    tester = _mock_docker_calls(monkeypatch, cmd)
+    tester = _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
     yield tester
 
 
@@ -50,7 +33,7 @@ def mock_docker_calls_serve(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
            f'DAGSpec("{path}").to_dag().clients)')
-    tester = _mock_docker_calls(monkeypatch, cmd)
+    tester = _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
     yield tester
 
 
@@ -78,7 +61,7 @@ def test_dockerfile_when_no_setup_py(tmp_sample_project):
 ],
                          ids=['incremental', 'regular', 'force'])
 def test_export(mock_docker_calls, backup_packaged_project, monkeypatch, mode,
-                args):
+                args, skip_repo_validation):
     load_tasks_mock = Mock(wraps=commons.load_tasks)
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
@@ -115,7 +98,7 @@ def test_export(mock_docker_calls, backup_packaged_project, monkeypatch, mode,
     assert run_task_template['script']['workingDir'] is None
 
     assert run_task_template['script'][
-        'image'] == 'your-repository/name:0.1dev'
+        'image'] == 'image_target:0.1dev'
     assert run_task_template['name'] == 'run-task'
     assert spec['metadata']['generateName'] == 'my-project-'
     assert all([
@@ -134,7 +117,8 @@ def test_export(mock_docker_calls, backup_packaged_project, monkeypatch, mode,
     ])
 
 
-def test_custom_volumes(mock_docker_calls, backup_packaged_project):
+def test_custom_volumes(mock_docker_calls, backup_packaged_project,
+                        skip_repo_validation):
     exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
                                      env_name='serve')
     exporter.add()
@@ -175,6 +159,33 @@ def test_custom_volumes(mock_docker_calls, backup_packaged_project):
         'subPath':
         'some_subpath'
     }]
+
+
+def test_export_with_null_repository(mock_docker_calls,
+                                     backup_packaged_project,
+                                     skip_repo_validation, capsys):
+    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
+                                     env_name='serve')
+    exporter.add()
+
+    # set empty repository
+    spec = yaml.safe_load(Path('soopervisor.yaml').read_text())
+    spec['serve']['repository'] = None
+    Path('soopervisor.yaml').write_text(yaml.safe_dump(spec))
+
+    # reload exporter
+    ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
+                          env_name='serve').export(mode='incremental',
+                                                   until=None)
+
+    spec = yaml.safe_load(Path('serve/argo.yaml').read_text())
+
+    script = spec['spec']['templates'][0]['script']
+
+    assert script['imagePullPolicy'] == 'Never'
+
+    captured = capsys.readouterr()
+    assert 'null repository found in soopervisor.yaml' in captured.out
 
 
 # move to project's CI
@@ -222,7 +233,7 @@ def test_stops_if_no_tasks(mock_docker_calls, backup_packaged_project,
 
 
 def test_skip_tests(mock_docker_calls, backup_packaged_project, monkeypatch,
-                    capsys):
+                    capsys, skip_repo_validation):
     exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
                                      env_name='serve')
     exporter.add()
@@ -233,9 +244,23 @@ def test_skip_tests(mock_docker_calls, backup_packaged_project, monkeypatch,
     assert 'Testing File client' not in captured.out
 
 
+def test_validates_repository(mock_docker_calls, tmp_sample_project):
+    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
+                                     env_name='serve')
+    exporter.add()
+
+    with pytest.raises(ConfigurationError) as excinfo:
+        exporter.export(mode='incremental', until=None, skip_tests=True)
+
+    assert str(
+        excinfo.value) == ("Invalid repository 'your-repository/name' "
+                           "in soopervisor.yaml, please add a valid value.")
+
+
 # TODO: check with non-packaged project
 def test_checks_the_right_spec(mock_docker_calls_serve,
-                               backup_packaged_project, monkeypatch):
+                               backup_packaged_project, monkeypatch,
+                               skip_repo_validation):
     shutil.copy('src/my_project/pipeline.yaml',
                 'src/my_project/pipeline.serve.yaml')
 

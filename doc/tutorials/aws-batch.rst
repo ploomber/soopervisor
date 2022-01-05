@@ -1,7 +1,7 @@
 AWS Batch
 =========
 
-.. note:: **Got questions?** Reach out to us on `Slack <http://community.ploomber.io/>`_.
+.. note:: **Got questions?** Reach out to us on `Slack <https://ploomber.io/community/>`_.
 
 `AWS Batch <https://aws.amazon.com/batch/>`_ is a managed service for batch
 computing. This tutorial shows you how to submit a Ploomber pipeline to AWS
@@ -15,16 +15,14 @@ tutorial, `let us know <https://github.com/ploomber/soopervisor/issues/new?title
 Pre-requisites
 --------------
 
-
-* `conda instructions <https://docs.conda.io/en/latest/miniconda.html>`_
-* `docker instructions <https://docs.docker.com/get-docker/>`_
-* `aws instructions <https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html>`_
+* `conda <https://docs.conda.io/en/latest/miniconda.html>`_
+* `docker <https://docs.docker.com/get-docker/>`_
+* `aws cli <https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html>`_
 * `git <https://git-scm.com/book/en/v2/Getting-Started-Installing-Git>`_
-* Install Ploomber with ``pip install ploomber``
 
 ``soopervisor`` takes your pipeline, packages it, creates a Docker image,
-uploads it and submits it for execution; however, you still have to configure
-the AWS Batch environment. Specifically, you must configure a compute
+uploads it, and submits it for execution; however, you still have to configure
+the AWS Batch environment. Specifically, you must configure a computing
 environment and a job queue. `Refer to this guide for instructions. <https://docs.aws.amazon.com/batch/latest/userguide/Batch_GetStarted.html>`_
 
 .. note:: Only EC2 compute environments are supported.
@@ -35,12 +33,19 @@ the next step.
 Setting up project
 ------------------
 
-We'll now fetch an example pipeline:
+First, let's install ``ploomber``:
 
 .. code-block:: sh
 
-    git clone https://github.com/ploomber/projects
-    cd projects/templates/ml-online/
+    pip install ploomber
+
+Fetch an example pipeline:
+
+.. code-block:: sh
+
+    # get example
+    ploomber examples -n templates/ml-online -o ml-online
+    cd ml-online
 
 Configure the development environment:
 
@@ -59,7 +64,7 @@ Then, activate the environment:
 Configure S3 client
 -------------------
 
-Now, we must configure a client to upload all generated artifacts to S3. To
+We must configure a client to upload all generated artifacts to S3. To
 obtain such credentials, you may use the AWS console, ensure you give read
 and write S3 access. You may also create an S3 bucket or use one you already
 have.
@@ -95,11 +100,11 @@ it looks like this:
 
 
 Go to the ``src/ml_online/clients.py`` file and edit the ``get_s3`` function,
-modify the ``bucket_name`` and ``parent`` parameters. The latter is the folder
-inside the bucket where you want to save pipeline artifacts. Ignore the
+modifying the ``bucket_name`` and ``parent`` parameters. The latter is the folder
+inside the bucket to save pipeline artifacts. Ignore the
 second function; it's not relevant for this example.
 
-To make sure your pipeline is properly configured, run:
+To make sure your pipeline works, run:
 
 .. code-block:: sh
 
@@ -133,14 +138,11 @@ Let's now create the necessary files to export our Docker image:
 
 .. code-block:: sh
 
+    # get soopervisor
+    pip install soopervisor
+
+    # register new environment
     soopervisor add training --backend aws-batch
-
-
-.. note::
-
-    You don't have to install ``soopervisor`` manually; it should've been
-    installed when running ``ploomber install``. If missing, install it with
-    ``pip install soopervisor``.
 
 
 Open the ``soopervisor.yaml`` file and fill in the missing values in
@@ -163,8 +165,8 @@ Submit for execution:
 
     soopervisor export training
 
-The previous command will take a few minutes the first time since it has to
-build the Docker image from scratch. Subsequent runs will be much faster.
+The previous command will take a few minutes since it has to
+build the Docker image from scratch. After that, subsequent runs will be much faster.
 
 
 .. note:: 
@@ -172,12 +174,12 @@ build the Docker image from scratch. Subsequent runs will be much faster.
     if you successfully submitted tasks, but they are stuck in the console in
     ``RUNNABLE`` status. It's likely that the requested resources (the
     ``container_properties`` section in ``soopervisor.yaml``) exceeded the capacity
-    of the compute environment. Try lowering resources and submit again. If
+    of the computing environment. Try lowering resources and submit again. If
     that doesn't work, `check this out <https://aws.amazon.com/premiumsupport/knowledge-center/batch-job-stuck-runnable-status/>`_.
 
 .. tip::
 
-    To number of concurrent jobs is limited by the resources in the Compute
+    The number of concurrent jobs is limited by the resources in the Compute
     Environment. Increase them to run more tasks in parallel.
 
 **Congratulations! You just ran Ploomber on AWS Batch!**

@@ -1,7 +1,7 @@
 AWS Lambda
 ==========
 
-.. note:: **Got questions?** Reach out to us on `Slack <http://community.ploomber.io/>`_.
+.. note:: **Got questions?** Reach out to us on `Slack <https://ploomber.io/community/>`_.
 
 `AWS Lambda <https://aws.amazon.com/lambda/>`_ is a serverless compute service.
 It allows you to deploy functions in the cloud without worrying about servers
@@ -43,7 +43,7 @@ In our case, your inference pipeline includes "compute feature 1" and
 data and another one to load a model and make a prediction using the feature
 vector.
 
-This tutorials will walk you through the development and deployment process.
+This tutorial will walk you through the development and deployment process.
 
 Setting up project
 ------------------
@@ -86,7 +86,7 @@ its structure:
 
 
 Open the generated ``pipeline.png`` file. The left-most task in the pipeline
-obtains data for training, then we have a couple tasks that geneate some
+obtains data for training, then we have a of couple tasks that generate some
 extra feature, a task that joins all features into a single data frame and
 one that fits a model.
 
@@ -140,11 +140,11 @@ Let's now create the necessary files to export to AWS Lambda:
     ``pip install soopervisor``.
 
 You have to provide a few details before you can run the model in AWS Lambda.
-First, edit the  ``serve/test_aws_lambda.py`` file. Such file contains a
+First, edit the  ``serve/test_aws_lambda.py`` file. This file contains a
 unit test to ensure your model works as expected.
 
 The test case is already configured, you only have to replace the line that
-contaiins ``body = None`` for a sample input value. In our case, it looks
+contains, ``body = None`` for a sample input value. In our case, it looks
 like this:
 
 .. code-block:: python
@@ -208,12 +208,12 @@ Deployment
 
 explain the --guided thing and add some link
 
-you must be authenticated to use lambda, s3 and cloudformation
+you must be authenticated to use lambda, s3, and CloudFormation
 
 About ``template.yaml``
 -----------------------
 
-To deploy to Lamnda, AWS requires a ``template.yaml`` file to specify your
+To deploy to Lambda, AWS requires a ``template.yaml`` file to specify your
 serverless application. A sample file that configures an API Gateway is
 provided, but you may need to edit it for your application.
 `Click here to learn more <https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification.html>`_.

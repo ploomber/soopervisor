@@ -7,13 +7,48 @@ import os
 import shutil
 from pathlib import Path
 from copy import copy
+from unittest.mock import Mock
 
 import my_project
 import pytest
+from ploomber.io import _commander, _commander_tester
+
+from soopervisor import commons
+
+
+def _mock_docker_calls(monkeypatch, cmd, proj, tag):
+    """
+    Mock subprocess calls made by ploomber.io._commander.Commander (which
+    is used interally by the soopervisor.commons.docker module).
+
+    This allows us to prevent actual CLI calls to "docker run". Instead, we
+    mock the call and return a value. However, this function will allow calls
+    to "python -m build --sdist" to pass. For details, see the CommanderTester
+    docstring in the ploomber package.
+    """
+    tester = _commander_tester.CommanderTester(
+        run=[
+            ('python', '-m', 'build', '--sdist'),
+        ],
+        return_value={
+            ('docker', 'run', f'{proj}:{tag}', 'python', '-c', cmd): b'True\n'
+        })
+
+    subprocess_mock = Mock()
+    subprocess_mock.check_call.side_effect = tester
+    subprocess_mock.check_output.side_effect = tester
+    monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
+
+    return tester
 
 
 def _path_to_tests():
     return Path(__file__).absolute().parent
+
+
+@pytest.fixture
+def root_path():
+    return _path_to_tests().parent
 
 
 @pytest.fixture
@@ -184,3 +219,9 @@ def add_current_to_sys_path():
     sys.path.insert(0, os.path.abspath('.'))
     yield sys.path
     sys.path = old
+
+
+@pytest.fixture
+def skip_repo_validation(monkeypatch):
+    # do not validate repository (using the default value will raise an error)
+    monkeypatch.setattr(commons.docker, '_validate_repository', lambda x: x)

@@ -2,6 +2,7 @@ from soopervisor.enum import Backend
 from soopervisor.aws.batch import AWSBatchExporter
 from soopervisor.aws.lambda_ import AWSLambdaExporter
 from soopervisor.airflow.export import AirflowExporter
+from soopervisor.kubeflow.export import KubeflowExporter
 from soopervisor.argo.export import ArgoWorkflowsExporter
 from soopervisor.shell.export import SlurmExporter
 
@@ -11,6 +12,7 @@ def for_backend(backend):
         Backend.aws_batch: AWSBatchExporter,
         Backend.aws_lambda: AWSLambdaExporter,
         Backend.airflow: AirflowExporter,
+        Backend.kubeflow: KubeflowExporter,
         Backend.argo_workflows: ArgoWorkflowsExporter,
         Backend.slurm: SlurmExporter,
     }

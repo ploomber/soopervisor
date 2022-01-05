@@ -1,7 +1,7 @@
 Soopervisor
 ===========
 
-Soopervisor runs `Ploomber <github.com/ploomber/ploomber>`_ pipelines
+Soopervisor runs `Ploomber <https://github.com/ploomber/ploomber>`_ pipelines
 for batch processing (large-scale training or batch serving) or online
 inference.
 
@@ -17,12 +17,14 @@ Supported platforms
 
 * Batch serving and large-scale training:
 
-  * Kubernetes / Argo Workflows
-  * AWS Batch
+  * :doc:`Argo/Kubernetes <tutorials/kubernetes>`
+  * :doc:`Airflow <tutorials/airflow>`
+  * :doc:`AWS Batch <tutorials/aws-batch>`
+  * :doc:`SLURM <tutorials/slurm>`
 
 * Online inference:
 
-  * AWS Lambda
+  * :doc:`AWS Lambda <tutorials/aws-lambda>`
 
 
 Standard layout
@@ -152,6 +154,7 @@ configuration details will change, but the API remains the same:
    :hidden:
 
    api/cli
+   api/kubernetes
 
 
 .. toctree::

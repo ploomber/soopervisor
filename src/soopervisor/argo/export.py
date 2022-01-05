@@ -116,6 +116,8 @@ def _make_argo_task(name, dependencies):
 
 
 def _make_argo_spec(tasks, args, env_name, cfg, pkg_name, target_image):
+    """Generate Argo's YAML spec
+    """
     if cfg.mounted_volumes:
         volumes, volume_mounts = zip(*((mv.to_volume(), mv.to_volume_mount())
                                        for mv in cfg.mounted_volumes))
@@ -126,8 +128,9 @@ def _make_argo_spec(tasks, args, env_name, cfg, pkg_name, target_image):
         volumes = []
         volume_mounts = []
 
-    d = yaml.safe_load(pkg_resources.read_text(assets, 'argo-workflow.yaml'))
-    d['spec']['volumes'] = volumes
+    argo_spec = yaml.safe_load(
+        pkg_resources.read_text(assets, 'argo-workflow.yaml'))
+    argo_spec['spec']['volumes'] = volumes
 
     tasks_specs = []
 
@@ -135,11 +138,17 @@ def _make_argo_spec(tasks, args, env_name, cfg, pkg_name, target_image):
         spec = _make_argo_task(task_name, upstream)
         tasks_specs.append(spec)
 
-    d['metadata']['generateName'] = f'{pkg_name}-'.replace('_', '-')
-    d['spec']['templates'][1]['dag']['tasks'] = tasks_specs
-    d['spec']['templates'][0]['script']['volumeMounts'] = volume_mounts
+    argo_spec['metadata']['generateName'] = f'{pkg_name}-'.replace('_', '-')
+    argo_spec['spec']['templates'][1]['dag']['tasks'] = tasks_specs
 
-    d['spec']['templates'][0]['script']['image'] = target_image
+    script = argo_spec['spec']['templates'][0]['script']
+    script['volumeMounts'] = volume_mounts
+    script['image'] = target_image
+
+    if cfg.repository is None:
+        click.echo('null repository found in soopervisor.yaml, '
+                   'setting imagePullPolicy to "Never"')
+        script['imagePullPolicy'] = 'Never'
 
     command = 'ploomber task {{inputs.parameters.task_name}}'
 
@@ -148,14 +157,14 @@ def _make_argo_spec(tasks, args, env_name, cfg, pkg_name, target_image):
 
     # use literal_str to make the script source code be represented in YAML
     # literal style, this makes it readable
-    d['spec']['templates'][0]['script']['source'] = _literal_str(command)
+    script['source'] = _literal_str(command)
 
     # when we run this the current working directory is env_name/
     with open('argo.yaml', 'w') as f:
-        yaml.dump(d, f)
+        yaml.dump(argo_spec, f)
 
     output_path = f'{env_name}/argo.yaml'
     click.echo(f'Done. Saved argo spec to {output_path!r}')
     click.echo(f'Submit your workflow with: argo submit -n argo {output_path}')
 
-    return d
+    return argo_spec

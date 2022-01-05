@@ -1,0 +1,10 @@
+training:
+  backend: argo-workflows
+  # we are not uploading the docker image, set to null
+  repository: null
+  # mount the /host folder, it will be visible to pods in /mnt/shared-folder
+  mounted_volumes:
+    - name: shared-folder
+      spec:
+        hostPath:
+          path: /host

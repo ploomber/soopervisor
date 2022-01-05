@@ -1,7 +1,11 @@
 """
 Setup tasks (requires invoke: pip install invoke)
 """
+import shutil
+import sys
 import platform
+from pathlib import Path
+
 from invoke import task
 
 _DEFAULT_VERSION = '3.9'
@@ -24,10 +28,12 @@ def setup(c, version=_DEFAULT_VERSION):
 
 
 @task
-def test(c):
+def test(c, pty=True):
     """Run tests
     """
-    c.run('pytest tests', pty=True)
+    # run tests except test_tutorials.py - that one needs extra config,
+    # we're not running it as part of the CI
+    c.run('pytest tests --ignore=tests/test_tutorials.py', pty=pty)
 
 
 @task
@@ -61,3 +67,35 @@ def doc_auto(c):
     """Start hot reloading docs
     """
     c.run('sphinx-autobuild doc doc/_build/html')
+
+
+@task
+def install_git_hook(c, force=False):
+    """Installs pre-push git hook
+    """
+    path = Path('.git/hooks/pre-push')
+    hook_exists = path.is_file()
+
+    if hook_exists:
+        if force:
+            path.unlink()
+        else:
+            sys.exit('Error: pre-push hook already exists. '
+                     'Run: "invoke install-git-hook -f" to force overwrite.')
+
+    shutil.copy('.githooks/pre-push', '.git/hooks')
+    print(f'pre-push hook installed at {str(path)}')
+
+
+@task
+def uninstall_git_hook(c):
+    """Uninstalls pre-push git hook
+    """
+    path = Path('.git/hooks/pre-push')
+    hook_exists = path.is_file()
+
+    if hook_exists:
+        path.unlink()
+        print(f'Deleted {str(path)}.')
+    else:
+        print('Hook doesn\'t exist, nothing to delete.')

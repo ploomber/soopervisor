@@ -153,6 +153,6 @@ def test_error_when_missing_env_yml_and_reqs_txt(backup_packaged_project,
     with pytest.raises(ClickException) as excinfo:
         AWSLambdaExporter('soopervisor.yaml', 'serve')
 
-    msg = ('Expected requirements.txt.lock or environment.lock.yml at the '
+    msg = ('Expected requirements.lock.txt or environment.lock.yml at the '
            'root directory')
     assert msg in str(excinfo.value)

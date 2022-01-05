@@ -13,6 +13,7 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+from soopervisor.abc import AbstractConfig
 
 # -- Project information -----------------------------------------------------
 
@@ -50,3 +51,16 @@ html_theme = 'furo'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+
+def _process_signature(app, what, name, obj, options, signature,
+                       return_annotation):
+    if issubclass(obj, AbstractConfig) or '.config.' in name:
+        print(f'Removing signature to {name}')
+        signature = None
+
+    return (signature, return_annotation)
+
+
+def setup(app):
+    app.connect('autodoc-process-signature', _process_signature)

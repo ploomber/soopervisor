@@ -20,6 +20,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8
         flake8
+    - name: Search for broken links in docs
+      run: |
+        pip install pkgmt
+        # pkgmt check-links
     - name: Install dependencies
       run: |
         pip install invoke
@@ -29,5 +33,6 @@ jobs:
       env:
         CLIENT_ID: ${{ secrets.CLIENT_ID }}
         PRIMARY_ACCESS_TOKEN: ${{ secrets.PRIMARY_ACCESS_TOKEN }}
+        PLOOMBER_STATS_ENABLED: false
       run: |
         invoke test

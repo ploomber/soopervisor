@@ -9,9 +9,10 @@ import pytest
 import moto
 import boto3
 
+from conftest import _mock_docker_calls
 from soopervisor.aws import batch
 from soopervisor.aws.batch import commons
-from ploomber.io import _commander, _commander_tester
+from soopervisor.exceptions import ConfigurationError
 from ploomber.util import util
 
 service_role = {
@@ -225,31 +226,13 @@ def index_commands_by_name(submitted):
     }
 
 
-def _monkeypatch_docker(monkeypatch, cmd):
-    tester = _commander_tester.CommanderTester(
-        run=[
-            ('python', '-m', 'build', '--sdist'),
-        ],
-        return_value={
-            ('docker', 'run', 'my_project:0.1dev', 'python', '-c', cmd):
-            b'True\n'
-        })
-
-    subprocess_mock = Mock()
-    subprocess_mock.check_call.side_effect = tester
-    subprocess_mock.check_output.side_effect = tester
-    monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
-
-    return tester
-
-
 @pytest.fixture
 def monkeypatch_docker(monkeypatch):
     path = str(Path('src', 'my_project', 'pipeline.yaml'))
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
            f'DAGSpec("{path}").to_dag().clients)')
-    yield _monkeypatch_docker(monkeypatch, cmd)
+    yield _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
 
 
 @pytest.fixture
@@ -258,7 +241,7 @@ def monkeypatch_serve_docker(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
            f'DAGSpec("{path}").to_dag().clients)')
-    yield _monkeypatch_docker(monkeypatch, cmd)
+    yield _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
 
 
 @pytest.fixture
@@ -284,8 +267,8 @@ def monkeypatch_docker_client(monkeypatch):
     ],
 )
 def test_export(mock_batch, monkeypatch_docker, monkeypatch,
-                monkeypatch_docker_client, backup_packaged_project, mode,
-                args):
+                monkeypatch_docker_client, backup_packaged_project, mode, args,
+                skip_repo_validation):
 
     commander_mock = MagicMock()
     monkeypatch.setattr(batch, 'Commander',
@@ -359,8 +342,8 @@ def test_stops_if_no_tasks(monkeypatch, backup_packaged_project, capsys):
 
 
 def test_skip_tests(mock_batch, monkeypatch_docker, monkeypatch,
-                    monkeypatch_docker_client, backup_packaged_project,
-                    capsys):
+                    monkeypatch_docker_client, backup_packaged_project, capsys,
+                    skip_repo_validation):
     boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
     monkeypatch.setattr(batch.boto3, 'client',
                         lambda name, region_name: boto3_mock)
@@ -374,10 +357,24 @@ def test_skip_tests(mock_batch, monkeypatch_docker, monkeypatch,
     assert 'Testing File client' not in captured.out
 
 
+def test_validates_repository(mock_batch, monkeypatch_docker, monkeypatch,
+                              monkeypatch_docker_client,
+                              backup_packaged_project):
+    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
+    exporter.add()
+
+    with pytest.raises(ConfigurationError) as excinfo:
+        exporter.export(mode='incremental')
+
+    assert str(
+        excinfo.value) == ("Invalid repository 'your-repository/name' "
+                           "in soopervisor.yaml, please add a valid value.")
+
+
 # TODO: check with non-packaged project
 def test_checks_the_right_spec(mock_batch, monkeypatch_serve_docker,
                                monkeypatch, monkeypatch_docker_client,
-                               backup_packaged_project):
+                               backup_packaged_project, skip_repo_validation):
     shutil.copy('src/my_project/pipeline.yaml',
                 'src/my_project/pipeline.serve.yaml')
 

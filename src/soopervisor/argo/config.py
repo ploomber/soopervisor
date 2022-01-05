@@ -8,7 +8,7 @@ from soopervisor.enum import Backend
 
 class ArgoMountedVolume(BaseModel):
     """
-    Volume to mount in the Pod at /mnt/{name}
+    Volume to mount in the Pod at ``/mnt/{name}``
 
     Parameters
     ----------
@@ -17,11 +17,11 @@ class ArgoMountedVolume(BaseModel):
 
     sub_path : str, default=''
         Sub path from the volume to mount in the Pod (set in
-        volumeMounts[*].subPath). Defaults to the volume's root
+        ``volumeMounts[*].subPath``). Defaults to the volume's root
 
     spec : dict
         The volume spec, passed directly to the output spec.
-        e.g: {'persistentVolumeClaim': {'claimName': 'someName'}}
+        e.g: ``{'persistentVolumeClaim': {'claimName': 'someName'}}``
 
     """
     name: str
@@ -55,6 +55,14 @@ class ArgoConfig(abc.AbstractConfig):
 
     Parameters
     ----------
+    repository : str
+        Repository for uploading the Docker image.
+
+        .. important::
+
+            If ``repository`` is ``null``, it sets the ``imagePullPolicy`` in
+            the generated spec to ``Never``.
+
     mounted_volumes : list, optional
         List of volumes to mount on each Pod, described with the
         ``ArgoMountedVolumes`` schema.

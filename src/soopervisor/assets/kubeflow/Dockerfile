@@ -10,8 +10,8 @@ RUN mamba env update --name base --file project/{{name}} && conda clean --all --
 RUN pip install --requirement project/{{name}} && rm -rf /root/.cache/pip/
 {% endif %}
 
-COPY dist/* project/
-WORKDIR /project/
+COPY dist/* /tmp
+WORKDIR /tmp
 
 # extract to get any config files at the root
 RUN tar --strip-components=1 -zxvf *.tar.gz

@@ -14,7 +14,7 @@ Soopervisor
    :alt: CI Windows badge
 
 
-Soopervisor runs `Ploomber <github.com/ploomber/ploomber>`_ pipelines
+Soopervisor runs `Ploomber <https://github.com/ploomber/ploomber>`_ pipelines
 for batch processing (large-scale training or batch serving) or online
 inference.
 
@@ -32,12 +32,15 @@ Supported platforms
 
 * Batch serving and large-scale training:
 
-  * Kubernetes / Argo Workflows
-  * AWS Batch
+  * `Argo/Kubernetes <https://soopervisor.readthedocs.io/en/latest/tutorials/kubernetes.html>`_
+  * `Airflow <https://soopervisor.readthedocs.io/en/latest/tutorials/airflow.html>`_
+  * `AWS Batch <https://soopervisor.readthedocs.io/en/latest/tutorials/aws-batch.html>`_
+  * `SLURM <https://soopervisor.readthedocs.io/en/latest/tutorials/slurm.html>`_
 
 * Online inference:
 
-  * AWS Lambda
+  * `AWS Lambda <https://soopervisor.readthedocs.io/en/latest/tutorials/aws-lambda.html>`_
+
 
 Usage
 =====
@@ -57,6 +60,6 @@ After filling in some basic configuration settings, export the pipeline with:
    soopervisor export training
 
 
-Depending on the selected backend (Argo, Airflow, AWS Batch or AWS Lambda),
-configuration details will change but the API remains the same:
+Depending on the selected backend (Argo, Airflow, AWS Batch, or AWS Lambda),
+configuration details will change, but the API remains the same:
 ``soopervisor add``, then ``soopervisor export``.

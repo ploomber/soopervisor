@@ -31,6 +31,56 @@ def find_spec(cmdr, name):
     return spec, relative_path
 
 
+def load_dag(cmdr, name=None, mode='incremental'):
+    """Load tasks names and their upstream dependencies
+
+        Parameters
+        ----------
+        cmdr : Commander
+            Commander instance used to print output
+
+        name : str
+            Target environment name. This prioritizes loading a
+            pipeline.{name}.yaml spec, if such doesn't exist, it loads a
+            pipeline.yaml
+
+        mode : bool, default='incremental'
+            One of 'incremental' (only include outdated tasks with respect to
+            the remote metadata), 'regular' (ignore status, submit all tasks
+            and determine status at runtime) or 'force' (ignore status, submit
+            all tasks and force execution regardless of status)
+
+        Returns
+        -------
+        dag : class
+            A DAG class - collection of tasks with dependencies (values)
+        """
+
+    valid = Mode.get_values()
+
+    spec, relative_path = find_spec(cmdr=cmdr, name=name)
+    dag = spec.to_dag()
+
+    if mode not in valid:
+        raise ValueError(f'mode must be one of {valid!r}')
+
+    if mode == 'incremental':
+
+        # what if user has a shared disk but still wants to upload artifacts?
+        # maybe add a way to force this
+        if dag.clients.get(File):
+            dag.render(remote=True)
+        else:
+            dag.render()
+
+    else:
+        # force makes rendering faster. we just need this to ensure the
+        # pipeline does not have any rendering problems before proceeding
+        dag.render(force=True)
+
+    return dag
+
+
 def load_tasks(cmdr, name=None, mode='incremental'):
     """Load tasks names and their upstream dependencies
 
@@ -59,33 +109,17 @@ def load_tasks(cmdr, name=None, mode='incremental'):
     args : list
         A list of arguments to pass to "ploomber task {name}"
     """
-    valid = Mode.get_values()
 
     spec, relative_path = find_spec(cmdr=cmdr, name=name)
-    dag = spec.to_dag()
-
-    if mode not in valid:
-        raise ValueError(f'mode must be one of {valid!r}')
+    dag = load_dag(cmdr, name, mode)
 
     if mode == 'incremental':
-
-        # what if user has a shared disk but still wants to upload artifacts?
-        # maybe add a way to force this
-        if dag.clients.get(File):
-            dag.render(remote=True)
-        else:
-            dag.render()
-
         tasks = []
 
         for name, task in dag.items():
             if not mode or task.exec_status != TaskStatus.Skipped:
                 tasks.append(name)
     else:
-        # force makes rendering faster. we just need this to ensure the
-        # pipeline does not have any rendering problems before proceeding
-        dag.render(force=True)
-
         tasks = list(dag.keys())
 
     out = {}
