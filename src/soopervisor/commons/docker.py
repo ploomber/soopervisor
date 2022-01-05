@@ -130,8 +130,6 @@ def build(e, cfg, name, until, entry_point, skip_tests=False):
     if until == 'build':
         raise CommanderStop('Done. Run "docker images" to see your image.')
 
-    # TODO: validate format of cfg.repository
-    # TODO: If null point to the ploomber public repo
     if cfg.repository:
         image_target = cfg.repository
         # Adding the latest tag if not a remote repo

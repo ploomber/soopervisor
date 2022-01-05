@@ -41,6 +41,8 @@ def _mock_docker_calls(monkeypatch, cmd, proj, tag):
 
     return tester
 
+from soopervisor import commons
+
 
 def _path_to_tests():
     return Path(__file__).absolute().parent
