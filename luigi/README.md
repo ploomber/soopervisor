@@ -6,6 +6,10 @@ at `ploomber_dag.py`
 ## Setup
 
 ```sh
+# get code
+git clone --branch luigi --single-branch --depth 1 https://github.com/ploomber/soopervisor
+cd soopervisor/luigi
+
 # optional: create virtual env. e.g., if using conda
 conda create --name luigi python=3.9 --yes
 conda activate luigi
