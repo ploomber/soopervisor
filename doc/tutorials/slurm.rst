@@ -209,3 +209,6 @@ The resolution logic is as follows. Say you have a task named ``fit-gpu``:
 1. Use an exact match (i.e., ``fit-gpu.sh``)
 2. Use a filename with a double underscore placeholder (e.g., ``fit-__.sh``, or ``__-gpu.sh``)
 3. Use ``template.sh``
+
+You can use this templating feature to customize the submitted jobs, for example
+to pass custom parameters to the ``srun`` command.
