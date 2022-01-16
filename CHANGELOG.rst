@@ -3,6 +3,10 @@ CHANGELOG
 
 0.6.1dev
 --------
+* Fixes output message after exporting to Argo
+* Adds flag to ``source.copy`` to ignore git
+* ``soopervisor export`` raises and error if ``git`` isn't tracking any files
+* Adds ``--git-ignore`` to ``soopervisor export``
 
 0.6 (2022-01-04)
 ----------------

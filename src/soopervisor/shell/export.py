@@ -73,7 +73,7 @@ class SlurmExporter(abc.AbstractExporter):
         pass
 
     @staticmethod
-    def _export(cfg, env_name, mode, until, skip_tests):
+    def _export(cfg, env_name, mode, until, skip_tests, ignore_git):
         """
         Export and submit jbs
         """

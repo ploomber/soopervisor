@@ -160,12 +160,13 @@ class AbstractExporter(abc.ABC):
 
         return self._add(cfg=self._cfg, env_name=self._env_name)
 
-    def export(self, mode, until=None, skip_tests=False):
+    def export(self, mode, until=None, skip_tests=False, ignore_git=False):
         return self._export(cfg=self._cfg,
                             env_name=self._env_name,
                             mode=mode,
                             until=until,
-                            skip_tests=skip_tests)
+                            skip_tests=skip_tests,
+                            ignore_git=ignore_git)
 
     @staticmethod
     @abc.abstractmethod

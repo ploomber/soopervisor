@@ -15,7 +15,13 @@ def _validate_repository(repository):
             'in soopervisor.yaml, please add a valid value.')
 
 
-def build(e, cfg, name, until, entry_point, skip_tests=False):
+def build(e,
+          cfg,
+          name,
+          until,
+          entry_point,
+          skip_tests=False,
+          ignore_git=False):
     """Build a docker image
 
     Parameters
@@ -77,7 +83,8 @@ def build(e, cfg, name, until, entry_point, skip_tests=False):
                     src='.',
                     dst=target,
                     include=cfg.include,
-                    exclude=cfg.exclude)
+                    exclude=cfg.exclude,
+                    ignore_git=ignore_git)
         source.compress_dir(target, Path('dist', f'{pkg_name}.tar.gz'))
 
     e.cp('dist')

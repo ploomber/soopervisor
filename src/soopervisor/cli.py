@@ -66,7 +66,11 @@ def add(name, backend):
               '-m',
               type=click.Choice(Mode.get_values()),
               default=Mode.incremental.value)
-def export(name, until_build, mode, skip_tests):
+@click.option('--ignore-git',
+              '-i',
+              is_flag=True,
+              help='Ignore git tracked files (include everything)')
+def export(name, until_build, mode, skip_tests, ignore_git):
     """
     Export a target platform for execution/deployment
     """
@@ -77,6 +81,8 @@ def export(name, until_build, mode, skip_tests):
 
     backend = Backend(config.get_backend(name))
 
+    # TODO: warn on ignore-git if using SLURM (it's ignored)
+
     # TODO: ignore mode if using aws lambda, raised exception if value
     # is not the default
     if backend == Backend.aws_lambda:
@@ -85,7 +91,8 @@ def export(name, until_build, mode, skip_tests):
     Exporter = exporter.for_backend(backend)
     Exporter('soopervisor.yaml', env_name=name).export(mode=mode,
                                                        until=until,
-                                                       skip_tests=skip_tests)
+                                                       skip_tests=skip_tests,
+                                                       ignore_git=ignore_git)
 
 
 if __name__ == '__main__':
