@@ -1,6 +1,8 @@
 Full workflow
 =============
 
+.. important:: This tutorial requires soopervisor ``0.6.1`` or higher
+
 .. important::
 
     This tutorial requires ``soopervisor`` ``0.5.2`` or higher, and

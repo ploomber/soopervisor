@@ -1,6 +1,8 @@
 Airflow
 =======
 
+.. important:: This tutorial requires soopervisor ``0.6.1`` or higher
+
 .. note:: **Got questions?** Reach out to us on `Slack <https://ploomber.io/community/>`_.
 
 This tutorial shows you how to export a Ploomber pipeline to Airflow.

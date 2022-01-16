@@ -1,6 +1,8 @@
 AWS Batch
 =========
 
+.. important:: This tutorial requires soopervisor ``0.6.1`` or higher
+
 .. note:: **Got questions?** Reach out to us on `Slack <https://ploomber.io/community/>`_.
 
 `AWS Batch <https://aws.amazon.com/batch/>`_ is a managed service for batch
@@ -163,7 +165,7 @@ Submit for execution:
 
 .. code-block:: sh
 
-    soopervisor export training
+    soopervisor export training --skip-tests --ignore-git
 
 The previous command will take a few minutes since it has to
 build the Docker image from scratch. After that, subsequent runs will be much faster.

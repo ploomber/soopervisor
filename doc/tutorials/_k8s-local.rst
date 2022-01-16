@@ -3,7 +3,7 @@
 Local example
 -------------
 
-.. important:: This tutorial requires soopervisor ``0.5.2`` or higher
+.. important:: This tutorial requires soopervisor ``0.6.1`` or higher
 
 This tutorial runs a pipeline in a local Kubernetes cluster using ``k3d``.
 

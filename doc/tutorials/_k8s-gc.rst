@@ -3,6 +3,8 @@
 Google Cloud
 ------------
 
+.. important:: This tutorial requires soopervisor ``0.6.1`` or higher
+
 This second tutorial runs a pipeline in a local Kubernetes cluster using Google Cloud.
 
 
