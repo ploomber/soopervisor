@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+0.6.2dev
+--------
+
 0.6.1 (2022-01-16)
 ------------------
 * Fixes output message after exporting to Argo
