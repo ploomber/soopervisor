@@ -152,8 +152,10 @@ configuration details will change, but the API remains the same:
    :caption: User Guide
    :hidden:
 
-   user-guide/packaged-or-not.rst
+   user-guide/task-comm
    user-guide/build-process
+   user-guide/packaged-or-not
+
 
 
 .. toctree::

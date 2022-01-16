@@ -113,6 +113,8 @@ in module ``src/ml_online/clients.py`` to get the client. Edit the
 
 .. code-block:: python
 
+    from ploomber.clients import GCloudStorageClient
+
     def get_gcloud():
         # edit YOUR-BUCKET-NAME
         return GCloudStorageClient(bucket_name='YOUR-BUCKET-NAME',
