@@ -50,6 +50,11 @@ Shared disk
     so ensure you can mount a disk in all nodes and that your pipeline writes
     their outputs in the shared disk.
 
+.. important::
+
+    If using a shared disk, execute ``soopervisor export`` with the
+    ``--skip-tests`` flag, otherwise Soopervisor will raise an error if
+    your pipeline does not have a ``File`` client configured.
 
 
 Using remote storage
