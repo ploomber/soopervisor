@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.6.1dev
---------
+0.6.1 (2022-01-16)
+------------------
 * Fixes output message after exporting to Argo
 * Adds flag to ``source.copy`` to ignore git
 * ``soopervisor export`` raises and error if ``git`` isn't tracking any files
