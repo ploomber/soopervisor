@@ -247,6 +247,22 @@ def test_errors_if_no_tracked_files(tmp_empty):
     assert str(excinfo.value) == expected
 
 
+def test_copy_ignore_git(tmp_empty):
+    Path('file').touch()
+    git_init()
+
+    dir_ = Path('dir')
+    dir_.mkdir()
+    os.chdir(dir_)
+
+    Path('another').touch()
+
+    with Commander() as cmdr:
+        source.copy(cmdr, '.', 'dist', ignore_git=True)
+
+    assert Path('dist', 'another').is_file()
+
+
 def test_compress_dir(tmp_empty):
     dir = Path('dist', 'project-name')
     dir.mkdir(parents=True)
