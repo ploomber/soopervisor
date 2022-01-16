@@ -76,6 +76,13 @@ We now install argo; note that we are using a custom installation file
     kubectl get pods -n argo
 
 
+.. note::
+
+    ``argo-pns.yaml`` is a custom file that changes the Argo executor to PNS;
+    this is required to ensure Argo works on ``k3d``; however, this change
+    isn't required in a production environment.
+
+
 .. tip::
     Optionally, submit sample Argo workflow to ensure everything is working:
 
