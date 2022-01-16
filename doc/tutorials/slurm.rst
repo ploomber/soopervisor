@@ -83,9 +83,20 @@ First, let's create a SLURM cluster for testing. Create the following ``docker-c
 
 Now, start the cluster:
 
+
 .. code-block:: sh
 
     docker-compose up -d
+
+.. important::
+
+    Ensure you're running a recent version of ``docker-compose``, older
+    versions may throw an error like this: 
+
+    .. code-block:: console
+
+        Unsupported config option for volumes: 'shared-vol'
+        Unsupported config option for services: 'slurmmaster'
 
 
 .. tip::
@@ -100,7 +111,7 @@ Let's connect to the cluster to submit the jobs:
 
 .. code-block:: sh
 
-    docker compose exec slurmjupyter /bin/bash
+    docker-compose exec slurmjupyter /bin/bash
 
 
 Configure the environment:
