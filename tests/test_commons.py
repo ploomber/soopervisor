@@ -33,6 +33,11 @@ def git_init():
     subprocess.check_call(['git', 'commit', '-m', 'commit'])
 
 
+def git_commit():
+    subprocess.check_call(['git', 'add', '--all'])
+    subprocess.check_call(['git', 'commit', '-m', 'commit'])
+
+
 def test_glob_all_excludes_directories(tmp_empty):
     Path('dir').mkdir()
     Path('dir', 'a').touch()
@@ -218,6 +223,28 @@ def test_warns_on_dirty_git(tmp_empty, capsys):
     captured = capsys.readouterr()
 
     assert 'Your git repository contains uncommitted' in captured.out
+
+
+def test_errors_if_no_tracked_files(tmp_empty):
+
+    Path('file').touch()
+    git_init()
+
+    dir_ = Path('dir')
+    dir_.mkdir()
+    os.chdir(dir_)
+
+    Path('another').touch()
+
+    with pytest.raises(ClickException) as excinfo:
+        with Commander() as cmdr:
+            source.copy(cmdr, '.', 'dist')
+
+    expected = ('Running inside a git repository, but no files in '
+                'the current working directory are tracked by git. Commit the '
+                'files to include them in the Docker image or pass the '
+                '--ignore-git flag to soopervisor export')
+    assert str(excinfo.value) == expected
 
 
 def test_compress_dir(tmp_empty):

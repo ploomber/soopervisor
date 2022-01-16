@@ -94,6 +94,13 @@ def copy(cmdr, src, dst, include=None, exclude=None):
             'will be included, except for files in the \'exclude\' section '
             'of soopervisor.yaml')
 
+    if not tracked and not error:
+        raise ClickException("Running inside a git repository, but no files "
+                             "in the current working directory are tracked "
+                             "by git. Commit the files to include them in "
+                             "the Docker image or pass the --ignore-git "
+                             "flag to soopervisor export")
+
     for f in glob_all(path=src, exclude=dst):
         tracked_by_git = tracked is None or to_posix_str(f) in tracked
         excluded = f in exclude or is_relative_to_any(f, exclude_dirs)
