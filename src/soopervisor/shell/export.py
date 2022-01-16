@@ -1,9 +1,10 @@
+import shutil
 import fnmatch
 import os
 from pathlib import Path
 import subprocess
 
-from ploomber.io._commander import Commander, CommanderStop
+from ploomber.io._commander import Commander, CommanderStop, CommanderException
 from jinja2 import Template, meta
 import click
 
@@ -103,6 +104,13 @@ class SlurmExporter(abc.AbstractExporter):
                 raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
+
+            # FIXME: add unit test for this
+            if not shutil.which('sbatch'):
+                raise CommanderException(
+                    'sbatch is not installed, but it is '
+                    'required to submit the jobs to the cluster, '
+                    'please install it and try again.')
 
             _submit_to_slurm(tasks, args, env_name)
 
