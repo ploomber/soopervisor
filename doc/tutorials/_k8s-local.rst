@@ -138,7 +138,7 @@ We finished configuring; let's now submit the workflow:
 .. code-block:: bash
 
     # build docker image (takes a few minutes the first time) and generate an argo's yaml spec
-    soopervisor export training --skip-tests
+    soopervisor export training --skip-tests --ignore-git
 
     # import image to the k8s cluster
     k3d image import ml-intermediate:latest --cluster mycluster

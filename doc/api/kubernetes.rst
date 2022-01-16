@@ -18,6 +18,29 @@ Example
             hostPath:
               path: /host
 
+The above ``soopervisor.yaml``, translates into the following Argo spec:
+
+.. code-block:: yaml
+  :caption: argo.yaml
+
+    apiVersion: argoproj.io/v1alpha1
+    kind: Workflow
+    spec:
+      templates:
+        script:
+          volumeMounts:
+          - mountPath: /mnt/shared-folder
+            name: shared-folder
+            subPath: ''
+          # continues ...
+      - dag:
+          tasks:
+            # continues...
+      volumes:
+      - hostPath:
+          path: /host
+        name: shared-folder
+
 
 Schema
 -------
