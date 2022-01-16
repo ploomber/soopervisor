@@ -181,7 +181,7 @@ Try exporting the pipeline again:
 
 .. code-block:: bash
 
-    soopervisor export training --skip-tests
+    soopervisor export training --skip-tests --ignore-git
 
 
 You'll see a message like this: ``Loaded DAG in 'incremental' mode has no tasks to submit``.
@@ -196,7 +196,7 @@ Let's now modify one of the tasks and submit it again:
     echo -e "\nprint('Hello from Kubernetes')" >> fit.py
 
     # re-build docker image and submit
-    soopervisor export training --skip-tests
+    soopervisor export training --skip-tests --ignore-git
     k3d image import ml-intermediate:latest --cluster mycluster
     argo submit -n argo --watch training/argo.yaml
 

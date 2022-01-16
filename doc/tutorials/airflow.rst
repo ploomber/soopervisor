@@ -112,7 +112,7 @@ Submit pipeline
     
 .. code-block:: bash
 
-    soopervisor export training --skip-tests
+    soopervisor export training --skip-tests --ignore-git
 
     # import image to the cluster
     k3d image import ml-intermediate:latest --cluster mycluster
@@ -237,7 +237,7 @@ Try exporting the pipeline again:
 
 .. code-block:: bash
 
-    soopervisor export training --skip-tests
+    soopervisor export training --skip-tests --ignore-git
 
 
 You'll see a message like this: ``Loaded DAG in 'incremental' mode has no tasks to submit``.
@@ -252,7 +252,7 @@ Let's now modify one of the tasks and submit again:
     echo -e "\nprint('Hello from Kubernetes')" >> fit.py
 
     # re-build docker image
-    soopervisor export training --skip-tests
+    soopervisor export training --skip-tests --ignore-git
 
     # import image
     k3d image import ml-intermediate:latest --cluster mycluster
