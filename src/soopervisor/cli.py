@@ -81,8 +81,6 @@ def export(name, until_build, mode, skip_tests, ignore_git):
 
     backend = Backend(config.get_backend(name))
 
-    # TODO: warn on ignore-git if using SLURM (it's ignored)
-
     # TODO: ignore mode if using aws lambda, raised exception if value
     # is not the default
     if backend == Backend.aws_lambda:

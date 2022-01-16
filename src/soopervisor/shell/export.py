@@ -13,6 +13,12 @@ from soopervisor.shell.config import SlurmConfig
 from soopervisor import validate
 
 
+def _warn_on_exit_if_param(cmdr, param, name):
+    if param:
+        cmdr.warn_on_exit(f'{name!r} option has no effect when '
+                          'using SLURM, ignoring...')
+
+
 def _check_template_variables(env, source):
     return meta.find_undeclared_variables(env.parse(source))
 
@@ -79,6 +85,13 @@ class SlurmExporter(abc.AbstractExporter):
         """
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as cmdr:
+
+            # these do not apply when using SLURM, warn the user
+            # TODO: test the warning is shown
+            _warn_on_exit_if_param(cmdr, ignore_git, 'ignore_git')
+            _warn_on_exit_if_param(cmdr, until, 'until')
+            _warn_on_exit_if_param(cmdr, skip_tests, 'skip_tests')
+
             template = Path(env_name, 'template.sh').read_text()
             _validate_template(cmdr._env, template)
 
