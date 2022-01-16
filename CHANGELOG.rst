@@ -3,6 +3,13 @@ CHANGELOG
 
 0.6.2dev
 --------
+* Improves CLI documentation
+* Adds ``--git-ignore`` to documentation
+* Various documentation improvements
+* Changes short version of ``--until-build`` to ``-u``
+* Adds "Task Communication" user guide
+* Display warnings if passing CLI options that do not apply to SLURM
+* SLURM exporter raises error if ``sbatch`` isn't installed
 
 0.6.1 (2022-01-16)
 ------------------
