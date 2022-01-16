@@ -6,7 +6,8 @@ a way to pass the output files of each task to upcoming tasks that use them as
 inputs.
 
 There are two ways of doing so: either mount a shared disk on all containers,
-or configure a ``File`` client; we describe both options in the next sections.
+or configure a ``File`` client to use remote storage; we describe both options
+in the next sections.
 
 Shared disk
 -----------
@@ -51,8 +52,8 @@ Shared disk
 
 
 
-``File`` client
----------------
+Using remote storage
+--------------------
 
 As an alternative, you can configure a ``File`` client to ensure each task
 has their input files before execution. We currently support Amazon S3 and
@@ -87,6 +88,8 @@ client instance:
                             parent='PARENT-FOLDER-IN-BUCKET',
                             json_credentials_path='credentials.json')
 
+    `Click here to see the S3Client documentation. <https://docs.ploomber.io/en/latest/api/_modules/clients/ploomber.clients.S3Client.html>`_
+
 
 .. tab:: Google Cloud Storage
 
@@ -99,6 +102,8 @@ client instance:
             return GCloudStorageClient(bucket_name='YOUR-BUCKET-NAME',
                                        parent='PARENT-FOLDER-IN-BUCKET',
                                        json_credentials_path='credentials.json')
+
+    `Click here to see the GCloudStorageClient documentation. <https://docs.ploomber.io/en/latest/api/_modules/clients/ploomber.clients.GCloudStorageClient.html>`_
 
 
 Next, create a ``credentials.json`` (in the same directory as your
