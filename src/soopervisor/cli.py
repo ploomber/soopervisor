@@ -55,7 +55,7 @@ def add(name, backend):
 @cli.command()
 @click.argument('name')
 @click.option('--until-build',
-              '-ub',
+              '-u',
               is_flag=True,
               help='Only build docker image')
 @click.option('--skip-tests',
