@@ -13,8 +13,8 @@ Pre-requisites
 
 .. important::
 
-    This integration requires ploomber 0.13.7 or higher (To upgrade:
-    ``pip install ploomber --upgrade``)
+    This integration requires ploomber 0.13.7 or higher and soopervisor 0.6
+    or higher (To upgrade: ``pip install ploomber soopervisor --upgrade``)
 
 * `docker and docker-compose <https://docs.docker.com/get-docker/>`_
 
@@ -131,9 +131,7 @@ Configure the environment:
     conda activate myenv
 
     # install ploomber and soopervisor in the base environment
-    pip install ploomber
-    # install soopervisor from the slurm branch
-    pip install git+https://github.com/ploomber/soopervisor
+    pip install ploomber soopervisor
     
     # download sample pipeline to example/
     ploomber examples -n templates/ml-basic -o example
