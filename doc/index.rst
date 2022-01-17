@@ -17,9 +17,10 @@ Supported platforms
 
 * Batch serving and large-scale training:
 
-  * :doc:`Argo/Kubernetes <tutorials/kubernetes>`
   * :doc:`Airflow <tutorials/airflow>`
+  * :doc:`Argo/Kubernetes <tutorials/kubernetes>`
   * :doc:`AWS Batch <tutorials/aws-batch>`
+  * :doc:`Kubeflow <tutorials/kubeflow>`
   * :doc:`SLURM <tutorials/slurm>`
 
 * Online inference:
@@ -128,9 +129,11 @@ configuration details will change, but the API remains the same:
    :caption: Batch processing
    :hidden:
 
-   tutorials/kubernetes
-   tutorials/aws-batch
+
    tutorials/airflow
+   tutorials/aws-batch
+   tutorials/kubernetes
+   tutorials/kubeflow
    tutorials/slurm
 
 

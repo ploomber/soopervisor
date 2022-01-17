@@ -48,7 +48,9 @@ class KubeflowExporter(abc.AbstractExporter):
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
             tasks, args = commons.load_tasks(cmdr=e, name=env_name, mode=mode)
-            dag = commons.load_dag(cmdr=e, name=env_name, mode=mode)
+            dag, relative_path = commons.load_dag(cmdr=e,
+                                                  name=env_name,
+                                                  mode=mode)
             products_list = {}
 
             # TODO deal with the second mode.
@@ -105,10 +107,10 @@ def _make_kubeflow_dag(name, dependencies, command):
         for dependency in dependencies:
             dag_task['arguments']['artifacts'].append({
                 'name':
-                    f'{dependency}-product',
+                f'{dependency}-product',
                 'from':
-                    '{{tasks.' + dependency + '.outputs.artifacts.' +
-                    dependency + '-product}}'
+                '{{tasks.' + dependency + '.outputs.artifacts.' + dependency +
+                '-product}}'
             })
 
     return dag_task
@@ -202,8 +204,7 @@ def _parse_pipeline_tasks(tasks, target_image, products, args, pkg_name):
         tasks_lines.append('        - -c\n')
         tasks_lines.append('        - |\n')
         for index in range(0, len(kubeflow_args) - 1):
-            tasks_lines.append(
-                f'          mkdir -p "$(dirname "${index}")"\n')
+            tasks_lines.append(f'          mkdir -p "$(dirname "${index}")"\n')
         tasks_lines.append(f'          {command}\n')
 
         # Deal with output/input kubeflow_args

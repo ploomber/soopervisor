@@ -76,8 +76,6 @@ def test_dockerfile_when_no_setup_py(tmp_sample_project):
     ['force', ' --force'],
 ],
                          ids=['incremental', 'regular', 'force'])
-# @pytest.mark.parametrize('mode, args', [['incremental', '']],
-#                          ids=['incremental'])
 def test_export(monkeypatch, mock_docker_calls, backup_packaged_project,
                 no_sys_modules_cache, skip_repo_validation, mode, args):
     load_tasks_mock = Mock(wraps=commons.load_tasks)

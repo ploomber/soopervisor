@@ -54,6 +54,8 @@ def load_dag(cmdr, name=None, mode='incremental'):
         -------
         dag : class
             A DAG class - collection of tasks with dependencies (values)
+        relative_path : str
+            The relative location of the pipeline.yaml file
         """
 
     valid = Mode.get_values()
@@ -78,7 +80,7 @@ def load_dag(cmdr, name=None, mode='incremental'):
         # pipeline does not have any rendering problems before proceeding
         dag.render(force=True)
 
-    return dag
+    return dag, relative_path
 
 
 def load_tasks(cmdr, name=None, mode='incremental'):
@@ -110,8 +112,7 @@ def load_tasks(cmdr, name=None, mode='incremental'):
         A list of arguments to pass to "ploomber task {name}"
     """
 
-    spec, relative_path = find_spec(cmdr=cmdr, name=name)
-    dag = load_dag(cmdr, name, mode)
+    dag, relative_path = load_dag(cmdr, name, mode)
 
     if mode == 'incremental':
         tasks = []

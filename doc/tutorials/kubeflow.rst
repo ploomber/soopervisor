@@ -1,5 +1,5 @@
 Kubeflow
-=======
+========
 
 .. note:: **Got questions?** Reach out to us on `Slack <https://ploomber.io/community/>`_.
 
@@ -32,8 +32,7 @@ Pre-requisites
     locally and upload the final ``ploomber_pipeline.yaml`` to Kubeflow.
 
 
-,
-,Instructions
+Instructions
 ------------
 
 First, let's install ``ploomber``:
