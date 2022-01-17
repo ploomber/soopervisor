@@ -1,7 +1,6 @@
 Kubeflow
 ========
-
-.. note:: **Got questions?** Reach out to us on `Slack <https://ploomber.io/community/>`_.
+.. note:: **The Kubeflow tutorial is in beta! Got questions or found issues?** Reach out to us on `Slack <https://ploomber.io/community/>`_.
 
 This tutorial shows you how to export a Ploomber pipeline to Kubeflow.
 
