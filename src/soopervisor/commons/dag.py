@@ -34,21 +34,21 @@ def find_spec(cmdr, name):
 def load_dag(cmdr, name=None, mode='incremental'):
     """Load tasks names and their upstream dependencies
 
-        Parameters
-        ----------
-        cmdr : Commander
-            Commander instance used to print output
+    Parameters
+    ----------
+    cmdr : Commander
+        Commander instance used to print output
 
-        name : str
-            Target environment name. This prioritizes loading a
-            pipeline.{name}.yaml spec, if such doesn't exist, it loads a
-            pipeline.yaml
+    name : str
+        Target environment name. This prioritizes loading a
+        pipeline.{name}.yaml spec, if such doesn't exist, it loads a
+        pipeline.yaml
 
-        mode : bool, default='incremental'
-            One of 'incremental' (only include outdated tasks with respect to
-            the remote metadata), 'regular' (ignore status, submit all tasks
-            and determine status at runtime) or 'force' (ignore status, submit
-            all tasks and force execution regardless of status)
+    mode : bool, default='incremental'
+        One of 'incremental' (only include outdated tasks with respect to
+        the remote metadata), 'regular' (ignore status, submit all tasks
+        and determine status at runtime) or 'force' (ignore status, submit
+        all tasks and force execution regardless of status)
 
         Returns
         -------

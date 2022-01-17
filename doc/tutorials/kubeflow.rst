@@ -14,7 +14,6 @@ tutorial, `let us know <https://github.com/ploomber/soopervisor/issues/new?title
     This tutorial uses cloud storage (S3 or Google Cloud Storage). In addition,
     it runs on the local cluster local storage for faster data fetch.
 
-
 Pre-requisites
 **************
 
@@ -248,7 +247,7 @@ We now export the pipeline to Kubeflow:
 .. note::
 
     See how the repository is configured to the docker hub ``idomic/general``
-    and the image within it ``kubeflow1`` (: seperated)
+    and the image within it ``kubeflow1`` (: separated)
 
 Build the Docker image (takes a few minutes the first time):
     
@@ -262,8 +261,8 @@ three files: ``Dockerfile`` which is the file used to build the docker image,
 a ``kubeflow_pipeline.py`` which is the pythonic version of the pipeline (you
 can run it directly on a notebook instance within the cluster) and the file
 ``ploomber_pipeline.yaml`` which contains the kubeflow pipeline to run.
-To deploy, go to your cluster and upload the .yaml file as a new pipeline (you
-can also use the CLI directly (we'll cover both options).
+To deploy, go to your cluster and upload the ``.yaml`` file as a new pipeline
+(you can also use the CLI directly (we'll cover both options).
 
 Option 1: UI upload of a Kubeflow pipeline
 -----------------------------------------
