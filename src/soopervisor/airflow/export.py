@@ -9,7 +9,6 @@ from pathlib import Path
 import click
 
 from ploomber.io._commander import Commander, CommanderStop
-from ploomber.telemetry import telemetry
 from soopervisor.airflow.config import AirflowConfig
 from soopervisor import commons
 from soopervisor import abc
@@ -49,12 +48,6 @@ class AirflowExporter(abc.AbstractExporter):
                 path_out = str(Path(env_name, './ploomber/'))
                 shutil.copytree(home_path, path_out)
 
-            telemetry.log_api("soopervisor_add_success",
-                              metadata={
-                                  'type': 'airflow',
-                                  'env_name': env_name,
-                                  'config': cfg,
-                              })
             click.echo(
                 f'Airflow DAG declaration saved to {path_out!r}, you may '
                 'edit the file to change the configuration if needed, '
@@ -75,12 +68,6 @@ class AirflowExporter(abc.AbstractExporter):
         The code along with the DAG declaration file can be copied to
         AIRFLOW_HOME for execution
         """
-        telemetry.log_api("soopervisor_export_started",
-                          metadata={
-                              'type': 'airflow',
-                              'env_name': env_name,
-                              'config': cfg,
-                          })
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
             tasks, args = commons.load_tasks(cmdr=e, name=env_name, mode=mode)
@@ -103,12 +90,6 @@ class AirflowExporter(abc.AbstractExporter):
 
             path_dag_dict_out = Path(pkg_name + '.json')
             path_dag_dict_out.write_text(json.dumps(dag_dict))
-            telemetry.log_api("soopervisor_export_success",
-                              metadata={
-                                  'type': 'airflow',
-                                  'env_name': env_name,
-                                  'config': cfg,
-                              })
 
 
 def generate_airflow_spec(tasks, args, target_image):

@@ -12,6 +12,7 @@ from unittest.mock import Mock
 import my_project
 import pytest
 from ploomber.io import _commander, _commander_tester
+from ploomber.telemetry import telemetry
 
 from soopervisor import commons
 
@@ -45,6 +46,23 @@ def _mock_docker_calls(monkeypatch, cmd, proj, tag):
 def _path_to_tests():
     return Path(__file__).absolute().parent
 
+@pytest.fixture
+def ignore_ploomber_stats_enabled_env_var(monkeypatch):
+    """
+    GitHub Actions configuration scripts set the PLOOMBER_STATS_ENABLED
+    environment variable to prevent CI events from going to posthog, this
+    inferes with some tests. This fixture removes its value temporarily
+    """
+    monkeypatch.delenv('PLOOMBER_STATS_ENABLED', raising=True)
+
+@pytest.fixture
+def ignore_env_var_and_set_tmp_default_home_dir(
+        tmp_empty, ignore_ploomber_stats_enabled_env_var, monkeypatch):
+    """
+    ignore_ploomber_stats_enabled_env_var + overrides DEFAULT_HOME_DIR
+    to prevent the local configuration to interfere with tests
+    """
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
 
 @pytest.fixture
 def root_path():

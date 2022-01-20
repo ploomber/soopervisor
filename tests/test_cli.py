@@ -4,6 +4,7 @@ from unittest.mock import Mock, ANY
 import pytest
 from click.testing import CliRunner
 from ploomber.io._commander import Commander
+from ploomber.telemetry import telemetry
 
 from soopervisor.cli import cli
 from soopervisor.cli import exporter
@@ -40,6 +41,11 @@ def monkeypatch_external(monkeypatch):
 # TODO Add test with lambda
 
 
+def test_check_stats_enabled(ignore_env_var_and_set_tmp_default_home_dir):
+    stats_enabled = telemetry.check_stats_enabled()
+    assert stats_enabled is True
+
+
 @pytest.mark.parametrize('args, backend', [
     [['add', 'serve', '--backend', 'argo-workflows'], Backend.argo_workflows],
     [['add', 'serve', '--backend', 'airflow'], Backend.airflow],
@@ -52,8 +58,11 @@ def monkeypatch_external(monkeypatch):
                              'batch',
                              'slurm',
                          ])
-def test_sample_project_no_args(args, backend, tmp_sample_project,
-                                monkeypatch):
+def test_sample_project_no_args(args, backend, tmp_sample_project, monkeypatch,
+                                ignore_ploomber_stats_enabled_env_var):
+    stats_mock = Mock()
+    monkeypatch.setattr(telemetry, 'log_api', stats_mock)
+
     runner = CliRunner()
     result = runner.invoke(cli, args, catch_exceptions=False)
     assert result.exit_code == 0
@@ -72,6 +81,7 @@ def test_sample_project_no_args(args, backend, tmp_sample_project,
                                                until=None,
                                                skip_tests=False,
                                                ignore_git=False)
+    stats_mock.call_count == 3
 
 
 @pytest.mark.parametrize('args, backend', [
