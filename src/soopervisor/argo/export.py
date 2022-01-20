@@ -37,7 +37,8 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
                        templates_path=('soopervisor', 'assets')) as e:
             e.copy_template('argo-workflows/Dockerfile',
                             conda=Path('environment.lock.yml').exists(),
-                            setup_py=Path('setup.py').exists())
+                            setup_py=Path('setup.py').exists(),
+                            env_name=env_name)
             e.success('Done')
 
     @staticmethod
