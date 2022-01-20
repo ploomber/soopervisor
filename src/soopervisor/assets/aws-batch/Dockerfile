@@ -15,6 +15,7 @@ WORKDIR /project/
 
 # extract to get any config files at the root
 RUN tar --strip-components=1 -zxvf *.tar.gz
+RUN cp -r /project/{{env_name}}/ploomber/ /root/.ploomber/  || echo 'ploomber home does not exist'
 
 {% if setup_py %}
 # install from the source distribution

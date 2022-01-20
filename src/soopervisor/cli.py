@@ -1,5 +1,5 @@
 from pathlib import Path
-
+import shutil
 import yaml
 import click
 
@@ -45,6 +45,13 @@ def add(env_name, backend):
                     f'A {env_name!r} section in the '
                     'soopervisor.yaml configuration file '
                     'already exists. Choose another name.')
+
+            home_path = Path(telemetry.get_home_dir())
+            home_path = home_path.expanduser()
+
+            if home_path.exists():
+                path_out = str(Path(env_name, './ploomber/'))
+                shutil.copytree(home_path, path_out)
 
         if Path(env_name).exists():
             raise click.ClickException(f'{env_name!r} already exists. '

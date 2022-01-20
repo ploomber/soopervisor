@@ -41,13 +41,6 @@ class AirflowExporter(abc.AbstractExporter):
                             setup_py=Path('setup.py').exists(),
                             env_name=env_name)
 
-            home_path = Path('~/.ploomber/')
-            home_path = home_path.expanduser()
-
-            if home_path.exists():
-                path_out = str(Path(env_name, './ploomber/'))
-                shutil.copytree(home_path, path_out)
-
             click.echo(
                 f'Airflow DAG declaration saved to {path_out!r}, you may '
                 'edit the file to change the configuration if needed, '
