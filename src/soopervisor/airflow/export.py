@@ -3,7 +3,6 @@ Export a Ploomber DAG to Airflow
 """
 import json
 import os
-import shutil
 from pathlib import Path
 
 import click
