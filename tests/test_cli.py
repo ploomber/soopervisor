@@ -52,6 +52,7 @@ def monkeypatch_external(monkeypatch):
         'batch',
     ])
 def test_ploomber_home_exists(args, backend, tmp_sample_project, monkeypatch):
+    monkeypatch.delenv('PLOOMBER_STATS_ENABLED', raising=True)
     monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
 
     runner = CliRunner()
