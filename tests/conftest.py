@@ -46,12 +46,14 @@ def _mock_docker_calls(monkeypatch, cmd, proj, tag):
 def _path_to_tests():
     return Path(__file__).absolute().parent
 
+
 @pytest.fixture(scope='class')
 def monkeypatch_session():
     from _pytest.monkeypatch import MonkeyPatch
     m = MonkeyPatch()
     yield m
     m.undo()
+
 
 @pytest.fixture(scope='class', autouse=True)
 def external_access(monkeypatch_session):

@@ -40,16 +40,17 @@ def monkeypatch_external(monkeypatch):
 
 # TODO Add test with lambda
 
-@pytest.mark.parametrize('args, backend', [
-    [['add', 'serve', '--backend', 'argo-workflows'], Backend.argo_workflows],
-    [['add', 'serve', '--backend', 'airflow'], Backend.airflow],
-    [['add', 'serve', '--backend', 'aws-batch'], Backend.aws_batch]
-],
-                         ids=[
-                             'argo',
-                             'airflow',
-                             'batch',
-                         ])
+
+@pytest.mark.parametrize(
+    'args, backend',
+    [[['add', 'serve', '--backend', 'argo-workflows'], Backend.argo_workflows],
+     [['add', 'serve', '--backend', 'airflow'], Backend.airflow],
+     [['add', 'serve', '--backend', 'aws-batch'], Backend.aws_batch]],
+    ids=[
+        'argo',
+        'airflow',
+        'batch',
+    ])
 def test_ploomber_home_exists(args, backend, tmp_sample_project, monkeypatch):
     monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
 
@@ -65,8 +66,6 @@ def test_ploomber_home_exists(args, backend, tmp_sample_project, monkeypatch):
 
     assert conf.exists()
     assert uid.exists()
-
-
 
 
 @pytest.mark.parametrize('args, backend', [
