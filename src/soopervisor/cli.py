@@ -38,18 +38,14 @@ def add(env_name, backend):
     try:
         if Path('soopervisor.yaml').exists():
             cfg = yaml.safe_load(Path('soopervisor.yaml').read_text())
-
             if env_name in cfg:
                 raise click.ClickException(
                     f'A {env_name!r} section in the '
                     'soopervisor.yaml configuration file '
                     'already exists. Choose another name.')
-
-
-
         if Path(env_name).exists():
             raise click.ClickException(f'{env_name!r} already exists. '
-                                       'Select a different name.')
+                                   'Select a different name.')
     except Exception as e:
         telemetry.log_api("soopervisor_export_error",
                           metadata={
