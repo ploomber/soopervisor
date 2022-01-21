@@ -1,5 +1,4 @@
 from pathlib import Path
-import shutil
 import yaml
 import click
 
@@ -46,12 +45,7 @@ def add(env_name, backend):
                     'soopervisor.yaml configuration file '
                     'already exists. Choose another name.')
 
-            home_path = Path(telemetry.get_home_dir())
-            home_path = home_path.expanduser()
 
-            if home_path.exists():
-                path_out = str(Path(env_name, './ploomber/'))
-                shutil.copytree(home_path, path_out)
 
         if Path(env_name).exists():
             raise click.ClickException(f'{env_name!r} already exists. '
@@ -63,7 +57,7 @@ def add(env_name, backend):
                               'env_name': env_name,
                               'error': e
                           })
-        raise e
+        raise
 
     Exporter = exporter.for_backend(backend)
     Exporter('soopervisor.yaml', env_name=env_name).add()
@@ -141,7 +135,7 @@ def export(env_name, until_build, mode, skip_tests, ignore_git):
                               'input_args': input_args,
                               'error': e
                           })
-        raise e
+        raise
 
 
 if __name__ == '__main__':

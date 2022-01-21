@@ -40,10 +40,33 @@ def monkeypatch_external(monkeypatch):
 
 # TODO Add test with lambda
 
+@pytest.mark.parametrize('args, backend', [
+    [['add', 'serve', '--backend', 'argo-workflows'], Backend.argo_workflows],
+    [['add', 'serve', '--backend', 'airflow'], Backend.airflow],
+    [['add', 'serve', '--backend', 'aws-batch'], Backend.aws_batch]
+],
+                         ids=[
+                             'argo',
+                             'airflow',
+                             'batch',
+                         ])
+def test_ploomber_home_exists(args, backend, tmp_sample_project, monkeypatch):
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
 
-def test_check_stats_enabled(ignore_env_var_and_set_tmp_default_home_dir):
-    stats_enabled = telemetry.check_stats_enabled()
-    assert stats_enabled is True
+    runner = CliRunner()
+    result = runner.invoke(cli, args, catch_exceptions=False)
+    assert result.exit_code == 0
+
+    result = runner.invoke(cli, ['export', 'serve'], catch_exceptions=False)
+
+    # Check workspace files exist after execution
+    conf = Path('./stats/config.yaml')
+    uid = Path('./stats/uid.yaml')
+
+    assert conf.exists()
+    assert uid.exists()
+
+
 
 
 @pytest.mark.parametrize('args, backend', [
@@ -58,10 +81,8 @@ def test_check_stats_enabled(ignore_env_var_and_set_tmp_default_home_dir):
                              'batch',
                              'slurm',
                          ])
-def test_sample_project_no_args(args, backend, tmp_sample_project, monkeypatch,
-                                ignore_ploomber_stats_enabled_env_var):
-    stats_mock = Mock()
-    monkeypatch.setattr(telemetry, 'log_api', stats_mock)
+def test_sample_project_no_args(args, backend, tmp_sample_project,
+                                monkeypatch):
 
     runner = CliRunner()
     result = runner.invoke(cli, args, catch_exceptions=False)
@@ -81,7 +102,6 @@ def test_sample_project_no_args(args, backend, tmp_sample_project, monkeypatch,
                                                until=None,
                                                skip_tests=False,
                                                ignore_git=False)
-    stats_mock.call_count == 3
 
 
 @pytest.mark.parametrize('args, backend', [

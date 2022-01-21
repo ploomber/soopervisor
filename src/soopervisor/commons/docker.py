@@ -1,8 +1,10 @@
 import importlib
 from pathlib import Path
+import shutil
 
 from ploomber.util import default
 from ploomber.io._commander import CommanderStop
+from ploomber.telemetry import telemetry
 
 from soopervisor.commons import source, dependencies
 from soopervisor.exceptions import ConfigurationError
@@ -17,7 +19,7 @@ def _validate_repository(repository):
 
 def build(e,
           cfg,
-          name,
+          env_name,
           until,
           entry_point,
           skip_tests=False,
@@ -66,8 +68,15 @@ def build(e,
     elif Path('environment.lock.yml').exists():
         e.cp('environment.lock.yml')
 
-    # generate source distribution
+    # Generate ploomber home
+    home_path = Path(telemetry.get_home_dir())
+    home_path = home_path.expanduser()
 
+    if home_path.exists():
+        path_out = str(Path(env_name, './ploomber/'))
+        shutil.copytree(home_path, path_out)
+
+    # Generate source distribution
     if Path('setup.py').exists():
         # .egg-info may cause issues if MANIFEST.in was recently updated
         e.rm('dist', 'build', Path('src', pkg_name, f'{pkg_name}.egg-info'))
@@ -89,7 +98,7 @@ def build(e,
 
     e.cp('dist')
 
-    e.cd(name)
+    e.cd(env_name)
 
     image_local = f'{pkg_name}:{version}'
 
