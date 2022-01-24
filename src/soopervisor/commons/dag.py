@@ -32,10 +32,10 @@ def _extract_product_parent(task_spec):
     return [str(path.parent) for path in paths if _is_relative_path(path)]
 
 
-def _product_prefixes_from_spec(spec):
+def product_prefixes_from_spec(spec):
     parents = [_extract_product_parent(t) for t in spec['tasks']]
     parents_flat = [path for sub in parents for path in sub]
-    return set(parents_flat)
+    return sorted(set(parents_flat)) or None
 
 
 def find_spec(cmdr, name):

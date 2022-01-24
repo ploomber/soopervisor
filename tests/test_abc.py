@@ -27,6 +27,16 @@ def test_initialize_from_empty_folder(tmp_empty):
     assert data['some_env']['default'] == 'value'
 
 
+def test_set_exclude_default_value(tmp_empty):
+    ConcreteConfig.from_file_with_root_key('soopervisor.yaml',
+                                           'some_env',
+                                           exclude=['some-dir'])
+
+    data = yaml.safe_load(Path('soopervisor.yaml').read_text())
+
+    assert data['some_env']['exclude'] == ['some-dir']
+
+
 # TODO: parametrize over concrete classes
 def test_creates_soopervisor_yaml_if_it_doesnt_exist(tmp_empty):
     ConcreteConfig._write_defaults('soopervisor.yaml', 'some_env')

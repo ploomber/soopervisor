@@ -3,7 +3,12 @@ from pathlib import Path
 import pytest
 from ploomber.spec import DAGSpec
 
-from soopervisor.commons.dag import _product_prefixes_from_spec
+from soopervisor.commons.dag import product_prefixes_from_spec
+
+# NOTE: representing absolute paths with a leading // so the
+# Path().is_absolute() method works in unix and windows since a single leading
+# / is not interpreted as absolute on windows
+# https://docs.python.org/3/library/pathlib.html#pathlib.PurePath.is_absolute
 
 simple = """
 tasks:
@@ -14,7 +19,7 @@ tasks:
 absolute = """
 tasks:
   - source: tasks/load.py
-    product: /path/to/output/load.ipynb
+    product: //path/to/output/load.ipynb
 
   - source: tasks/clean.py
     product: output/load.ipynb
@@ -38,7 +43,7 @@ tasks:
 
   - source: tasks/more.sql
     product:
-     one: /path/to/data/dump.csv
+     one: //path/to/data/dump.csv
      another: output/dump.csv
 
   - source: tasks/another.sql
@@ -49,14 +54,14 @@ tasks:
 
 
 @pytest.mark.parametrize('spec, expected', [
-    [simple, {'output'}],
-    [absolute, {'output'}],
-    [multiple_products, {'data', 'output'}],
-    [sql_products, {'data', 'output'}],
+    [simple, ['output']],
+    [absolute, ['output']],
+    [multiple_products, ['data', 'output']],
+    [sql_products, ['data', 'output']],
 ])
 def test_product_prefixes_from_spec(tmp_empty, spec, expected):
     Path('pipeline.yaml').write_text(spec)
 
     spec = DAGSpec('pipeline.yaml')
 
-    assert _product_prefixes_from_spec(spec) == expected
+    assert product_prefixes_from_spec(spec) == expected
