@@ -149,8 +149,13 @@ def copy(cmdr, src, dst, include=None, exclude=None, ignore_git=False):
             print(f'Copying {f} -> {target}')
 
 
-def compress_dir(src, dst):
+def compress_dir(cmdr, src, dst):
     with tarfile.open(dst, "w:gz") as tar:
         tar.add(src, arcname=os.path.basename(src))
+
+    if size_too_big(dst):
+        cmdr.warn_on_exit(f"The project's source code {str(dst)!r} is "
+                          "larger than 5MB, there may be some unnecessary "
+                          "files (e.g., data files)")
 
     shutil.rmtree(src)

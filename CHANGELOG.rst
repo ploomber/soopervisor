@@ -10,6 +10,7 @@ CHANGELOG
 * Adds "Task Communication" user guide
 * Display warnings if passing CLI options that do not apply to SLURM
 * SLURM exporter raises error if ``sbatch`` isn't installed
+* Showing a warning if source dist is >5MB  (#53)
 
 0.6.1 (2022-01-16)
 ------------------

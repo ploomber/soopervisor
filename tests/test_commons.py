@@ -268,16 +268,36 @@ def test_copy_ignore_git(tmp_empty):
 def test_compress_dir(tmp_empty):
     dir = Path('dist', 'project-name')
     dir.mkdir(parents=True)
-
     (dir / 'file').touch()
 
-    source.compress_dir('dist/project-name', 'dist/project-name.tar.gz')
+    with Commander() as cmdr:
+        source.compress_dir(cmdr, 'dist/project-name',
+                            'dist/project-name.tar.gz')
 
     with tarfile.open('dist/project-name.tar.gz', 'r:gz') as tar:
         tar.extractall('.')
 
     expected = {Path('project-name/file')}
     assert set(Path(p) for p in source.glob_all('project-name')) == expected
+
+
+def test_compress_warns_if_output_too_big(tmp_empty, monkeypatch, capsys):
+    # mock a file of 6MB
+    monkeypatch.setattr(source.os.path, 'getsize',
+                        Mock(return_value=1024 * 1024 * 6))
+
+    dir = Path('dist', 'project-name')
+    dir.mkdir(parents=True)
+    (dir / 'file').touch()
+
+    with Commander() as cmdr:
+        source.compress_dir(cmdr, 'dist/project-name',
+                            'dist/project-name.tar.gz')
+
+    captured = capsys.readouterr()
+    expected = ("The project's source code 'dist/project-name.tar.gz' "
+                "is larger than 5MB")
+    assert expected in captured.out
 
 
 @pytest.mark.parametrize('env_yaml, expected', [
