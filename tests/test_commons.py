@@ -2,6 +2,7 @@ import os
 import tarfile
 import subprocess
 from pathlib import Path
+from unittest.mock import Mock
 
 import yaml
 import pytest
@@ -12,6 +13,7 @@ from ploomber.io._commander import Commander
 
 from soopervisor.commons import source, conda, dependencies
 from soopervisor import commons
+from soopervisor.exceptions import MissingDockerfileError
 
 
 @pytest.fixture
@@ -425,3 +427,14 @@ def test_check_lock_files_exist(tmp_empty):
     expected = ('Expected requirements.lock.txt or environment.lock.yml at '
                 'the root directory')
     assert expected in str(excinfo.value)
+
+
+def test_error_if_missing_dockerfile(tmp_empty):
+    with pytest.raises(MissingDockerfileError) as excinfo:
+        commons.docker.build(e=Mock(),
+                             cfg=Mock(),
+                             name='some_name',
+                             until=Mock(),
+                             entry_point=Mock())
+
+    assert excinfo.value.env_name == 'some_name'

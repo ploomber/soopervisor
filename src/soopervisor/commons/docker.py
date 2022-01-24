@@ -5,7 +5,7 @@ from ploomber.util import default
 from ploomber.io._commander import CommanderStop
 
 from soopervisor.commons import source, dependencies
-from soopervisor.exceptions import ConfigurationError
+from soopervisor.exceptions import ConfigurationError, MissingDockerfileError
 
 
 def _validate_repository(repository):
@@ -44,6 +44,10 @@ def build(e,
     skip_tests : bool, default=False
         Skip image testing (check dag loading and File.client configuration)
     """
+
+    if not Path('Dockerfile').is_file():
+        raise MissingDockerfileError(name)
+
     # raise an error if the user didn't change the default value
     _validate_repository(cfg.repository)
 
