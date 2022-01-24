@@ -89,7 +89,7 @@ def build(e,
                     include=cfg.include,
                     exclude=cfg.exclude,
                     ignore_git=ignore_git)
-        source.compress_dir(target, Path('dist', f'{pkg_name}.tar.gz'))
+        source.compress_dir(e, target, Path('dist', f'{pkg_name}.tar.gz'))
 
     e.cp('dist')
 

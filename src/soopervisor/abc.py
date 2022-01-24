@@ -118,7 +118,8 @@ class AbstractExporter(abc.ABC):
         # ensure that the project and the config make sense
         self.validate()
 
-        # initialize configuration and a few checks on it
+        # initialize configuration (create file if needed) and a few checks on
+        # it
         self._cfg = self.CONFIG_CLASS.from_file_with_root_key(
             path_to_config=path_to_config,
             env_name=env_name,
@@ -145,6 +146,8 @@ class AbstractExporter(abc.ABC):
         commons.dependencies.check_lock_files_exist()
 
     def add(self):
+        """Create a directory with the env_name and add any necessary files
+        """
         # check that env_name folder does not exist
         path = Path(self._env_name)
 
