@@ -69,6 +69,13 @@ def to_posix_str(path):
     return str(PurePosixPath(*Path(path).parts))
 
 
+def size_too_big(path):
+    """Returns true is file is too large (5MB)
+    """
+    five_mb = 5242880
+    return os.path.getsize(path) > five_mb
+
+
 def copy(cmdr, src, dst, include=None, exclude=None, ignore_git=False):
     """Copy files
 
