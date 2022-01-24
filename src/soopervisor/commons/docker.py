@@ -45,7 +45,7 @@ def build(e,
         Skip image testing (check dag loading and File.client configuration)
     """
 
-    if not Path('Dockerfile').is_file():
+    if not Path(name, 'Dockerfile').is_file():
         raise MissingDockerfileError(name)
 
     # raise an error if the user didn't change the default value

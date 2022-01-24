@@ -270,9 +270,6 @@ def test_export(mock_batch, monkeypatch_docker, monkeypatch,
                 monkeypatch_docker_client, backup_packaged_project, mode, args,
                 skip_repo_validation):
 
-    commander_mock = MagicMock()
-    monkeypatch.setattr(batch, 'Commander',
-                        lambda workspace, templates_path: commander_mock)
     boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
     monkeypatch.setattr(batch.boto3, 'client',
                         lambda name, region_name: boto3_mock)
@@ -281,6 +278,12 @@ def test_export(mock_batch, monkeypatch_docker, monkeypatch,
 
     exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
     exporter.add()
+
+    # mock commander
+    commander_mock = MagicMock()
+    monkeypatch.setattr(batch, 'Commander',
+                        lambda workspace, templates_path: commander_mock)
+
     exporter.export(mode=mode)
 
     jobs = mock_batch.list_jobs(jobQueue='your-job-queue')['jobSummaryList']

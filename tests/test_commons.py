@@ -280,7 +280,6 @@ def test_compress_dir(tmp_empty):
     assert set(Path(p) for p in source.glob_all('project-name')) == expected
 
 
-
 @pytest.mark.parametrize('env_yaml, expected', [
     [{
         'dependencies': ['a', 'b', {
