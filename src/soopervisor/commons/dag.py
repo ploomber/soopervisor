@@ -1,12 +1,41 @@
 """
 Loading dags
 """
+from pathlib import Path
+
 from ploomber.constants import TaskStatus
 from ploomber.spec import DAGSpec
 from ploomber.exceptions import DAGSpecInvalidError
 from ploomber.products import File
 
 from soopervisor.enum import Mode
+
+
+def _is_relative_path(path):
+    return not Path(path).is_absolute()
+
+
+def _extract_product_parent(task_spec):
+    product_spec = task_spec.data['product']
+
+    try:
+        # single product
+        paths = [Path(product_spec)]
+    except TypeError:
+        # dictionary
+        try:
+            paths = [Path(product) for product in product_spec.values()]
+        except Exception:
+            # any other thing
+            return []
+
+    return [str(path.parent) for path in paths if _is_relative_path(path)]
+
+
+def _product_prefixes_from_spec(spec):
+    parents = [_extract_product_parent(t) for t in spec['tasks']]
+    parents_flat = [path for sub in parents for path in sub]
+    return set(parents_flat)
 
 
 def find_spec(cmdr, name):
