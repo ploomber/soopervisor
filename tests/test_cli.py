@@ -47,12 +47,9 @@ def monkeypatch_external(monkeypatch):
     [[['add', 'serve', '--backend', 'argo-workflows'], Backend.argo_workflows],
      [['add', 'serve', '--backend', 'airflow'], Backend.airflow],
      [['add', 'serve', '--backend', 'aws-batch'], Backend.aws_batch]],
-    ids=[
-        'argo',
-        'airflow',
-        'batch',
-    ])
+    ids=['argo', 'airflow', 'aws-batch'])
 def test_p_home_exists_tar(args, backend, tmp_sample_project, monkeypatch):
+    monkeypatch.delenv('PLOOMBER_STATS_ENABLED', raising=True)
     runner = CliRunner()
     result = runner.invoke(cli, args, catch_exceptions=False)
     assert result.exit_code == 0
@@ -64,7 +61,8 @@ def test_p_home_exists_tar(args, backend, tmp_sample_project, monkeypatch):
     with open('soopervisor.yaml', 'w') as file:
         yaml.dump(yml, file)
     file.close()
-    runner.invoke(cli, ['export', '-i', '-s', 'serve'], catch_exceptions=False)
+    result = runner.invoke(cli, ['export', '-i', '-s', 'serve'],
+                           catch_exceptions=False)
 
     # Check workspace files exist after execution
     # Extracting targz file
@@ -74,7 +72,7 @@ def test_p_home_exists_tar(args, backend, tmp_sample_project, monkeypatch):
     file.close()
 
     # Load stats
-    stats_path = Path('sample_project', 'dist', 'ploomber', 'stats')
+    stats_path = Path('ploomber', 'stats')
     conf = Path(stats_path, 'config.yaml')
     uid = Path(stats_path, 'uid.yaml')
 
