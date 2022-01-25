@@ -1,6 +1,8 @@
 from pathlib import Path
 from unittest.mock import Mock, ANY
 
+import tarfile
+import yaml
 import pytest
 from click.testing import CliRunner
 from ploomber.io._commander import Commander
@@ -40,10 +42,9 @@ def monkeypatch_external(monkeypatch):
 
 # TODO Add test with lambda
 
-
 @pytest.mark.parametrize(
-    'args, backend',
-    [[['add', 'serve', '--backend', 'argo-workflows'], Backend.argo_workflows],
+    'args, backend', [
+    [['add', 'serve', '--backend', 'argo-workflows'], Backend.argo_workflows],
      [['add', 'serve', '--backend', 'airflow'], Backend.airflow],
      [['add', 'serve', '--backend', 'aws-batch'], Backend.aws_batch]],
     ids=[
@@ -51,19 +52,31 @@ def monkeypatch_external(monkeypatch):
         'airflow',
         'batch',
     ])
-def test_ploomber_home_exists(args, backend, tmp_sample_project, monkeypatch):
-    monkeypatch.delenv('PLOOMBER_STATS_ENABLED', raising=True)
-    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
-
+def test_p_home_exists_tar(args, backend, tmp_sample_project, monkeypatch):
     runner = CliRunner()
     result = runner.invoke(cli, args, catch_exceptions=False)
     assert result.exit_code == 0
 
-    result = runner.invoke(cli, ['export', 'serve'], catch_exceptions=False)
+    with open('soopervisor.yaml', 'r') as file:
+        yml = yaml.safe_load(file)
+    yml['serve']['repository'] = 'null'
+
+    with open('soopervisor.yaml', 'w') as file:
+        yaml.dump(yml, file)
+    file.close()
+    runner.invoke(cli, ['export', '-i', '-s', 'serve'], catch_exceptions=False)
 
     # Check workspace files exist after execution
-    conf = Path('./stats/config.yaml')
-    uid = Path('./stats/uid.yaml')
+    # Extracting targz file
+    tar_path = Path('dist', 'sample_project.tar.gz')
+    file = tarfile.open(tar_path)
+    file.extractall('.')
+    file.close()
+
+    # Load stats
+    stats_path = Path('sample_project', 'dist', 'ploomber', 'stats')
+    conf = Path(stats_path, 'config.yaml')
+    uid = Path(stats_path, 'uid.yaml')
 
     assert conf.exists()
     assert uid.exists()

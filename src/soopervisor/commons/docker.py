@@ -16,6 +16,14 @@ def _validate_repository(repository):
             f'Invalid repository {repository!r} '
             'in soopervisor.yaml, please add a valid value.')
 
+def cp_ploomber_home():
+    # Generate ploomber home
+    home_path = Path(telemetry.get_home_dir(), 'stats')
+    home_path = home_path.expanduser()
+
+    if home_path.exists():
+        path_out = str(Path('dist', 'ploomber', 'stats'))
+        shutil.copytree(home_path, path_out)
 
 def build(e,
           cfg,
@@ -68,24 +76,18 @@ def build(e,
     elif Path('environment.lock.yml').exists():
         e.cp('environment.lock.yml')
 
-    # Generate ploomber home
-    home_path = Path(telemetry.get_home_dir())
-    home_path = home_path.expanduser()
-
-    if home_path.exists():
-        path_out = str(Path(env_name, './ploomber/'))
-        shutil.copytree(home_path, path_out)
-
     # Generate source distribution
     if Path('setup.py').exists():
         # .egg-info may cause issues if MANIFEST.in was recently updated
         e.rm('dist', 'build', Path('src', pkg_name, f'{pkg_name}.egg-info'))
+        cp_ploomber_home()
         e.run('python', '-m', 'build', '--sdist', description='Packaging code')
 
         # raise error if include is not None? and suggest to use MANIFEST.in
         # instead
     else:
         e.rm('dist')
+        cp_ploomber_home()
         target = Path('dist', pkg_name)
         e.info('Packaging code')
         source.copy(cmdr=e,
