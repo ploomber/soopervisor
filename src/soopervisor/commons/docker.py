@@ -1,8 +1,6 @@
 import importlib
-import os
 import tarfile
 from pathlib import Path
-import shutil
 
 from ploomber.util import default
 from ploomber.io._commander import CommanderStop
