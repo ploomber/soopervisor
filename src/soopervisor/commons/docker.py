@@ -7,7 +7,7 @@ from ploomber.io._commander import CommanderStop
 from ploomber.telemetry import telemetry
 
 from soopervisor.commons import source, dependencies
-from soopervisor.exceptions import ConfigurationError
+from soopervisor.exceptions import ConfigurationError, MissingDockerfileError
 
 
 def _validate_repository(repository):
@@ -58,6 +58,10 @@ def build(e,
     skip_tests : bool, default=False
         Skip image testing (check dag loading and File.client configuration)
     """
+
+    if not Path(env_name, 'Dockerfile').is_file():
+        raise MissingDockerfileError(name)
+
     # raise an error if the user didn't change the default value
     _validate_repository(cfg.repository)
 
@@ -85,6 +89,7 @@ def build(e,
         # .egg-info may cause issues if MANIFEST.in was recently updated
         e.rm('dist', 'build', Path('src', pkg_name, f'{pkg_name}.egg-info'))
         e.run('python', '-m', 'build', '--sdist', description='Packaging code')
+
         # raise error if include is not None? and suggest to use MANIFEST.in
         # instead
     else:
@@ -97,7 +102,8 @@ def build(e,
                     include=cfg.include,
                     exclude=cfg.exclude,
                     ignore_git=ignore_git)
-        source.compress_dir(target, Path('dist', f'{pkg_name}.tar.gz'))
+        source.compress_dir(e, target, Path('dist', f'{pkg_name}.tar.gz'))
+
     cp_ploomber_home(pkg_name)
     e.cp('dist')
 
