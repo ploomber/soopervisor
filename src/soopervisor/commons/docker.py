@@ -16,6 +16,7 @@ def _validate_repository(repository):
             f'Invalid repository {repository!r} '
             'in soopervisor.yaml, please add a valid value.')
 
+
 def cp_ploomber_home():
     # Generate ploomber home
     home_path = Path(telemetry.get_home_dir(), 'stats')
@@ -24,6 +25,7 @@ def cp_ploomber_home():
     if home_path.exists():
         path_out = str(Path('dist', 'ploomber', 'stats'))
         shutil.copytree(home_path, path_out)
+
 
 def build(e,
           cfg,

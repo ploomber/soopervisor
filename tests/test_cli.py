@@ -6,7 +6,6 @@ import yaml
 import pytest
 from click.testing import CliRunner
 from ploomber.io._commander import Commander
-from ploomber.telemetry import telemetry
 
 from soopervisor.cli import cli
 from soopervisor.cli import exporter
@@ -42,9 +41,10 @@ def monkeypatch_external(monkeypatch):
 
 # TODO Add test with lambda
 
+
 @pytest.mark.parametrize(
-    'args, backend', [
-    [['add', 'serve', '--backend', 'argo-workflows'], Backend.argo_workflows],
+    'args, backend',
+    [[['add', 'serve', '--backend', 'argo-workflows'], Backend.argo_workflows],
      [['add', 'serve', '--backend', 'airflow'], Backend.airflow],
      [['add', 'serve', '--backend', 'aws-batch'], Backend.aws_batch]],
     ids=[
