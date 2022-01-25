@@ -60,7 +60,7 @@ def build(e,
     """
 
     if not Path(env_name, 'Dockerfile').is_file():
-        raise MissingDockerfileError(name)
+        raise MissingDockerfileError(env_name)
 
     # raise an error if the user didn't change the default value
     _validate_repository(cfg.repository)
