@@ -44,7 +44,7 @@ def build(e,
     cfg
         Configuration
 
-    name : str
+    env_name : str
         Target environment name
 
     until : str
