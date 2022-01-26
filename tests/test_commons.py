@@ -453,7 +453,7 @@ def test_error_if_missing_dockerfile(tmp_empty):
     with pytest.raises(MissingDockerfileError) as excinfo:
         commons.docker.build(e=Mock(),
                              cfg=Mock(),
-                             name='some_name',
+                             env_name='some_name',
                              until=Mock(),
                              entry_point=Mock())
 
