@@ -269,7 +269,8 @@ def monkeypatch_docker_client(monkeypatch):
 def test_export(mock_batch, monkeypatch_docker, monkeypatch,
                 monkeypatch_docker_client, backup_packaged_project, mode, args,
                 skip_repo_validation):
-
+    p_home_mock = Mock()
+    monkeypatch.setattr(commons.docker, 'cp_ploomber_home', p_home_mock)
     boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
     monkeypatch.setattr(batch.boto3, 'client',
                         lambda name, region_name: boto3_mock)
