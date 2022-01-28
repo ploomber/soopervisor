@@ -1,5 +1,4 @@
 from pathlib import Path
-
 import yaml
 import click
 
@@ -7,6 +6,7 @@ from soopervisor import __version__
 from soopervisor import config
 from soopervisor import exporter
 from soopervisor.enum import Backend, Mode
+from ploomber.telemetry import telemetry
 
 
 @click.group()
@@ -26,34 +26,46 @@ def cli():
 
 
 @cli.command()
-@click.argument('name')
+@click.argument('env_name')
 @click.option('--backend',
               '-b',
               type=click.Choice(Backend.get_values()),
               required=True)
-def add(name, backend):
+def add(env_name, backend):
     """Add a new target platform
     """
     backend = Backend(backend)
-
-    if Path('soopervisor.yaml').exists():
-        cfg = yaml.safe_load(Path('soopervisor.yaml').read_text())
-
-        if name in cfg:
-            raise click.ClickException(f'A {name!r} section in the '
-                                       'soopervisor.yaml configuration file '
-                                       'already exists. Choose another name.')
-
-    if Path(name).exists():
-        raise click.ClickException(f'{name!r} already exists. '
-                                   'Select a different name.')
+    try:
+        if Path('soopervisor.yaml').exists():
+            cfg = yaml.safe_load(Path('soopervisor.yaml').read_text())
+            if env_name in cfg:
+                raise click.ClickException(
+                    f'A {env_name!r} section in the '
+                    'soopervisor.yaml configuration file '
+                    'already exists. Choose another name.')
+        if Path(env_name).exists():
+            raise click.ClickException(
+                f'{env_name!r} already exists. Select a different name.')
+    except Exception as e:
+        telemetry.log_api("soopervisor_export_error",
+                          metadata={
+                              'type': backend,
+                              'env_name': env_name,
+                              'error': e
+                          })
+        raise
 
     Exporter = exporter.for_backend(backend)
-    Exporter('soopervisor.yaml', env_name=name).add()
+    Exporter('soopervisor.yaml', env_name=env_name).add()
+    telemetry.log_api("soopervisor_add_success",
+                      metadata={
+                          'type': backend,
+                          'env_name': env_name
+                      })
 
 
 @cli.command()
-@click.argument('name')
+@click.argument('env_name')
 @click.option('--until-build',
               '-u',
               is_flag=True,
@@ -70,27 +82,56 @@ def add(name, backend):
               '-i',
               is_flag=True,
               help='Ignore git tracked files (include everything)')
-def export(name, until_build, mode, skip_tests, ignore_git):
+def export(env_name, until_build, mode, skip_tests, ignore_git):
     """
     Export a target platform for execution/deployment
     """
-    until = None
+    input_args = {
+        'env_name': env_name,
+        'until_build': until_build,
+        'mode': mode,
+        'skip_tests': skip_tests,
+        'ignore_git': ignore_git
+    }
+    try:
+        backend = Backend(config.get_backend(env_name))
 
-    if until_build:
-        until = 'build'
+        telemetry.log_api("soopervisor_export_started",
+                          metadata={
+                              'type': backend,
+                              'input_args': input_args
+                          })
 
-    backend = Backend(config.get_backend(name))
+        until = None
 
-    # TODO: ignore mode if using aws lambda, raised exception if value
-    # is not the default
-    if backend == Backend.aws_lambda:
-        mode = None
+        if until_build:
+            until = 'build'
 
-    Exporter = exporter.for_backend(backend)
-    Exporter('soopervisor.yaml', env_name=name).export(mode=mode,
-                                                       until=until,
-                                                       skip_tests=skip_tests,
-                                                       ignore_git=ignore_git)
+        # TODO: ignore mode if using aws lambda, raised exception if value
+        # is not the default
+        if backend == Backend.aws_lambda:
+            mode = None
+
+        Exporter = exporter.for_backend(backend)
+
+        Exporter('soopervisor.yaml',
+                 env_name=env_name).export(mode=mode,
+                                           until=until,
+                                           skip_tests=skip_tests,
+                                           ignore_git=ignore_git)
+        telemetry.log_api("soopervisor_export_success",
+                          metadata={
+                              'type': backend,
+                              'input_args': input_args
+                          })
+    except Exception as e:
+        telemetry.log_api("soopervisor_export_error",
+                          metadata={
+                              'type': backend,
+                              'input_args': input_args,
+                              'error': e
+                          })
+        raise
 
 
 if __name__ == '__main__':

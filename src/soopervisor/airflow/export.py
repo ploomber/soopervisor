@@ -37,7 +37,8 @@ class AirflowExporter(abc.AbstractExporter):
 
             e.copy_template('airflow/Dockerfile',
                             conda=Path('environment.lock.yml').exists(),
-                            setup_py=Path('setup.py').exists())
+                            setup_py=Path('setup.py').exists(),
+                            env_name=env_name)
 
             click.echo(
                 f'Airflow DAG declaration saved to {path_out!r}, you may '

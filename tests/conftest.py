@@ -7,7 +7,8 @@ import os
 import shutil
 from pathlib import Path
 from copy import copy
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock
+import posthog
 
 import my_project
 import pytest
@@ -44,6 +45,22 @@ def _mock_docker_calls(monkeypatch, cmd, proj, tag):
 
 def _path_to_tests():
     return Path(__file__).absolute().parent
+
+
+@pytest.fixture(scope='class')
+def monkeypatch_session():
+    from _pytest.monkeypatch import MonkeyPatch
+    m = MonkeyPatch()
+    yield m
+    m.undo()
+
+
+@pytest.fixture(scope='class', autouse=True)
+def external_access(monkeypatch_session):
+    external_access = MagicMock()
+    external_access.get_something = MagicMock(return_value='Mock was used.')
+    monkeypatch_session.setattr(posthog, 'capture',
+                                external_access.get_something)
 
 
 @pytest.fixture
