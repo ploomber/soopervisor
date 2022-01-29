@@ -13,7 +13,7 @@ class AWSBatchConfig(AbstractConfig):
         return Backend.aws_batch.value
 
     @classmethod
-    def _defaults(cls):
+    def _hints(cls):
         return dict(repository='your-repository/name',
                     job_queue='your-job-queue',
                     region_name='your-region-name',

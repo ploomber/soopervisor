@@ -76,7 +76,7 @@ class AbstractConfig(BaseModel, abc.ABC):
 
     @classmethod
     def _write_defaults(cls, path_to_config, env_name, preset, **defaults):
-        data = {**cls.defaults(), **defaults}
+        data = {**cls.hints(), **defaults}
 
         if preset:
             data['preset'] = preset
@@ -102,21 +102,36 @@ class AbstractConfig(BaseModel, abc.ABC):
         pass
 
     @classmethod
-    def _defaults(cls):
+    def _hints(cls):
+        """
+        Hints must return a dictionary with descriptive values that help
+        the user understand what each field means. They are not necessarilly
+        values that work. For example, in docker-based exporters, the
+        user needs to specify a repository. So we have a hint of
+        your-repository/name (this is what the user sees when they create the
+        target environment). This contrasts with default values (declared
+        in the pydantic model). Default values are *acceptable values*,
+        but are not necessarily descriptive. For example, the default value
+        for repository is None, meaning there is not remote repository.
+        """
         return {}
 
     @classmethod
-    def defaults(cls):
-        data = cls._defaults()
+    def hints(cls):
+        data = cls._hints()
         data['backend'] = cls.get_backend_value()
         return data
 
 
 class AbstractDockerConfig(AbstractConfig):
+    """
+    An abstract class for docker-based configurations where having a remote
+    repository is optional (e.g., can build an image locally)
+    """
     repository: Optional[str] = None
 
     @classmethod
-    def _defaults(cls):
+    def _hints(cls):
         return dict(repository='your-repository/name')
 
 

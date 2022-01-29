@@ -12,11 +12,15 @@ from soopervisor.abc import AbstractConfig
 
 
 class ConcreteConfig(AbstractConfig):
-    default: str = 'value'
+    default: str
 
     @classmethod
     def get_backend_value(self):
         return 'backend-value'
+
+    @classmethod
+    def _hints(cls):
+        return {'default': 'value'}
 
 
 def test_initialize_from_empty_folder(tmp_empty):
@@ -45,9 +49,6 @@ def test_creates_soopervisor_yaml_if_it_doesnt_exist(tmp_empty):
     assert cfg['some_env'] == {
         'default': 'value',
         'backend': 'backend-value',
-        'include': None,
-        'exclude': None,
-        'preset': None,
     }
 
 

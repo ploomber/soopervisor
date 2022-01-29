@@ -1,6 +1,6 @@
 """
 Here we check the default values for each config object, this should contain
-the minimum number of keys, and values should contain reasonable defaults
+the minimum number of keys, and values should contain reasonable hints
 """
 import pytest
 
@@ -11,7 +11,7 @@ from soopervisor.aws.config import AWSBatchConfig, AWSLambdaConfig
 from soopervisor.kubeflow.config import KubeflowConfig
 
 
-@pytest.mark.parametrize('class_, defaults', [
+@pytest.mark.parametrize('class_, hints', [
     [
         SlurmConfig,
         {
@@ -59,5 +59,5 @@ from soopervisor.kubeflow.config import KubeflowConfig
         },
     ],
 ])
-def test_defaults(class_, defaults):
-    assert class_.defaults() == defaults
+def test_hints(class_, hints):
+    assert class_.hints() == hints

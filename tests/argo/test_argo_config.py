@@ -32,7 +32,7 @@ def test_make_volume_entries_no_sub_path():
 
 
 def test_config_defaults():
-    assert ArgoConfig.defaults() == {
+    assert ArgoConfig.hints() == {
         'repository': 'your-repository/name',
         'backend': 'argo-workflows'
     }

@@ -2,7 +2,7 @@ from soopervisor.aws.config import AWSBatchConfig
 
 
 def test_defaults():
-    cfg = AWSBatchConfig.defaults()
+    cfg = AWSBatchConfig.hints()
     assert cfg == {
         'backend': 'aws-batch',
         'repository': 'your-repository/name',
