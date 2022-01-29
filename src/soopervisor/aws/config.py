@@ -4,14 +4,8 @@ from soopervisor.enum import Backend
 
 class AWSBatchConfig(AbstractConfig):
     repository: str
-
-    # must not contain "image"
-    container_properties: dict = {
-        "memory": 16384,
-        "vcpus": 8,
-    }
+    container_properties: dict
     job_queue: str
-
     region_name: str
 
     @classmethod
@@ -19,15 +13,14 @@ class AWSBatchConfig(AbstractConfig):
         return Backend.aws_batch.value
 
     @classmethod
-    def defaults(cls):
-        data = cls(repository='your-repository/name',
-                   job_queue='your-job-queue',
-                   region_name='your-region-name').dict()
-        data['backend'] = cls.get_backend_value()
-        del data['include']
-        del data['exclude']
-        del data['preset']
-        return data
+    def _defaults(cls):
+        return dict(repository='your-repository/name',
+                    job_queue='your-job-queue',
+                    region_name='your-region-name',
+                    container_properties=dict(
+                        memory=16384,
+                        vcpus=8,
+                    ))
 
 
 class AWSLambdaConfig(AbstractConfig):
@@ -35,7 +28,3 @@ class AWSLambdaConfig(AbstractConfig):
     @classmethod
     def get_backend_value(cls):
         return Backend.aws_lambda.value
-
-    @classmethod
-    def defaults(cls):
-        return {'backend': cls.get_backend_value()}

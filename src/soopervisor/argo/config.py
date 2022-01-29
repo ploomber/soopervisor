@@ -50,7 +50,7 @@ class ArgoMountedVolume(BaseModel):
         }
 
 
-class ArgoConfig(abc.AbstractConfig):
+class ArgoConfig(abc.AbstractDockerConfig):
     """Configuration for exporting to Argo
 
     Parameters
@@ -67,19 +67,8 @@ class ArgoConfig(abc.AbstractConfig):
         List of volumes to mount on each Pod, described with the
         ``ArgoMountedVolumes`` schema.
     """
-    repository: Optional[str] = None
     mounted_volumes: Optional[List[ArgoMountedVolume]] = None
 
     @classmethod
     def get_backend_value(cls):
         return Backend.argo_workflows.value
-
-    @classmethod
-    def defaults(cls):
-        data = cls(repository='your-repository/name').dict()
-        data['backend'] = cls.get_backend_value()
-        del data['mounted_volumes']
-        del data['include']
-        del data['exclude']
-        del data['preset']
-        return data

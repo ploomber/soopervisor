@@ -9,12 +9,3 @@ class SlurmConfig(abc.AbstractConfig):
     @classmethod
     def get_backend_value(cls):
         return Backend.slurm.value
-
-    @classmethod
-    def defaults(cls):
-        data = cls().dict()
-        data['backend'] = cls.get_backend_value()
-        del data['include']
-        del data['exclude']
-        del data['preset']
-        return data

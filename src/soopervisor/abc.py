@@ -102,10 +102,22 @@ class AbstractConfig(BaseModel, abc.ABC):
         pass
 
     @classmethod
+    def _defaults(cls):
+        return {}
+
+    @classmethod
     def defaults(cls):
-        data = dict(cls())
+        data = cls._defaults()
         data['backend'] = cls.get_backend_value()
         return data
+
+
+class AbstractDockerConfig(AbstractConfig):
+    repository: Optional[str] = None
+
+    @classmethod
+    def _defaults(cls):
+        return dict(repository='your-repository/name')
 
 
 class AbstractExporter(abc.ABC):
