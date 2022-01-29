@@ -39,7 +39,7 @@ def test_set_exclude_default_value(tmp_empty):
 
 # TODO: parametrize over concrete classes
 def test_creates_soopervisor_yaml_if_it_doesnt_exist(tmp_empty):
-    ConcreteConfig._write_defaults('soopervisor.yaml', 'some_env')
+    ConcreteConfig._write_defaults('soopervisor.yaml', 'some_env', preset=None)
 
     cfg = yaml.safe_load(Path('soopervisor.yaml').read_text())
     assert cfg['some_env'] == {
@@ -47,13 +47,14 @@ def test_creates_soopervisor_yaml_if_it_doesnt_exist(tmp_empty):
         'backend': 'backend-value',
         'include': None,
         'exclude': None,
+        'preset': None,
     }
 
 
 def test_error_if_root_key_exists_in_soopervisor_yaml(tmp_empty):
     Path('soopervisor.yaml').write_text('another_env:\n    x: 1')
 
-    ConcreteConfig._write_defaults('soopervisor.yaml', 'some_env')
+    ConcreteConfig._write_defaults('soopervisor.yaml', 'some_env', preset=None)
 
     cfg = yaml.safe_load(Path('soopervisor.yaml').read_text())
 

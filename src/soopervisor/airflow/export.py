@@ -38,11 +38,11 @@ class AirflowExporter(abc.AbstractExporter):
             path_out = str(Path(env_name, project_name + '.py'))
             os.rename(Path(env_name, name), path_out)
 
-            # TODO: do not copy if bash
-            e.copy_template('airflow/Dockerfile',
-                            conda=Path('environment.lock.yml').exists(),
-                            setup_py=Path('setup.py').exists(),
-                            env_name=env_name)
+            if cfg.preset != 'bash':
+                e.copy_template('airflow/Dockerfile',
+                                conda=Path('environment.lock.yml').exists(),
+                                setup_py=Path('setup.py').exists(),
+                                env_name=env_name)
 
             click.echo(
                 f'Airflow DAG declaration saved to {path_out!r}, you may '
@@ -73,22 +73,30 @@ class AirflowExporter(abc.AbstractExporter):
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
 
-            # TODO: maybe throw a warning if non-docker preset but there is a
+            # TODO: throw a warning if non-docker preset but there is a
             # Dockerfile
-            # TODO: should not build docker image if using bash
-            pkg_name, target_image = commons.docker.build(
-                e,
-                cfg,
-                env_name,
-                until=until,
-                entry_point=args[1],
-                skip_tests=skip_tests,
-                ignore_git=ignore_git)
+            if cfg.preset != 'bash':
+                pkg_name, target_image = commons.docker.build(
+                    e,
+                    cfg,
+                    env_name,
+                    until=until,
+                    entry_point=args[1],
+                    skip_tests=skip_tests,
+                    ignore_git=ignore_git)
 
-            dag_dict = generate_airflow_spec(tasks, args, target_image)
+                dag_dict = generate_airflow_spec(tasks, args, target_image)
 
-            path_dag_dict_out = Path(pkg_name + '.json')
-            path_dag_dict_out.write_text(json.dumps(dag_dict))
+                path_dag_dict_out = Path(pkg_name + '.json')
+                path_dag_dict_out.write_text(json.dumps(dag_dict))
+
+            else:
+                (pkg_name, target_image
+                 ) = commons.source.find_package_name_and_version()
+
+                dag_dict = generate_airflow_spec(tasks, args, target_image)
+                path_dag_dict_out = Path(env_name, pkg_name + '.json')
+                path_dag_dict_out.write_text(json.dumps(dag_dict))
 
 
 def generate_airflow_spec(tasks, args, target_image):

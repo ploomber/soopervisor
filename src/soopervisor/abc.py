@@ -36,9 +36,13 @@ class AbstractConfig(BaseModel, abc.ABC):
         extra = 'forbid'
 
     @classmethod
-    def from_file_with_root_key(cls, path_to_config, env_name, **defaults):
+    def from_file_with_root_key(cls,
+                                path_to_config,
+                                env_name,
+                                preset=None,
+                                **defaults):
         # write defaults, if needed
-        cls._write_defaults(path_to_config, env_name, **defaults)
+        cls._write_defaults(path_to_config, env_name, preset, **defaults)
 
         data = yaml.safe_load(Path(path_to_config).read_text())
 
@@ -71,8 +75,12 @@ class AbstractConfig(BaseModel, abc.ABC):
         return cls(**data[env_name])
 
     @classmethod
-    def _write_defaults(cls, path_to_config, env_name, **defaults):
+    def _write_defaults(cls, path_to_config, env_name, preset, **defaults):
         data = {**cls.defaults(), **defaults}
+
+        if preset:
+            data['preset'] = preset
+
         # pass default_flow_style=None to it serializes lists as [a, b, c]
         default_data = yaml.safe_dump({env_name: data},
                                       default_flow_style=None)

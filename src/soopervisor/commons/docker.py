@@ -1,8 +1,6 @@
-import importlib
 import tarfile
 from pathlib import Path
 
-from ploomber.util import default
 from ploomber.io._commander import CommanderStop
 from ploomber.telemetry import telemetry
 
@@ -65,17 +63,7 @@ def build(e,
     # raise an error if the user didn't change the default value
     _validate_repository(cfg.repository)
 
-    # if this is a pkg, get the name
-    try:
-        pkg_name = default.find_package_name()
-    # if not a package, use the parent folder's name
-    except ValueError:
-        pkg_name = Path('.').resolve().name
-        version = 'latest'
-    else:
-        # if using versioneer, the version may contain "+"
-        version = importlib.import_module(pkg_name).__version__.replace(
-            '+', '-plus-')
+    pkg_name, version = source.find_package_name_and_version()
 
     dependencies.check_lock_files_exist()
 

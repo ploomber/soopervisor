@@ -92,10 +92,10 @@ def test_airflow_add_sample_project(monkeypatch, tmp_sample_project,
     assert set(os.listdir('serve')) == {'sample_project.py', 'Dockerfile'}
 
 
-@pytest.mark.parametrize('preset, operator_class', [
-    [None, KubernetesPodOperator],
-    ['kubernetes', KubernetesPodOperator],
-    ['bash', BashOperator],
+@pytest.mark.parametrize('preset, operator_class, needs_docker', [
+    [None, KubernetesPodOperator, True],
+    ['kubernetes', KubernetesPodOperator, True],
+    ['bash', BashOperator, False],
 ],
                          ids=[
                              'none',
@@ -110,6 +110,7 @@ def test_airflow_export_sample_project(
     skip_repo_validation,
     preset,
     operator_class,
+    needs_docker,
 ):
     load_tasks_mock = Mock(wraps=commons.load_tasks)
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
@@ -122,6 +123,7 @@ def test_airflow_export_sample_project(
     git_init()
 
     exporter.add()
+
     exporter.export(mode='incremental')
 
     # if we do no call .resolve(), .import_module will keep loading the module
@@ -151,6 +153,10 @@ def test_airflow_export_sample_project(
         'ploomber task clean --entry-point pipeline.yaml',
         'ploomber task plot --entry-point pipeline.yaml'
     ]
+
+    # Dockerfile should only exist if needed
+    assert ((Path('serve', 'Dockerfile').exists() and needs_docker)
+            or (not Path('serve', 'Dockerfile').exists() and not needs_docker))
 
 
 @pytest.mark.parametrize('mode, args', [

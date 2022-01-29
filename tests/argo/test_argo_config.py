@@ -46,4 +46,5 @@ def test_sample_project_from_empty_config(tmp_empty):
         'mounted_volumes': None,
         'include': None,
         'exclude': None,
+        'preset': None,
     }

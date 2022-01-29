@@ -1,3 +1,4 @@
+import importlib
 import tarfile
 import os.path
 import shutil
@@ -6,7 +7,24 @@ from itertools import chain
 from glob import iglob
 import subprocess
 
+from ploomber.util import default
 from click.exceptions import ClickException
+
+
+def find_package_name_and_version():
+    # if this is a pkg, get the name
+    try:
+        pkg_name = default.find_package_name()
+    # if not a package, use the parent folder's name
+    except ValueError:
+        pkg_name = Path('.').resolve().name
+        version = 'latest'
+    else:
+        # if using versioneer, the version may contain "+"
+        version = importlib.import_module(pkg_name).__version__.replace(
+            '+', '-plus-')
+
+    return pkg_name, version
 
 
 def git_tracked_files():

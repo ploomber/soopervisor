@@ -144,7 +144,6 @@ def test_error_if_missing_boto3(monkeypatch, backup_packaged_project):
 
 
 def test_add(backup_packaged_project):
-
     exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
     exporter.add()
 
