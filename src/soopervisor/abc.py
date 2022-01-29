@@ -46,7 +46,7 @@ class AbstractConfig(BaseModel, abc.ABC):
         cls._write_hints_if_needed(path_to_config, env_name, preset,
                                    **defaults)
 
-        data = read_yaml_mapping()
+        data = read_yaml_mapping(path_to_config)
 
         # check data[env_name] is a dictionary
         if not isinstance(data[env_name], Mapping):
@@ -202,7 +202,7 @@ class AbstractExporter(abc.ABC):
     CONFIG_CLASS = None
 
     def __init__(self, path_to_config, env_name, preset=None):
-        # ensure that the project and the config make sense
+        # run some basic validations
         self.validate()
 
         # initialize dag (needed for validation)
@@ -229,8 +229,15 @@ class AbstractExporter(abc.ABC):
 
         self._env_name = env_name
 
-        # validate specific details about the target
+        # check backend-specific rrules
         self._validate(self._cfg, self._dag, self._env_name)
+
+    @classmethod
+    def from_config(path_to_config, env_name):
+        """
+        Loads an exporter using settings from an existing configuration file
+        """
+        pass
 
     def validate(self):
         """
