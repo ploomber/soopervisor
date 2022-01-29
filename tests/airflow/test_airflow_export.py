@@ -83,15 +83,6 @@ def test_generate_valid_airflow_dags(name, tmp_projects):
     subprocess.run(['python', f'serve/dags/{name}.py'], check=True)
 
 
-def test_airflow_add_sample_project(monkeypatch, tmp_sample_project,
-                                    no_sys_modules_cache):
-    exporter = AirflowExporter.new(path_to_config='soopervisor.yaml',
-                                   env_name='serve')
-    exporter.add()
-
-    assert set(os.listdir('serve')) == {'sample_project.py', 'Dockerfile'}
-
-
 @pytest.mark.parametrize('preset, operator_class, needs_docker', [
     [None, KubernetesPodOperator, True],
     ['kubernetes', KubernetesPodOperator, True],

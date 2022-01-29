@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 import shutil
 
-import yaml
 import pytest
 import moto
 import boto3
@@ -141,27 +140,6 @@ def test_error_if_missing_boto3(monkeypatch, backup_packaged_project):
         exporter.export(mode='incremental')
 
     assert 'boto3 is required to use AWSBatchExporter' in str(excinfo.value)
-
-
-def test_add(backup_packaged_project):
-    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
-    exporter.add()
-
-    with open('soopervisor.yaml') as f:
-        d = yaml.safe_load(f)
-
-    assert d['train'] == {
-        'backend': 'aws-batch',
-        'repository': 'your-repository/name',
-        'job_queue': 'your-job-queue',
-        'region_name': 'your-region-name',
-        'container_properties': {
-            'memory': 16384,
-            'vcpus': 8
-        }
-    }
-
-    assert Path('train', 'Dockerfile').exists()
 
 
 def process_submit_job_call(call):

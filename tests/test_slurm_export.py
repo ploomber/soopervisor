@@ -1,5 +1,4 @@
 from pathlib import Path
-import os
 from unittest.mock import Mock, ANY, call
 
 import pytest
@@ -60,15 +59,6 @@ def test_script_name_for_task_name(tmp_empty, name, files, match, workspace):
 
     assert (_script_name_for_task_name(name,
                                        workspace) == Path(workspace, match))
-
-
-def test_slurm_add_sample_project(monkeypatch, tmp_sample_project,
-                                  no_sys_modules_cache):
-    exporter = SlurmExporter.new(path_to_config='soopervisor.yaml',
-                                 env_name='serve')
-    exporter.add()
-
-    assert set(os.listdir('serve')) == {'template.sh'}
 
 
 @pytest.mark.parametrize('template, error', [

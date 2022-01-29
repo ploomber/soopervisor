@@ -37,14 +37,6 @@ def mock_docker_calls_serve(monkeypatch):
     yield tester
 
 
-def test_add(tmp_sample_project):
-    exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
-                                         env_name='serve')
-    exporter.add()
-
-    assert Path('serve', 'Dockerfile').exists()
-
-
 @pytest.mark.parametrize('mode, args', [
     ['incremental', ''],
     ['regular', ''],

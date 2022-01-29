@@ -52,14 +52,6 @@ def mock_docker_calls_callables(monkeypatch):
     yield _mock_docker_calls(monkeypatch, cmd, 'callables')
 
 
-def test_add(tmp_sample_project):
-    exporter = KubeflowExporter.new(path_to_config='soopervisor.yaml',
-                                    env_name='serve')
-    exporter.add()
-
-    assert Path('serve', 'Dockerfile').exists()
-
-
 # Test the task output is same as it's product
 @pytest.mark.parametrize('mode, args', [
     ['incremental', ''],
