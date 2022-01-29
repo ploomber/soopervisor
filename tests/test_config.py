@@ -51,7 +51,7 @@ env:
     expected = ("Misconfigured environment: 'invalid' is not a "
                 "valid backend. backend must be one of: "
                 "'aws_batch', 'aws_lambda', 'argo_workflows', "
-                "'airflow', 'slurm'")
+                "'airflow', 'kubeflow', 'slurm'")
     assert str(excinfo.value) == expected
 
 
