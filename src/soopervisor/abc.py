@@ -22,18 +22,10 @@ class AbstractConfig(BaseModel, abc.ABC):
 
     Parameters
     ----------
-    include : list of str
-        Files/directories to include in the Docker image
-
-    exclude : list of str
-        Files/directories to exclude from the Docker image
-
     preset : str
         The preset to use, this determines certain settings and is
         backend-specific
     """
-    include: Optional[List[str]] = None
-    exclude: Optional[List[str]] = None
     preset: Optional[str] = None
 
     class Config:
@@ -166,7 +158,15 @@ class AbstractDockerConfig(AbstractConfig):
     """
     An abstract class for docker-based configurations where having a remote
     repository is optional (e.g., can build an image locally)
+
+    include : list of str
+        Files/directories to include in the Docker image
+
+    exclude : list of str
+        Files/directories to exclude from the Docker image
     """
+    include: Optional[List[str]] = None
+    exclude: Optional[List[str]] = None
     repository: Optional[str] = None
 
     @classmethod

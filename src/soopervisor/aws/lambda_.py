@@ -14,6 +14,7 @@ from soopervisor import commons
 from soopervisor import abc
 
 
+# TODO: add support for include/exclude fields
 class AWSLambdaExporter(abc.AbstractExporter):
     CONFIG_CLASS = AWSLambdaConfig
 

@@ -74,8 +74,6 @@ def test_hints(class_, hints):
         SlurmConfig,
         {},
         {
-            'include': None,
-            'exclude': None,
             'preset': None
         },
     ],
@@ -128,8 +126,6 @@ def test_hints(class_, hints):
         AWSLambdaConfig,
         {},
         {
-            'include': None,
-            'exclude': None,
             'preset': None
         },
     ],

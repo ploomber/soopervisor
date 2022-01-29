@@ -1,9 +1,11 @@
-from soopervisor.abc import AbstractConfig
+from soopervisor.abc import AbstractConfig, AbstractDockerConfig
 from soopervisor.enum import Backend
 
 
-class AWSBatchConfig(AbstractConfig):
+class AWSBatchConfig(AbstractDockerConfig):
+    # in AWSBatch, repository cannot be None
     repository: str
+
     container_properties: dict
     job_queue: str
     region_name: str
