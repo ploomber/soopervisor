@@ -5,7 +5,7 @@ import yaml
 
 from soopervisor.enum import Backend
 from soopervisor import validate, exceptions
-from soopervisor._io import comma_separated
+from soopervisor._format import comma_separated
 
 
 def get_backend(name):
