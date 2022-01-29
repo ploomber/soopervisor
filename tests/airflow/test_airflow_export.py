@@ -231,21 +231,6 @@ def test_validates_repository(monkeypatch, mock_docker_calls,
                            "in soopervisor.yaml, please add a valid value.")
 
 
-def test_skip_tests(monkeypatch, mock_docker_calls, tmp_sample_project,
-                    no_sys_modules_cache, skip_repo_validation, capsys):
-    exporter = AirflowExporter.new(path_to_config='soopervisor.yaml',
-                                   env_name='serve')
-
-    git_init()
-
-    exporter.add()
-    exporter.export(mode='incremental', skip_tests=True)
-
-    captured = capsys.readouterr()
-    assert 'Testing image' not in captured.out
-    assert 'Testing File client' not in captured.out
-
-
 # TODO: check with packaged project
 def test_checks_the_right_spec(monkeypatch, mock_docker_calls_serve,
                                tmp_sample_project, no_sys_modules_cache,

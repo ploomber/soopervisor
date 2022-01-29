@@ -1,13 +1,18 @@
+from unittest.mock import Mock
 import os
 from pathlib import Path
 
 import pytest
+from pytest_cases import parametrize
+import boto3
 
+from conftest import _mock_docker_calls
 from soopervisor.airflow.export import AirflowExporter
 from soopervisor.argo.export import ArgoWorkflowsExporter
 from soopervisor.aws.batch import AWSBatchExporter
 from soopervisor.kubeflow.export import KubeflowExporter
 from soopervisor.shell.export import SlurmExporter
+from soopervisor.aws import batch
 
 CLASSES = [
     AirflowExporter,
@@ -56,3 +61,62 @@ def test_add_creates_necessary_files(CLASS_, files, tmp_sample_project,
     exporter.add()
 
     assert set(os.listdir('serve')) == files
+
+
+# TODO: this is still duplicated in a few places
+@pytest.fixture
+def mock_docker_calls(monkeypatch):
+    cmd = ('from ploomber.spec import '
+           'DAGSpec; print("File" in '
+           'DAGSpec("pipeline.yaml").to_dag().clients)')
+    yield _mock_docker_calls(monkeypatch, cmd, 'sample_project', 'latest')
+
+
+@pytest.fixture
+def monkeypatch_boto3_batch_client(monkeypatch):
+    """
+    Mocks calls to boto3.client(...) in the batch module
+    """
+    boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
+    monkeypatch.setattr(batch.boto3, 'client',
+                        lambda name, region_name: boto3_mock)
+
+
+# monkeypatch_docker, monkeypatch_docker_client
+
+
+@pytest.fixture
+def mock_batch_env(monkeypatch_boto3_batch_client, mock_batch):
+    pass
+
+
+# TODO: add the missing ones
+@parametrize('CLASS_, mock', [
+    [AirflowExporter, mock_docker_calls],
+    [ArgoWorkflowsExporter, mock_docker_calls],
+    [KubeflowExporter, mock_docker_calls],
+    [AWSBatchExporter, mock_batch_env],
+],
+             ids=[
+                 'airflow',
+                 'argo',
+                 'kubeflow',
+                 'batch',
+             ])
+def test_skip_tests(
+    mock,
+    tmp_sample_project,
+    no_sys_modules_cache,
+    skip_repo_validation,
+    capsys,
+    CLASS_,
+):
+
+    exporter = CLASS_.new(path_to_config='soopervisor.yaml', env_name='serve')
+
+    exporter.add()
+    exporter.export(mode='incremental', skip_tests=True)
+
+    captured = capsys.readouterr()
+    assert 'Testing image' not in captured.out
+    assert 'Testing File client' not in captured.out

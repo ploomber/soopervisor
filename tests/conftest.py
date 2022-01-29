@@ -9,9 +9,13 @@ from pathlib import Path
 from copy import copy
 from unittest.mock import Mock, MagicMock
 import posthog
+import json
 
 import my_project
 import pytest
+import moto
+import boto3
+
 from ploomber.io import _commander, _commander_tester
 
 from soopervisor import commons
@@ -242,3 +246,119 @@ def add_current_to_sys_path():
 def skip_repo_validation(monkeypatch):
     # do not validate repository (using the default value will raise an error)
     monkeypatch.setattr(commons.docker, '_validate_repository', lambda x: x)
+
+
+# AWS BATCH
+
+service_role = {
+    "Version":
+    "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Principal": {
+            "Service": "batch.amazonaws.com"
+        },
+        "Action": "sts:AssumeRole",
+    }],
+}
+
+instance_role = {
+    "Version":
+    "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Principal": {
+            "Service": "ec2.amazonaws.com"
+        },
+        "Action": "sts:AssumeRole",
+    }],
+}
+
+
+@pytest.fixture
+def vpc():
+    mock = moto.mock_ec2()
+    mock.start()
+    ec2 = boto3.resource("ec2", region_name='us-east-1')
+    vpc = ec2.create_vpc(CidrBlock="172.16.0.0/16")
+    vpc.wait_until_available()
+    sub = ec2.create_subnet(CidrBlock="172.16.0.0/24", VpcId=vpc.id)
+    sg = ec2.create_security_group(Description="Test security group",
+                                   GroupName="sg1",
+                                   VpcId=vpc.id)
+    yield sg, sub
+    mock.stop()
+
+
+@pytest.fixture
+def aws_credentials():
+    os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
+    os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
+    os.environ['AWS_SECURITY_TOKEN'] = 'testing'
+    os.environ['AWS_SESSION_TOKEN'] = 'testing'
+
+
+@pytest.fixture()
+def batch_client():
+    mock = moto.mock_batch()
+    mock.start()
+    yield boto3.client("batch", region_name='us-east-1')
+    mock.stop()
+
+
+@pytest.fixture
+def iam_resource():
+    mock = moto.mock_iam()
+    mock.start()
+    yield boto3.resource("iam", region_name='us-east-1')
+    mock.stop()
+
+
+@pytest.fixture
+def mock_batch(aws_credentials, iam_resource, batch_client, vpc):
+    sg, sub = vpc
+
+    iam_resource = boto3.resource("iam", region_name='us-east-1')
+    batch_client = boto3.client("batch", region_name='us-east-1')
+
+    role = iam_resource.create_role(
+        RoleName='role-from-python',
+        AssumeRolePolicyDocument=json.dumps(service_role),
+        Description='test')
+
+    instance_role_res = iam_resource.create_role(
+        RoleName='InstanceRole-from-python',
+        AssumeRolePolicyDocument=json.dumps(instance_role),
+        Description='test 2')
+
+    ce = batch_client.create_compute_environment(
+        computeEnvironmentName='some_environment',
+        type='MANAGED',
+        computeResources={
+            'type': 'EC2',
+            'maxvCpus': 8,
+            'minvCpus': 4,
+            'instanceRole': instance_role_res.arn,
+            'instanceTypes': ['c4.large'],
+            'securityGroupIds': [
+                sg.id,
+            ],
+            'subnets': [
+                sub.id,
+            ],
+        },
+        serviceRole=role.arn,
+        state='ENABLED')
+
+    batch_client.create_job_queue(jobQueueName='your-job-queue',
+                                  priority=1,
+                                  computeEnvironmentOrder=[
+                                      {
+                                          'computeEnvironment':
+                                          ce['computeEnvironmentArn'],
+                                          'order':
+                                          1,
+                                      },
+                                  ],
+                                  state='ENABLED')
+    yield batch_client

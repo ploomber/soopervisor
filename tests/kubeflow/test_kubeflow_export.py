@@ -119,16 +119,3 @@ def test_stops_if_no_tasks(mock_docker_calls, backup_packaged_project,
 
     captured = capsys.readouterr()
     assert 'has no tasks to submit.' in captured.out
-
-
-def test_skip_tests(monkeypatch, mock_docker_calls, tmp_sample_project,
-                    no_sys_modules_cache, skip_repo_validation, capsys):
-    exporter = KubeflowExporter.new(path_to_config='soopervisor.yaml',
-                                    env_name='serve')
-
-    exporter.add()
-    exporter.export(mode='incremental', until=None, skip_tests=True)
-
-    captured = capsys.readouterr()
-    assert 'Testing image' not in captured.out
-    assert 'Testing File client' not in captured.out

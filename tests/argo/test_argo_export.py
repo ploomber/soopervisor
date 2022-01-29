@@ -214,18 +214,6 @@ def test_stops_if_no_tasks(mock_docker_calls, backup_packaged_project,
     assert 'has no tasks to submit.' in captured.out
 
 
-def test_skip_tests(mock_docker_calls, backup_packaged_project, monkeypatch,
-                    capsys, skip_repo_validation):
-    exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
-                                         env_name='serve')
-    exporter.add()
-    exporter.export(mode='incremental', until=None, skip_tests=True)
-
-    captured = capsys.readouterr()
-    assert 'Testing image' not in captured.out
-    assert 'Testing File client' not in captured.out
-
-
 def test_validates_repository(mock_docker_calls, tmp_sample_project):
     exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
                                          env_name='serve')

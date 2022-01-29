@@ -43,6 +43,7 @@ DEV = [
     'invoke',
     # TEST
     'pytest',
+    'pytest-cases',
     'Faker',
     'yapf',
     'flake8',
