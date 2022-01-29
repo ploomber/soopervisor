@@ -17,8 +17,7 @@ from soopervisor.exceptions import (BackendWithoutPresetsError,
 
 
 class AbstractConfig(BaseModel, abc.ABC):
-    """
-    Configuration schema
+    """Abstract class for configuration objects
 
     Parameters
     ----------
@@ -27,6 +26,10 @@ class AbstractConfig(BaseModel, abc.ABC):
 
     exclude : list of str
         Files/directories to exclude from the Docker image
+
+    preset : str
+        The preset to use, this determines certain settings and is
+        backend-specific
     """
     include: Optional[List[str]] = None
     exclude: Optional[List[str]] = None
@@ -41,6 +44,9 @@ class AbstractConfig(BaseModel, abc.ABC):
                                 env_name,
                                 preset=None,
                                 **defaults):
+        """
+        """
+
         # write defaults, if needed
         cls._write_defaults(path_to_config, env_name, preset, **defaults)
 
@@ -76,6 +82,24 @@ class AbstractConfig(BaseModel, abc.ABC):
 
     @classmethod
     def _write_defaults(cls, path_to_config, env_name, preset, **defaults):
+        """
+        Writes the hints to a YAML configuration file if the target environment
+        does not exist. Otherwise, don't do anything.
+
+        Parameters
+        ----------
+        path_to_config
+            Path to the config file
+
+        env_name
+            Target environment
+
+        preset
+            Target environment preset
+
+        defaults
+            Any other values to store
+        """
         data = {**cls.hints(), **defaults}
 
         if preset:
@@ -85,20 +109,27 @@ class AbstractConfig(BaseModel, abc.ABC):
         default_data = yaml.safe_dump({env_name: data},
                                       default_flow_style=None)
 
-        # if no config file, write one with env_name section and defaults
+        # if no config file, write one with env_name section and hints
         if not Path(path_to_config).exists():
             Path(path_to_config).write_text(default_data)
-        # if config file but missing env_name section, add one with defaults
+
+        # if config file but missing env_name section, add one with the hints
         else:
             path = Path(path_to_config)
             content = path.read_text()
+            env_names = list(yaml.safe_load(content))
 
-            if env_name not in yaml.safe_load(content):
+            # only update the config file if the section does not exist
+            if env_name not in env_names:
+                # append to the text file so we don't delete any existing
+                # comments
                 path.write_text(content + f'\n{default_data}\n')
 
     @classmethod
     @abc.abstractmethod
     def get_backend_value(cls):
+        """Returns the string identifier for the given backend
+        """
         pass
 
     @classmethod
@@ -118,6 +149,11 @@ class AbstractConfig(BaseModel, abc.ABC):
 
     @classmethod
     def hints(cls):
+        """
+        Returns a dictiionary with the values to use when a target environment
+        is created, it also adds the appropriate backend value. Actual
+        hint values must be returned in the _hints() method
+        """
         data = cls._hints()
         data['backend'] = cls.get_backend_value()
         return data
