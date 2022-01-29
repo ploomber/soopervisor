@@ -14,6 +14,7 @@ from ploomber.io._commander import Commander
 from soopervisor import commons
 from soopervisor.exceptions import (BackendWithoutPresetsError,
                                     InvalidPresetForBackendError)
+from soopervisor._io import read_yaml_mapping
 
 
 class AbstractConfig(BaseModel, abc.ABC):
@@ -53,13 +54,11 @@ class AbstractConfig(BaseModel, abc.ABC):
         cls._write_hints_if_needed(path_to_config, env_name, preset,
                                    **defaults)
 
-        data = yaml.safe_load(Path(path_to_config).read_text())
-
-        # check data is a dictionary
+        data = read_yaml_mapping()
 
         # check data[env_name] is a dictionary
         if not isinstance(data[env_name], Mapping):
-            raise TypeError(f'Expected {env_name!r} to be a dictionary, '
+            raise TypeError(f'Expected {env_name!r} to contain a dictionary, '
                             f'got {type(data[env_name]).__name__}')
 
         # check env_name in data, otherwise the env is corrupted
@@ -121,7 +120,7 @@ class AbstractConfig(BaseModel, abc.ABC):
         else:
             path = Path(path_to_config)
             content = path.read_text()
-            env_names = list(yaml.safe_load(content))
+            env_names = list(read_yaml_mapping(path_to_config))
 
             # only update the config file if the section does not exist
             if env_name not in env_names:
@@ -219,7 +218,7 @@ class AbstractExporter(abc.ABC):
 
         # initialize configuration (create file if needed) and a few checks on
         # it
-        self._cfg = self.CONFIG_CLASS.from_file_with_root_key(
+        self._cfg = self.CONFIG_CLASS.load_env_from_config(
             path_to_config=path_to_config,
             env_name=env_name,
             preset=preset,

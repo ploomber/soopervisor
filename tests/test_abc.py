@@ -8,7 +8,7 @@ import pytest
 import yaml
 
 from soopervisor.abc import AbstractConfig
-# from soopervisor.airflow.config import AirflowConfig
+from soopervisor.exceptions import ConfigurationFileTypeError
 
 
 class ConcreteConfig(AbstractConfig):
@@ -23,12 +23,37 @@ class ConcreteConfig(AbstractConfig):
         return {'default': 'value'}
 
 
-def test_initialize_from_empty_folder(tmp_empty):
+def load_config():
+    return yaml.safe_load(Path('soopervisor.yaml').read_text())
+
+
+def test_writes_hints_if_empty_directory(tmp_empty):
     ConcreteConfig.load_env_from_config('soopervisor.yaml', 'some_env')
 
-    data = yaml.safe_load(Path('soopervisor.yaml').read_text())
+    data = load_config()
     assert data['some_env']['backend'] == 'backend-value'
     assert data['some_env']['default'] == 'value'
+
+
+def test_writes_hints_if_missing_env(tmp_empty):
+    Path('soopervisor.yaml').write_text("""
+another_env:
+  key: value
+""")
+
+    ConcreteConfig.load_env_from_config('soopervisor.yaml', 'some_env')
+
+    data = load_config()
+    assert data['some_env']['backend'] == 'backend-value'
+    assert data['some_env']['default'] == 'value'
+
+
+@pytest.mark.parametrize('content', ['', '- a\n- b'])
+def test_error_if_not_a_mapping(tmp_empty, content):
+    Path('soopervisor.yaml').write_text(content)
+
+    with pytest.raises(ConfigurationFileTypeError):
+        ConcreteConfig.load_env_from_config('soopervisor.yaml', 'some_env')
 
 
 def test_set_exclude_default_value(tmp_empty):
@@ -36,7 +61,7 @@ def test_set_exclude_default_value(tmp_empty):
                                         'some_env',
                                         exclude=['some-dir'])
 
-    data = yaml.safe_load(Path('soopervisor.yaml').read_text())
+    data = load_config()
 
     assert data['some_env']['exclude'] == ['some-dir']
 
@@ -47,7 +72,7 @@ def test_creates_soopervisor_yaml_if_it_doesnt_exist(tmp_empty):
                                           'some_env',
                                           preset=None)
 
-    cfg = yaml.safe_load(Path('soopervisor.yaml').read_text())
+    cfg = load_config()
     assert cfg['some_env'] == {
         'default': 'value',
         'backend': 'backend-value',
@@ -61,7 +86,7 @@ def test_error_if_root_key_exists_in_soopervisor_yaml(tmp_empty):
                                           'some_env',
                                           preset=None)
 
-    cfg = yaml.safe_load(Path('soopervisor.yaml').read_text())
+    cfg = load_config()
 
     assert cfg['another_env']['x'] == 1
     assert cfg['some_env']['default'] == 'value'

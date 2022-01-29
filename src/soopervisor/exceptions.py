@@ -2,7 +2,7 @@ from pathlib import Path
 
 from click import ClickException
 
-from soopervisor._io import comma_separated
+from soopervisor._format import comma_separated
 
 
 class BackendWithoutPresetsError(ClickException):
@@ -55,3 +55,12 @@ class MissingConfigurationFileError(ClickException):
         name = 'soopervisor.yaml'
         super().__init__(f'Expected a {name!r} file in the current '
                          'working directory, but such files does not exist')
+
+
+class ConfigurationFileTypeError(ClickException):
+    """Raised if the configuration file does not have the right type
+    """
+
+    def __init__(self, path, data):
+        super().__init__(f'Expected {str(path)!r} to contain a dictionary '
+                         f'but got an object of type: {type(data).__name__}')
