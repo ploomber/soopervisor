@@ -17,4 +17,5 @@ class AirflowConfig(abc.AbstractConfig):
         data['backend'] = cls.get_backend_value()
         del data['include']
         del data['exclude']
+        del data['preset']
         return data

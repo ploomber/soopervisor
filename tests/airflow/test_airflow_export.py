@@ -115,12 +115,13 @@ def test_airflow_export_sample_project(
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
     exporter = AirflowExporter(path_to_config='soopervisor.yaml',
-                               env_name='serve')
+                               env_name='serve',
+                               preset=preset)
 
     # this requires a git repo
     git_init()
 
-    exporter.add(preset=preset)
+    exporter.add()
     exporter.export(mode='incremental')
 
     # if we do no call .resolve(), .import_module will keep loading the module

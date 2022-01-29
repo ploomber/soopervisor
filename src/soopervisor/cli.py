@@ -61,7 +61,7 @@ def add(env_name, backend, preset):
         raise
 
     Exporter = exporter.for_backend(backend)
-    Exporter('soopervisor.yaml', env_name=env_name).add(preset=preset)
+    Exporter('soopervisor.yaml', env_name=env_name, preset=preset).add()
 
     telemetry.log_api("soopervisor_add_success",
                       metadata={

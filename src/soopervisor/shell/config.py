@@ -5,6 +5,7 @@ from soopervisor import abc
 class SlurmConfig(abc.AbstractConfig):
     """Configuration for exporting to Slurm
     """
+
     @classmethod
     def get_backend_value(cls):
         return Backend.slurm.value
@@ -15,4 +16,5 @@ class SlurmConfig(abc.AbstractConfig):
         data['backend'] = cls.get_backend_value()
         del data['include']
         del data['exclude']
+        del data['preset']
         return data

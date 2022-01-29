@@ -18,7 +18,7 @@ class AirflowExporter(abc.AbstractExporter):
     PRESETS = ('kubernetes', 'bash')
 
     @staticmethod
-    def _add(cfg, env_name, preset):
+    def _add(cfg, env_name):
         """Export Ploomber project to Airflow
 
         Generates a .py file that exposes a dag variable
@@ -27,7 +27,7 @@ class AirflowExporter(abc.AbstractExporter):
         project_root = Path('.').resolve()
         project_name = project_root.name
 
-        name = f'{preset}.py'
+        name = f'{cfg.preset}.py'
 
         # TODO: modify Dockerfile depending on package or non-package
         with Commander(workspace=env_name,

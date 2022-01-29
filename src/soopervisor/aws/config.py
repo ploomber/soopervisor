@@ -26,10 +26,12 @@ class AWSBatchConfig(AbstractConfig):
         data['backend'] = cls.get_backend_value()
         del data['include']
         del data['exclude']
+        del data['preset']
         return data
 
 
 class AWSLambdaConfig(AbstractConfig):
+
     @classmethod
     def get_backend_value(cls):
         return Backend.aws_lambda.value

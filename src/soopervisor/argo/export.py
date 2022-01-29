@@ -29,7 +29,7 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
         pass
 
     @staticmethod
-    def _add(cfg, env_name, preset):
+    def _add(cfg, env_name):
         """
         Add Dockerfile
         """

@@ -81,4 +81,5 @@ class ArgoConfig(abc.AbstractConfig):
         del data['mounted_volumes']
         del data['include']
         del data['exclude']
+        del data['preset']
         return data

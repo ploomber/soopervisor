@@ -30,6 +30,7 @@ class AbstractConfig(BaseModel, abc.ABC):
     """
     include: Optional[List[str]] = None
     exclude: Optional[List[str]] = None
+    preset: Optional[str] = None
 
     class Config:
         extra = 'forbid'
@@ -115,11 +116,16 @@ class AbstractExporter(abc.ABC):
 
     env_name : str
         Environment name
+
+    preset : str, default=None
+        The backend preset (customizes the configuration). If this isn't
+        None and the concrete class does not take a present, it will raise
+        an exception
     """
     PRESETS = None
     CONFIG_CLASS = None
 
-    def __init__(self, path_to_config, env_name):
+    def __init__(self, path_to_config, env_name, preset=None):
         # ensure that the project and the config make sense
         self.validate()
 
@@ -141,6 +147,7 @@ class AbstractExporter(abc.ABC):
         self._cfg = self.CONFIG_CLASS.from_file_with_root_key(
             path_to_config=path_to_config,
             env_name=env_name,
+            preset=preset,
             **defaults,
         )
 
@@ -156,25 +163,20 @@ class AbstractExporter(abc.ABC):
         """
         commons.dependencies.check_lock_files_exist()
 
-    def add(self, preset=None):
+    def add(self):
         """Create a directory with the env_name and add any necessary files
-
-        preset : str
-            The backend preset (customizes the configuration). If this isn't
-            None and the concrete class does not take a present, it will raise
-            an exception
         """
         backend = self.CONFIG_CLASS.get_backend_value()
 
-        if self.PRESETS is None and preset:
+        if self.PRESETS is None and self._cfg.preset:
             raise BackendWithoutPresetsError(backend)
 
         if self.PRESETS:
-            if preset is None:
-                preset = self.PRESETS[0]
+            if self._cfg.preset is None:
+                self._cfg.preset = self.PRESETS[0]
 
-            if preset not in self.PRESETS:
-                raise InvalidPresetForBackendError(backend, preset,
+            if self._cfg.preset not in self.PRESETS:
+                raise InvalidPresetForBackendError(backend, self._cfg.preset,
                                                    self.PRESETS)
 
         # check that env_name folder does not exist
@@ -190,7 +192,7 @@ class AbstractExporter(abc.ABC):
 
         path.mkdir()
 
-        return self._add(cfg=self._cfg, env_name=self._env_name, preset=preset)
+        return self._add(cfg=self._cfg, env_name=self._env_name)
 
     def export(self, mode, until=None, skip_tests=False, ignore_git=False):
         return self._export(cfg=self._cfg,

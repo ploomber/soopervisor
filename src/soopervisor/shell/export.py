@@ -55,7 +55,7 @@ class SlurmExporter(abc.AbstractExporter):
     CONFIG_CLASS = SlurmConfig
 
     @staticmethod
-    def _add(cfg, env_name, preset):
+    def _add(cfg, env_name):
         """
         Add sample template
         """

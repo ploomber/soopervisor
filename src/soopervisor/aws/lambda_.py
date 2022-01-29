@@ -31,7 +31,7 @@ class AWSLambdaExporter(abc.AbstractExporter):
         pass
 
     @staticmethod
-    def _add(cfg, env_name, preset):
+    def _add(cfg, env_name):
         try:
             pkg_name = default.find_package_name()
         except ValueError as e:
