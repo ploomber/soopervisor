@@ -39,16 +39,19 @@ class AbstractConfig(BaseModel, abc.ABC):
         extra = 'forbid'
 
     @classmethod
-    def from_file_with_root_key(cls,
-                                path_to_config,
-                                env_name,
-                                preset=None,
-                                **defaults):
+    def load_env_from_config(cls,
+                             path_to_config,
+                             env_name,
+                             preset=None,
+                             **defaults):
         """
+        Load the target environment configuration from a given YAML config
+        file. Creates one if needed.
         """
 
         # write defaults, if needed
-        cls._write_defaults(path_to_config, env_name, preset, **defaults)
+        cls._write_hints_if_needed(path_to_config, env_name, preset,
+                                   **defaults)
 
         data = yaml.safe_load(Path(path_to_config).read_text())
 
@@ -81,7 +84,8 @@ class AbstractConfig(BaseModel, abc.ABC):
         return cls(**data[env_name])
 
     @classmethod
-    def _write_defaults(cls, path_to_config, env_name, preset, **defaults):
+    def _write_hints_if_needed(cls, path_to_config, env_name, preset,
+                               **defaults):
         """
         Writes the hints to a YAML configuration file if the target environment
         does not exist. Otherwise, don't do anything.
