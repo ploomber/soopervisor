@@ -2,9 +2,7 @@ from pathlib import Path
 
 from click import ClickException
 
-
-def _comma_separated(values):
-    return ', '.join([repr(v) for v in values])
+from soopervisor._io import comma_separated
 
 
 class BackendWithoutPresetsError(ClickException):
@@ -23,7 +21,7 @@ class InvalidPresetForBackendError(ClickException):
     def __init__(self, backend, preset, preset_values):
         super().__init__(f'Preset {preset!r} is not a valid value for '
                          f'backend {str(backend)!r}. Valid presets are: '
-                         f'{_comma_separated(preset_values)}')
+                         f'{comma_separated(preset_values)}')
 
 
 class ConfigurationError(ClickException):
@@ -46,3 +44,14 @@ class MissingDockerfileError(ClickException):
 Expected Dockerfile at {path!r} but it does not exist\
         """
         super().__init__(message)
+
+
+class MissingConfigurationFileError(ClickException):
+    """
+    Raised if soopervisor.yaml is missing
+    """
+
+    def __init__(self):
+        name = 'soopervisor.yaml'
+        super().__init__(f'Expected a {name!r} file in the current '
+                         'working directory, but such files does not exist')
