@@ -393,16 +393,3 @@ def test_checks_the_right_spec(mock_batch, monkeypatch_serve_docker,
                 '--entry-point',
                 str(Path('src', 'my_project', 'pipeline.serve.yaml')))
     assert monkeypatch_serve_docker.calls[2] == expected
-
-
-def test_dockerfile_when_no_setup_py(mock_batch, monkeypatch_docker,
-                                     monkeypatch, tmp_sample_project):
-    boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
-    monkeypatch.setattr(batch.boto3, 'client',
-                        lambda name, region_name: boto3_mock)
-
-    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
-    exporter.add()
-
-    dockerfile = Path('train', 'Dockerfile').read_text()
-    assert 'RUN pip install *.tar.gz --no-deps' not in dockerfile

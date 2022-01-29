@@ -50,7 +50,7 @@ class ConcreteDockerExporter(AbstractExporter):
     CONFIG_CLASS = ConcreteDockerConfig
 
     @staticmethod
-    def _add():
+    def _add(cfg, env_name):
         pass
 
     @staticmethod

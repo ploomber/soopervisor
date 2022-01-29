@@ -270,13 +270,3 @@ def test_checks_the_right_spec(monkeypatch, mock_docker_calls_serve,
     expected = ('docker', 'run', 'sample_project:latest', 'ploomber', 'status',
                 '--entry-point', 'pipeline.serve.yaml')
     assert mock_docker_calls_serve.calls[1] == expected
-
-
-def test_dockerfile_when_no_setup_py(tmp_sample_project, no_sys_modules_cache):
-    exporter = AirflowExporter.new(path_to_config='soopervisor.yaml',
-                                   env_name='serve')
-
-    exporter.add()
-
-    dockerfile = Path('serve', 'Dockerfile').read_text()
-    assert 'RUN pip install *.tar.gz --no-deps' not in dockerfile

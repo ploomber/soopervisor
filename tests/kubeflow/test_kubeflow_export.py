@@ -60,15 +60,6 @@ def test_add(tmp_sample_project):
     assert Path('serve', 'Dockerfile').exists()
 
 
-def test_dockerfile_when_no_setup_py(tmp_sample_project):
-    exporter = KubeflowExporter.new(path_to_config='soopervisor.yaml',
-                                    env_name='serve')
-    exporter.add()
-
-    dockerfile = Path('serve', 'Dockerfile').read_text()
-    assert 'RUN pip install *.tar.gz --no-deps' not in dockerfile
-
-
 # Test the task output is same as it's product
 @pytest.mark.parametrize('mode, args', [
     ['incremental', ''],
