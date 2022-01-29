@@ -83,12 +83,14 @@ def test_p_home_exists_tar(args, backend, tmp_sample_project, monkeypatch):
 @pytest.mark.parametrize('args, backend', [
     [['add', 'serve', '--backend', 'argo-workflows'], Backend.argo_workflows],
     [['add', 'serve', '--backend', 'airflow'], Backend.airflow],
+    [['add', 'serve', '--backend', 'kubeflow'], Backend.kubeflow],
     [['add', 'serve', '--backend', 'aws-batch'], Backend.aws_batch],
     [['add', 'serve', '--backend', 'slurm'], Backend.slurm],
 ],
                          ids=[
                              'argo',
                              'airflow',
+                             'kubeflow',
                              'batch',
                              'slurm',
                          ])
@@ -118,12 +120,14 @@ def test_sample_project_no_args(args, backend, tmp_sample_project,
 @pytest.mark.parametrize('args, backend', [
     [['add', 'serve', '--backend', 'argo-workflows'], Backend.argo_workflows],
     [['add', 'serve', '--backend', 'airflow'], Backend.airflow],
+    [['add', 'serve', '--backend', 'kubeflow'], Backend.kubeflow],
     [['add', 'serve', '--backend', 'aws-batch'], Backend.aws_batch],
     [['add', 'serve', '--backend', 'slurm'], Backend.slurm],
 ],
                          ids=[
                              'argo',
                              'airflow',
+                             'kubeflow',
                              'batch',
                              'slurm',
                          ])
@@ -159,12 +163,14 @@ def test_sample_project(args, args_export, mode, backend, tmp_sample_project,
 @pytest.mark.parametrize('args', [
     ['add', 'serve', '--backend', 'argo-workflows'],
     ['add', 'serve', '--backend', 'airflow'],
+    ['add', 'serve', '--backend', 'kubeflow'],
     ['add', 'serve', '--backend', 'aws-batch'],
     ['add', 'serve', '--backend', 'slurm'],
 ],
                          ids=[
                              'argo',
                              'airflow',
+                             'kubeflow',
                              'batch',
                              'slurm',
                          ])
@@ -177,12 +183,14 @@ def test_callables(args, tmp_callables):
 @pytest.mark.parametrize('args, backend', [
     [['add', 'serve', '--backend', 'argo-workflows'], Backend.argo_workflows],
     [['add', 'serve', '--backend', 'airflow'], Backend.airflow],
+    [['add', 'serve', '--backend', 'kubeflow'], Backend.kubeflow],
     [['add', 'serve', '--backend', 'aws-batch'], Backend.aws_batch],
     [['add', 'serve', '--backend', 'slurm'], Backend.slurm],
 ],
                          ids=[
                              'argo',
                              'airflow',
+                             'kubeflow',
                              'batch',
                              'slurm',
                          ])

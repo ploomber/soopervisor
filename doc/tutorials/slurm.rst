@@ -118,29 +118,29 @@ Configure the environment:
 
 .. code-block:: sh
 
-    # install miniconda (to get a Python environment ready, not needed if 
-    # there's already a Python environment up and running)
+    # Install miniconda (to get a Python environment ready, not needed if
+    # There's already a Python environment up and running)
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
     bash ~/Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda
     
-    # init conda
+    # Init conda
     eval "$($HOME/miniconda/bin/conda shell.bash hook)"
 
-    # create and activate env
+    # Create and activate env
     conda env create --name myenv
     conda activate myenv
 
     # install ploomber and soopervisor in the base environment
     pip install ploomber soopervisor
     
-    # download sample pipeline to example/
+    # Download sample pipeline to example/
     ploomber examples -n templates/ml-basic -o example
     cd example
 
-    # install project dependencies
+    # Install project dependencies
     pip install -r requirements.txt
 
-    # register a soopervisor environment with the SLURM backend
+    # Register a soopervisor environment with the SLURM backend
     soopervisor add cluster --backend slurm
 
 
@@ -161,7 +161,7 @@ we created, edit the ``template.sh`` so it looks like this:
     #SBATCH --output=result.out
     #
 
-    # activate myenv
+    # Activate myenv
     conda activate myenv
     srun {{command}}
 
@@ -177,7 +177,7 @@ Once jobs finish execution, you'll see the outputs in the ``output`` directory.
 .. tip::
 
    If you execute ``soopervisor export cluster``, only tasks whose source code
-   has changed will be executed again, to force execution of all tasks, run
+   has changed will be executed again, to force the execution of all tasks, run
    ``soopervisor export cluster --mode force``
 
 

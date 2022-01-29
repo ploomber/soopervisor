@@ -45,6 +45,25 @@ To run tests:
 invoke test
 ```
 
+### Viewing the docs/tutorials
+You can run this command to show the rst doc in live mode (you can pass a custom port in this example 9999):
+
+```
+invoke doc-auto -p 9999
+```
+
+In addition you can run this command to see all of the invoke commands available:
+
+```
+invoke -l
+```
+
+If we want to understand how to use or change one of the tasks for invoke, we can run --help on the specific task:
+
+```
+invoke doc-auto --help
+```
+
 ## Submitting code
 
 [Refer to Ploomber's CONTRIBUTING.md Submitting Code section.](https://github.com/ploomber/ploomber/blob/master/CONTRIBUTING.md#submitting-code)

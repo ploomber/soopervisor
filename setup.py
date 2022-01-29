@@ -52,7 +52,9 @@ DEV = [
     'apache-airflow',
     # KubernetesPodOperator
     'apache-airflow-providers-cncf-kubernetes',
-    # to validate argo spec
+    # exporting to kubeflow
+    'kfp',
+    # to validate argo specs
     'argo-workflows-dsl',
     # for testing aws (newer versions break)
     # see: https://github.com/spulec/moto/issues/1793

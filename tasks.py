@@ -63,10 +63,10 @@ def upload(c, tag, production=True):
 
 
 @task
-def doc_auto(c):
-    """Start hot reloading docs
+def doc_auto(c, port=8000):
+    """Start hot reloading docs, the destination port can be passed as an argument
     """
-    c.run('sphinx-autobuild doc doc/_build/html')
+    c.run(f'sphinx-autobuild doc doc/_build/html --port {port}')
 
 
 @task

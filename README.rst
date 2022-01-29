@@ -32,9 +32,10 @@ Supported platforms
 
 * Batch serving and large-scale training:
 
-  * `Argo/Kubernetes <https://soopervisor.readthedocs.io/en/latest/tutorials/kubernetes.html>`_
   * `Airflow <https://soopervisor.readthedocs.io/en/latest/tutorials/airflow.html>`_
+  * `Argo/Kubernetes <https://soopervisor.readthedocs.io/en/latest/tutorials/kubernetes.html>`_
   * `AWS Batch <https://soopervisor.readthedocs.io/en/latest/tutorials/aws-batch.html>`_
+  * `Kubeflow <https://soopervisor.readthedocs.io/en/latest/tutorials/kubeflow.html>`_
   * `SLURM <https://soopervisor.readthedocs.io/en/latest/tutorials/slurm.html>`_
 
 * Online inference:
