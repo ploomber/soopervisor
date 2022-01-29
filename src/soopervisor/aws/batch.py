@@ -46,7 +46,7 @@ class AWSBatchExporter(abc.AbstractExporter):
         pass
 
     @staticmethod
-    def _add(cfg, env_name):
+    def _add(cfg, env_name, preset):
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
             e.copy_template('aws-batch/Dockerfile',

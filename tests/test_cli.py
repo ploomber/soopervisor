@@ -21,6 +21,7 @@ class CustomCommander(Commander):
     A subclass of Commander that ignores calls to
     CustomCommander.run('docker', ...)
     """
+
     def run(self, *args, **kwargs):
         if args[0] == 'docker':
             print(f'ignoring: {args} {kwargs}')
@@ -78,6 +79,68 @@ def test_p_home_exists_tar(args, backend, tmp_sample_project, monkeypatch):
 
     assert conf.exists()
     assert uid.exists()
+
+
+@pytest.mark.parametrize('backend', [
+    'argo-workflows',
+    'aws-batch',
+    'slurm',
+    'aws-lambda',
+])
+def test_error_if_backend_takes_no_preset(tmp_sample_project, backend):
+    runner = CliRunner()
+
+    res = runner.invoke(cli, [
+        'add',
+        'something',
+        '--backend',
+        backend,
+        '--preset',
+        'some-preset',
+    ])
+
+    assert res.exit_code
+    assert 'does not have presets' in res.stdout
+
+
+@pytest.mark.parametrize('backend, preset', [
+    ['airflow', 'invalid'],
+])
+def test_error_if_invalid_preset(tmp_sample_project, backend, preset):
+    runner = CliRunner()
+
+    res = runner.invoke(cli, [
+        'add',
+        'something',
+        '--backend',
+        backend,
+        '--preset',
+        preset,
+    ])
+
+    assert res.exit_code
+    expected = ("Error: Preset 'invalid' is not a valid value for "
+                "backend 'airflow'. Valid presets are: 'kubernetes', 'bash'")
+    assert expected in res.stdout
+
+
+@pytest.mark.parametrize('backend, preset', [
+    ['airflow', 'bash'],
+    ['airflow', 'kubernetes'],
+])
+def test_accepts_preset_value(tmp_sample_project, backend, preset):
+    runner = CliRunner()
+
+    res = runner.invoke(cli, [
+        'add',
+        'something',
+        '--backend',
+        backend,
+        '--preset',
+        preset,
+    ])
+
+    assert res.exit_code == 0
 
 
 @pytest.mark.parametrize('args, backend', [

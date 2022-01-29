@@ -29,7 +29,7 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
         pass
 
     @staticmethod
-    def _add(cfg, env_name):
+    def _add(cfg, env_name, preset):
         """
         Add Dockerfile
         """
@@ -86,6 +86,7 @@ class _literal_str(str):
 
 
 def _change_style(style, representer):
+
     def new_representer(dumper, data):
         scalar = representer(dumper, data)
         scalar.style = style

@@ -9,6 +9,7 @@ import json
 from airflow import DAG
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod \
     import KubernetesPodOperator
+from airflow.operators.bash_operator import BashOperator
 import pytest
 
 from conftest import _mock_docker_calls
@@ -91,10 +92,25 @@ def test_airflow_add_sample_project(monkeypatch, tmp_sample_project,
     assert set(os.listdir('serve')) == {'sample_project.py', 'Dockerfile'}
 
 
-def test_airflow_export_sample_project(monkeypatch, mock_docker_calls,
-                                       tmp_sample_project,
-                                       no_sys_modules_cache,
-                                       skip_repo_validation):
+@pytest.mark.parametrize('preset, operator_class', [
+    [None, KubernetesPodOperator],
+    ['kubernetes', KubernetesPodOperator],
+    ['bash', BashOperator],
+],
+                         ids=[
+                             'none',
+                             'kubernetes',
+                             'bash',
+                         ])
+def test_airflow_export_sample_project(
+    monkeypatch,
+    mock_docker_calls,
+    tmp_sample_project,
+    no_sys_modules_cache,
+    skip_repo_validation,
+    preset,
+    operator_class,
+):
     load_tasks_mock = Mock(wraps=commons.load_tasks)
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
@@ -104,10 +120,13 @@ def test_airflow_export_sample_project(monkeypatch, mock_docker_calls,
     # this requires a git repo
     git_init()
 
-    exporter.add()
+    exporter.add(preset=preset)
     exporter.export(mode='incremental')
 
-    monkeypatch.syspath_prepend('serve')
+    # if we do no call .resolve(), .import_module will keep loading the module
+    # from the previous parametrization (idk why)
+    monkeypatch.syspath_prepend(Path('serve').resolve())
+
     mod = importlib.import_module('sample_project')
     dag = mod.dag
 
@@ -116,7 +135,7 @@ def test_airflow_export_sample_project(monkeypatch, mock_docker_calls,
                                             mode='incremental')
     assert isinstance(dag, DAG)
     assert set(dag.task_dict) == {'clean', 'plot', 'raw'}
-    assert set(type(t) for t in dag.tasks) == {KubernetesPodOperator}
+    assert set(type(t) for t in dag.tasks) == {operator_class}
     assert {n: t.upstream_task_ids
             for n, t in dag.task_dict.items()} == {
                 'raw': set(),

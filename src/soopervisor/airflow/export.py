@@ -15,9 +15,10 @@ from soopervisor import abc
 
 class AirflowExporter(abc.AbstractExporter):
     CONFIG_CLASS = AirflowConfig
+    PRESETS = ('kubernetes', 'bash')
 
     @staticmethod
-    def _add(cfg, env_name):
+    def _add(cfg, env_name, preset):
         """Export Ploomber project to Airflow
 
         Generates a .py file that exposes a dag variable
@@ -26,15 +27,18 @@ class AirflowExporter(abc.AbstractExporter):
         project_root = Path('.').resolve()
         project_name = project_root.name
 
+        name = f'{preset}.py'
+
         # TODO: modify Dockerfile depending on package or non-package
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
-            e.copy_template('airflow/dag.py',
+            e.copy_template(f'airflow/{name}',
                             project_name=project_name,
                             env_name=env_name)
             path_out = str(Path(env_name, project_name + '.py'))
-            os.rename(Path(env_name, 'dag.py'), path_out)
+            os.rename(Path(env_name, name), path_out)
 
+            # TODO: do not copy if bash
             e.copy_template('airflow/Dockerfile',
                             conda=Path('environment.lock.yml').exists(),
                             setup_py=Path('setup.py').exists(),
@@ -69,6 +73,9 @@ class AirflowExporter(abc.AbstractExporter):
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
 
+            # TODO: maybe throw a warning if non-docker preset but there is a
+            # Dockerfile
+            # TODO: should not build docker image if using bash
             pkg_name, target_image = commons.docker.build(
                 e,
                 cfg,

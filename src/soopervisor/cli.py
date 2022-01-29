@@ -31,10 +31,15 @@ def cli():
               '-b',
               type=click.Choice(Backend.get_values()),
               required=True)
-def add(env_name, backend):
+@click.option('--preset',
+              '-p',
+              help='Customizes settings (backend-specific)',
+              default=None)
+def add(env_name, backend, preset):
     """Add a new target platform
     """
     backend = Backend(backend)
+
     try:
         if Path('soopervisor.yaml').exists():
             cfg = yaml.safe_load(Path('soopervisor.yaml').read_text())
@@ -56,7 +61,8 @@ def add(env_name, backend):
         raise
 
     Exporter = exporter.for_backend(backend)
-    Exporter('soopervisor.yaml', env_name=env_name).add()
+    Exporter('soopervisor.yaml', env_name=env_name).add(preset=preset)
+
     telemetry.log_api("soopervisor_add_success",
                       metadata={
                           'type': backend,

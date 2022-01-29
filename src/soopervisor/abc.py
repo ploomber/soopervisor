@@ -12,6 +12,8 @@ from pydantic import BaseModel
 from ploomber.io._commander import Commander
 
 from soopervisor import commons
+from soopervisor.exceptions import (BackendWithoutPresetsError,
+                                    InvalidPresetForBackendError)
 
 
 class AbstractConfig(BaseModel, abc.ABC):
@@ -114,6 +116,7 @@ class AbstractExporter(abc.ABC):
     env_name : str
         Environment name
     """
+    PRESETS = None
     CONFIG_CLASS = None
 
     def __init__(self, path_to_config, env_name):
@@ -153,9 +156,27 @@ class AbstractExporter(abc.ABC):
         """
         commons.dependencies.check_lock_files_exist()
 
-    def add(self):
+    def add(self, preset=None):
         """Create a directory with the env_name and add any necessary files
+
+        preset : str
+            The backend preset (customizes the configuration). If this isn't
+            None and the concrete class does not take a present, it will raise
+            an exception
         """
+        backend = self.CONFIG_CLASS.get_backend_value()
+
+        if self.PRESETS is None and preset:
+            raise BackendWithoutPresetsError(backend)
+
+        if self.PRESETS:
+            if preset is None:
+                preset = self.PRESETS[0]
+
+            if preset not in self.PRESETS:
+                raise InvalidPresetForBackendError(backend, preset,
+                                                   self.PRESETS)
+
         # check that env_name folder does not exist
         path = Path(self._env_name)
 
@@ -169,7 +190,7 @@ class AbstractExporter(abc.ABC):
 
         path.mkdir()
 
-        return self._add(cfg=self._cfg, env_name=self._env_name)
+        return self._add(cfg=self._cfg, env_name=self._env_name, preset=preset)
 
     def export(self, mode, until=None, skip_tests=False, ignore_git=False):
         return self._export(cfg=self._cfg,
