@@ -173,11 +173,12 @@ def test_sample_project_no_args(args, backend, tmp_sample_project,
 
     # check calls to the python API
     for_backend.assert_called_once_with(backend)
-    exporter_.assert_called_once_with('soopervisor.yaml', env_name='serve')
-    exporter_().export.assert_called_once_with(mode='incremental',
-                                               until=None,
-                                               skip_tests=False,
-                                               ignore_git=False)
+    exporter_.load.assert_called_once_with('soopervisor.yaml',
+                                           env_name='serve')
+    exporter_.load().export.assert_called_once_with(mode='incremental',
+                                                    until=None,
+                                                    skip_tests=False,
+                                                    ignore_git=False)
 
 
 @pytest.mark.parametrize('args, backend', [
@@ -216,11 +217,12 @@ def test_sample_project(args, args_export, mode, backend, tmp_sample_project,
 
     # check calls to the python API
     for_backend.assert_called_once_with(backend)
-    exporter_.assert_called_once_with('soopervisor.yaml', env_name='serve')
-    exporter_().export.assert_called_once_with(mode=mode,
-                                               until=None,
-                                               skip_tests=False,
-                                               ignore_git=False)
+    exporter_.load.assert_called_once_with('soopervisor.yaml',
+                                           env_name='serve')
+    exporter_.load().export.assert_called_once_with(mode=mode,
+                                                    until=None,
+                                                    skip_tests=False,
+                                                    ignore_git=False)
 
 
 @pytest.mark.parametrize('args', [
@@ -274,11 +276,12 @@ def test_skip_tests(args, backend, tmp_sample_project, monkeypatch):
 
     # check calls to the python API
     for_backend.assert_called_once_with(backend)
-    exporter_.assert_called_once_with('soopervisor.yaml', env_name='serve')
-    exporter_().export.assert_called_once_with(mode='incremental',
-                                               until=None,
-                                               skip_tests=True,
-                                               ignore_git=False)
+    exporter_.load.assert_called_once_with('soopervisor.yaml',
+                                           env_name='serve')
+    exporter_.load().export.assert_called_once_with(mode='incremental',
+                                                    until=None,
+                                                    skip_tests=True,
+                                                    ignore_git=False)
 
 
 @pytest.mark.parametrize('args, backend', [

@@ -15,7 +15,6 @@ from soopervisor import abc
 
 class AirflowExporter(abc.AbstractExporter):
     CONFIG_CLASS = AirflowConfig
-    PRESETS = ('kubernetes', 'bash')
 
     @staticmethod
     def _add(cfg, env_name):

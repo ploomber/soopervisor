@@ -61,7 +61,7 @@ def add(env_name, backend, preset):
         raise
 
     Exporter = exporter.for_backend(backend)
-    Exporter('soopervisor.yaml', env_name=env_name, preset=preset).add()
+    Exporter.new('soopervisor.yaml', env_name=env_name, preset=preset).add()
 
     telemetry.log_api("soopervisor_add_success",
                       metadata={
@@ -120,11 +120,11 @@ def export(env_name, until_build, mode, skip_tests, ignore_git):
 
         Exporter = exporter.for_backend(backend)
 
-        Exporter('soopervisor.yaml',
-                 env_name=env_name).export(mode=mode,
-                                           until=until,
-                                           skip_tests=skip_tests,
-                                           ignore_git=ignore_git)
+        Exporter.load('soopervisor.yaml',
+                      env_name=env_name).export(mode=mode,
+                                                until=until,
+                                                skip_tests=skip_tests,
+                                                ignore_git=ignore_git)
         telemetry.log_api("soopervisor_export_success",
                           metadata={
                               'type': backend,

@@ -7,7 +7,9 @@ from ploomber.constants import TaskStatus
 from ploomber.spec import DAGSpec
 from ploomber.exceptions import DAGSpecInvalidError
 from ploomber.products import File
+from ploomber.io._commander import Commander
 
+from soopervisor import commons
 from soopervisor.enum import Mode
 
 
@@ -163,3 +165,15 @@ def load_tasks(cmdr, name=None, mode='incremental'):
         args.append('--force')
 
     return out, args
+
+
+def load_dag_and_spec(env_name):
+    # initialize dag (needed for validation)
+    # TODO: _export also has to find_spec, maybe load it here and
+    # pass it directly to _export?
+    with Commander() as cmdr:
+        spec, _ = commons.find_spec(cmdr=cmdr, name=env_name)
+
+    dag = spec.to_dag().render(force=True, show_progress=False)
+
+    return dag, spec

@@ -53,16 +53,16 @@ def mock_docker_calls_callables(monkeypatch):
 
 
 def test_add(tmp_sample_project):
-    exporter = KubeflowExporter(path_to_config='soopervisor.yaml',
-                                env_name='serve')
+    exporter = KubeflowExporter.new(path_to_config='soopervisor.yaml',
+                                    env_name='serve')
     exporter.add()
 
     assert Path('serve', 'Dockerfile').exists()
 
 
 def test_dockerfile_when_no_setup_py(tmp_sample_project):
-    exporter = KubeflowExporter(path_to_config='soopervisor.yaml',
-                                env_name='serve')
+    exporter = KubeflowExporter.new(path_to_config='soopervisor.yaml',
+                                    env_name='serve')
     exporter.add()
 
     dockerfile = Path('serve', 'Dockerfile').read_text()
@@ -81,8 +81,8 @@ def test_export(monkeypatch, mock_docker_calls, backup_packaged_project,
     load_tasks_mock = Mock(wraps=commons.load_tasks)
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
-    exporter = KubeflowExporter(path_to_config='soopervisor.yaml',
-                                env_name='serve')
+    exporter = KubeflowExporter.new(path_to_config='soopervisor.yaml',
+                                    env_name='serve')
 
     exporter.add()
     exporter.export(mode=mode, until=None)
@@ -129,8 +129,8 @@ def test_stops_if_no_tasks(mock_docker_calls, backup_packaged_project,
     load_tasks_mock = Mock(return_value=([], []))
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
-    exporter = KubeflowExporter(path_to_config='soopervisor.yaml',
-                                env_name='serve')
+    exporter = KubeflowExporter.new(path_to_config='soopervisor.yaml',
+                                    env_name='serve')
     exporter.add()
     exporter.export(mode='incremental', until=None)
 
@@ -140,8 +140,8 @@ def test_stops_if_no_tasks(mock_docker_calls, backup_packaged_project,
 
 def test_skip_tests(monkeypatch, mock_docker_calls, tmp_sample_project,
                     no_sys_modules_cache, skip_repo_validation, capsys):
-    exporter = KubeflowExporter(path_to_config='soopervisor.yaml',
-                                env_name='serve')
+    exporter = KubeflowExporter.new(path_to_config='soopervisor.yaml',
+                                    env_name='serve')
 
     exporter.add()
     exporter.export(mode='incremental', until=None, skip_tests=True)

@@ -131,7 +131,7 @@ def mock_batch(aws_credentials, iam_resource, batch_client, vpc):
 
 def test_error_if_missing_boto3(monkeypatch, backup_packaged_project):
 
-    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
+    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
     exporter.add()
 
     # simulate boto3 is not installed
@@ -144,7 +144,7 @@ def test_error_if_missing_boto3(monkeypatch, backup_packaged_project):
 
 
 def test_add(backup_packaged_project):
-    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
+    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
     exporter.add()
 
     with open('soopervisor.yaml') as f:
@@ -276,7 +276,7 @@ def test_export(mock_batch, monkeypatch_docker, monkeypatch,
     load_tasks_mock = Mock(wraps=commons.load_tasks)
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
-    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
+    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
     exporter.add()
 
     # mock commander
@@ -336,7 +336,7 @@ def test_stops_if_no_tasks(monkeypatch, backup_packaged_project, capsys):
     load_tasks_mock = Mock(return_value=([], ['--entry-point pipeline.yaml']))
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
-    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
+    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
     exporter.add()
     exporter.export(mode='incremental')
 
@@ -351,7 +351,7 @@ def test_skip_tests(mock_batch, monkeypatch_docker, monkeypatch,
     monkeypatch.setattr(batch.boto3, 'client',
                         lambda name, region_name: boto3_mock)
 
-    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
+    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
     exporter.add()
     exporter.export(mode='incremental', skip_tests=True)
 
@@ -363,7 +363,7 @@ def test_skip_tests(mock_batch, monkeypatch_docker, monkeypatch,
 def test_validates_repository(mock_batch, monkeypatch_docker, monkeypatch,
                               monkeypatch_docker_client,
                               backup_packaged_project):
-    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
+    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
     exporter.add()
 
     with pytest.raises(ConfigurationError) as excinfo:
@@ -385,7 +385,7 @@ def test_checks_the_right_spec(mock_batch, monkeypatch_serve_docker,
     monkeypatch.setattr(batch.boto3, 'client',
                         lambda name, region_name: boto3_mock)
 
-    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'serve')
+    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'serve')
     exporter.add()
     exporter.export(mode='incremental')
 
@@ -401,7 +401,7 @@ def test_dockerfile_when_no_setup_py(mock_batch, monkeypatch_docker,
     monkeypatch.setattr(batch.boto3, 'client',
                         lambda name, region_name: boto3_mock)
 
-    exporter = batch.AWSBatchExporter('soopervisor.yaml', 'train')
+    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
     exporter.add()
 
     dockerfile = Path('train', 'Dockerfile').read_text()

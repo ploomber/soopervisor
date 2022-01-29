@@ -85,8 +85,8 @@ def test_generate_valid_airflow_dags(name, tmp_projects):
 
 def test_airflow_add_sample_project(monkeypatch, tmp_sample_project,
                                     no_sys_modules_cache):
-    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
-                               env_name='serve')
+    exporter = AirflowExporter.new(path_to_config='soopervisor.yaml',
+                                   env_name='serve')
     exporter.add()
 
     assert set(os.listdir('serve')) == {'sample_project.py', 'Dockerfile'}
@@ -115,9 +115,9 @@ def test_airflow_export_sample_project(
     load_tasks_mock = Mock(wraps=commons.load_tasks)
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
-    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
-                               env_name='serve',
-                               preset=preset)
+    exporter = AirflowExporter.new(path_to_config='soopervisor.yaml',
+                                   env_name='serve',
+                                   preset=preset)
 
     # this requires a git repo
     git_init()
@@ -168,8 +168,8 @@ def test_airflow_export_sample_project(
 def test_export_airflow_callables(monkeypatch, mock_docker_calls_callables,
                                   tmp_callables, no_sys_modules_cache,
                                   skip_repo_validation, mode, args):
-    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
-                               env_name='serve')
+    exporter = AirflowExporter.new(path_to_config='soopervisor.yaml',
+                                   env_name='serve')
 
     # this requires a git repo
     git_init()
@@ -213,8 +213,8 @@ def test_stops_if_no_tasks(monkeypatch, mock_docker_calls, tmp_sample_project,
     load_tasks_mock = Mock(return_value=([], []))
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
-    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
-                               env_name='serve')
+    exporter = AirflowExporter.new(path_to_config='soopervisor.yaml',
+                                   env_name='serve')
 
     git_init()
 
@@ -227,8 +227,8 @@ def test_stops_if_no_tasks(monkeypatch, mock_docker_calls, tmp_sample_project,
 
 def test_validates_repository(monkeypatch, mock_docker_calls,
                               tmp_sample_project, no_sys_modules_cache):
-    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
-                               env_name='serve')
+    exporter = AirflowExporter.new(path_to_config='soopervisor.yaml',
+                                   env_name='serve')
 
     exporter.add()
 
@@ -242,8 +242,8 @@ def test_validates_repository(monkeypatch, mock_docker_calls,
 
 def test_skip_tests(monkeypatch, mock_docker_calls, tmp_sample_project,
                     no_sys_modules_cache, skip_repo_validation, capsys):
-    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
-                               env_name='serve')
+    exporter = AirflowExporter.new(path_to_config='soopervisor.yaml',
+                                   env_name='serve')
 
     git_init()
 
@@ -261,8 +261,8 @@ def test_checks_the_right_spec(monkeypatch, mock_docker_calls_serve,
                                skip_repo_validation):
     shutil.copy('pipeline.yaml', 'pipeline.serve.yaml')
 
-    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
-                               env_name='serve')
+    exporter = AirflowExporter.new(path_to_config='soopervisor.yaml',
+                                   env_name='serve')
 
     exporter.add()
     exporter.export(mode='incremental')
@@ -273,8 +273,8 @@ def test_checks_the_right_spec(monkeypatch, mock_docker_calls_serve,
 
 
 def test_dockerfile_when_no_setup_py(tmp_sample_project, no_sys_modules_cache):
-    exporter = AirflowExporter(path_to_config='soopervisor.yaml',
-                               env_name='serve')
+    exporter = AirflowExporter.new(path_to_config='soopervisor.yaml',
+                                   env_name='serve')
 
     exporter.add()
 

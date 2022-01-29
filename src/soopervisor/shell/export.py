@@ -72,7 +72,8 @@ class SlurmExporter(abc.AbstractExporter):
     def _validate(cfg, dag, env_name):
         pass
 
-    def validate(self):
+    @classmethod
+    def validate(cls):
         """
         Override method from the abstract class, since it validates lock files
         exist, but we don't need those for SLURM

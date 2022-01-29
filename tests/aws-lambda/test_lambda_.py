@@ -44,7 +44,7 @@ def _replace_line(path, line, value):
 
 
 def test_add(backup_packaged_project):
-    exporter = AWSLambdaExporter('soopervisor.yaml', 'serve')
+    exporter = AWSLambdaExporter.new('soopervisor.yaml', 'serve')
     exporter.add()
 
     with open('soopervisor.yaml') as f:
@@ -79,7 +79,7 @@ def test_export(backup_packaged_project, mock_sam_calls):
     subprocess.run(['ploomber', 'build'], check=True)
     shutil.copy('products/model.pickle', 'src/my_project/model.pickle')
 
-    exporter = AWSLambdaExporter('soopervisor.yaml', 'serve')
+    exporter = AWSLambdaExporter.new('soopervisor.yaml', 'serve')
     exporter.add()
     _edit_generated_files()
     exporter.export(mode=None, until=None, skip_tests=False)
@@ -93,7 +93,7 @@ def test_export(backup_packaged_project, mock_sam_calls):
 
 
 def test_export_non_packaged_project(tmp_sample_project):
-    exporter = AWSLambdaExporter('soopervisor.yaml', 'serve')
+    exporter = AWSLambdaExporter.new('soopervisor.yaml', 'serve')
 
     with pytest.raises(ClickException) as excinfo:
         exporter.add()
@@ -108,7 +108,7 @@ def test_skip_tests(backup_packaged_project, mock_sam_calls):
     subprocess.run(['ploomber', 'build'], check=True)
     shutil.copy('products/model.pickle', 'src/my_project/model.pickle')
 
-    exporter = AWSLambdaExporter('soopervisor.yaml', 'serve')
+    exporter = AWSLambdaExporter.new('soopervisor.yaml', 'serve')
     exporter.add()
     _edit_generated_files()
     exporter.export(mode=None, until=None, skip_tests=True)
@@ -135,7 +135,7 @@ dependencies:
     subprocess.run(['ploomber', 'build'], check=True)
     shutil.copy('products/model.pickle', 'src/my_project/model.pickle')
 
-    exporter = AWSLambdaExporter('soopervisor.yaml', 'serve')
+    exporter = AWSLambdaExporter.new('soopervisor.yaml', 'serve')
     exporter.add()
     _edit_generated_files()
 
@@ -151,7 +151,7 @@ def test_error_when_missing_env_yml_and_reqs_txt(backup_packaged_project,
     Path('environment.lock.yml').unlink()
 
     with pytest.raises(ClickException) as excinfo:
-        AWSLambdaExporter('soopervisor.yaml', 'serve')
+        AWSLambdaExporter.new('soopervisor.yaml', 'serve')
 
     msg = ('Expected requirements.lock.txt or environment.lock.yml at the '
            'root directory')

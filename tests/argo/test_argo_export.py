@@ -38,16 +38,16 @@ def mock_docker_calls_serve(monkeypatch):
 
 
 def test_add(tmp_sample_project):
-    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
-                                     env_name='serve')
+    exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
+                                         env_name='serve')
     exporter.add()
 
     assert Path('serve', 'Dockerfile').exists()
 
 
 def test_dockerfile_when_no_setup_py(tmp_sample_project):
-    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
-                                     env_name='serve')
+    exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
+                                         env_name='serve')
     exporter.add()
 
     dockerfile = Path('serve', 'Dockerfile').read_text()
@@ -65,8 +65,8 @@ def test_export(mock_docker_calls, backup_packaged_project, monkeypatch, mode,
     load_tasks_mock = Mock(wraps=commons.load_tasks)
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
-    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
-                                     env_name='serve')
+    exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
+                                         env_name='serve')
     exporter.add()
     exporter.export(mode=mode, until=None)
 
@@ -97,8 +97,7 @@ def test_export(mock_docker_calls, backup_packaged_project, monkeypatch, mode,
     # should not change workingdir
     assert run_task_template['script']['workingDir'] is None
 
-    assert run_task_template['script'][
-        'image'] == 'image_target:0.1dev'
+    assert run_task_template['script']['image'] == 'image_target:0.1dev'
     assert run_task_template['name'] == 'run-task'
     assert spec['metadata']['generateName'] == 'my-project-'
     assert all([
@@ -119,8 +118,8 @@ def test_export(mock_docker_calls, backup_packaged_project, monkeypatch, mode,
 
 def test_custom_volumes(mock_docker_calls, backup_packaged_project,
                         skip_repo_validation):
-    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
-                                     env_name='serve')
+    exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
+                                         env_name='serve')
     exporter.add()
 
     spec = yaml.safe_load(Path('soopervisor.yaml').read_text())
@@ -137,9 +136,9 @@ def test_custom_volumes(mock_docker_calls, backup_packaged_project,
     Path('soopervisor.yaml').write_text(yaml.safe_dump(spec))
 
     # reload exporter
-    ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
-                          env_name='serve').export(mode='incremental',
-                                                   until=None)
+    ArgoWorkflowsExporter.load(path_to_config='soopervisor.yaml',
+                               env_name='serve').export(mode='incremental',
+                                                        until=None)
 
     spec = yaml.safe_load(Path('serve/argo.yaml').read_text())
 
@@ -164,8 +163,8 @@ def test_custom_volumes(mock_docker_calls, backup_packaged_project,
 def test_export_with_null_repository(mock_docker_calls,
                                      backup_packaged_project,
                                      skip_repo_validation, capsys):
-    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
-                                     env_name='serve')
+    exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
+                                         env_name='serve')
     exporter.add()
 
     # set empty repository
@@ -174,9 +173,9 @@ def test_export_with_null_repository(mock_docker_calls,
     Path('soopervisor.yaml').write_text(yaml.safe_dump(spec))
 
     # reload exporter
-    ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
-                          env_name='serve').export(mode='incremental',
-                                                   until=None)
+    ArgoWorkflowsExporter.load(path_to_config='soopervisor.yaml',
+                               env_name='serve').export(mode='incremental',
+                                                        until=None)
 
     spec = yaml.safe_load(Path('serve/argo.yaml').read_text())
 
@@ -223,8 +222,8 @@ def test_stops_if_no_tasks(mock_docker_calls, backup_packaged_project,
     load_tasks_mock = Mock(return_value=([], []))
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
-    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
-                                     env_name='serve')
+    exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
+                                         env_name='serve')
     exporter.add()
     exporter.export(mode='incremental', until=None)
 
@@ -234,8 +233,8 @@ def test_stops_if_no_tasks(mock_docker_calls, backup_packaged_project,
 
 def test_skip_tests(mock_docker_calls, backup_packaged_project, monkeypatch,
                     capsys, skip_repo_validation):
-    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
-                                     env_name='serve')
+    exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
+                                         env_name='serve')
     exporter.add()
     exporter.export(mode='incremental', until=None, skip_tests=True)
 
@@ -245,8 +244,8 @@ def test_skip_tests(mock_docker_calls, backup_packaged_project, monkeypatch,
 
 
 def test_validates_repository(mock_docker_calls, tmp_sample_project):
-    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
-                                     env_name='serve')
+    exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
+                                         env_name='serve')
     exporter.add()
 
     with pytest.raises(ConfigurationError) as excinfo:
@@ -264,8 +263,8 @@ def test_checks_the_right_spec(mock_docker_calls_serve,
     shutil.copy('src/my_project/pipeline.yaml',
                 'src/my_project/pipeline.serve.yaml')
 
-    exporter = ArgoWorkflowsExporter(path_to_config='soopervisor.yaml',
-                                     env_name='serve')
+    exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
+                                         env_name='serve')
     exporter.add()
     exporter.export(mode='incremental')
 

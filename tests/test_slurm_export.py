@@ -64,8 +64,8 @@ def test_script_name_for_task_name(tmp_empty, name, files, match, workspace):
 
 def test_slurm_add_sample_project(monkeypatch, tmp_sample_project,
                                   no_sys_modules_cache):
-    exporter = SlurmExporter(path_to_config='soopervisor.yaml',
-                             env_name='serve')
+    exporter = SlurmExporter.new(path_to_config='soopervisor.yaml',
+                                 env_name='serve')
     exporter.add()
 
     assert set(os.listdir('serve')) == {'template.sh'}
@@ -78,8 +78,8 @@ def test_slurm_add_sample_project(monkeypatch, tmp_sample_project,
 ])
 def test_slurm_export_errors_if_missing_placeholder_in_template(
         monkeypatch_slurm, tmp_sample_project, template, error):
-    exporter = SlurmExporter(path_to_config='soopervisor.yaml',
-                             env_name='serve')
+    exporter = SlurmExporter.new(path_to_config='soopervisor.yaml',
+                                 env_name='serve')
     exporter.add()
 
     Path('serve', 'template.sh').write_text(template)
@@ -93,14 +93,14 @@ def test_slurm_export_errors_if_missing_placeholder_in_template(
 def test_slurm_export_doesnt_require_lock_files(monkeypatch_slurm,
                                                 tmp_sample_project):
     Path('environment.lock.yml').unlink()
-    SlurmExporter(path_to_config='soopervisor.yaml', env_name='serve')
+    SlurmExporter.new(path_to_config='soopervisor.yaml', env_name='serve')
 
 
 def test_slurm_export_sample_project(monkeypatch_slurm, tmp_sample_project):
     load_tasks_mock, run_mock = monkeypatch_slurm
 
-    exporter = SlurmExporter(path_to_config='soopervisor.yaml',
-                             env_name='serve')
+    exporter = SlurmExporter.new(path_to_config='soopervisor.yaml',
+                                 env_name='serve')
 
     exporter.add()
     exporter.export(mode='incremental')
@@ -154,8 +154,8 @@ def test_slurm_export_sample_project_matches_script_file(
     template_mock = Mock(wraps=Template)
     monkeypatch.setattr(export, 'Template', template_mock)
 
-    exporter = SlurmExporter(path_to_config='soopervisor.yaml',
-                             env_name='serve')
+    exporter = SlurmExporter.new(path_to_config='soopervisor.yaml',
+                                 env_name='serve')
     exporter.add()
 
     # exact match
@@ -192,8 +192,8 @@ def test_slurm_export_sample_project_incremental(monkeypatch,
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
     monkeypatch.setattr(subprocess, 'run', run_mock)
 
-    exporter = SlurmExporter(path_to_config='soopervisor.yaml',
-                             env_name='serve')
+    exporter = SlurmExporter.new(path_to_config='soopervisor.yaml',
+                                 env_name='serve')
 
     exporter.add()
     exporter.export(mode='incremental')
