@@ -8,6 +8,13 @@ from soopervisor.shell.export import SlurmExporter
 
 
 def for_backend(backend):
+    """Returns an Exporter class given the backend string identifier
+
+    Parameters
+    ----------
+    backend : str
+        Backend string identifier
+    """
     mapping = {
         Backend.aws_batch: AWSBatchExporter,
         Backend.aws_lambda: AWSLambdaExporter,

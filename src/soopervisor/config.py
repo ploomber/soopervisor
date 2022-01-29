@@ -7,14 +7,21 @@ from soopervisor.exceptions import ConfigurationError
 
 
 def get_backend(name):
+    """
+    Loads soopervisor.yaml and loads the configuration for an env with the
+    passed name. Performs validations before returning the configuration
+    """
+    # load soopervisor.yaml
     cfg = yaml.safe_load(Path('soopervisor.yaml').read_text())
 
+    # get section with that name
     if name not in cfg:
         raise ConfigurationError('Misconfigured environment: missing '
                                  f'{name!r} section in soopervisor.yaml')
 
     section = cfg[name]
 
+    # check if there is a backend key
     if 'backend' not in section:
         raise ConfigurationError('Misconfigured environment: missing '
                                  f'\'backend\' key in section {name!r} in '
@@ -22,6 +29,7 @@ def get_backend(name):
 
     backend = section['backend']
 
+    # check if the value is valid
     if backend not in Backend:
         valid = list(Backend.__members__.keys())
         raise ConfigurationError(
