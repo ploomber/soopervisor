@@ -1,9 +1,10 @@
+import shutil
 import fnmatch
 import os
 from pathlib import Path
 import subprocess
 
-from ploomber.io._commander import Commander, CommanderStop
+from ploomber.io._commander import Commander, CommanderStop, CommanderException
 from jinja2 import Template, meta
 import click
 
@@ -11,6 +12,12 @@ from soopervisor import abc
 from soopervisor import commons
 from soopervisor.shell.config import SlurmConfig
 from soopervisor import validate
+
+
+def _warn_on_exit_if_param(cmdr, param, name):
+    if param:
+        cmdr.warn_on_exit(f'{name!r} option has no effect when '
+                          'using SLURM, ignoring...')
 
 
 def _check_template_variables(env, source):
@@ -73,12 +80,19 @@ class SlurmExporter(abc.AbstractExporter):
         pass
 
     @staticmethod
-    def _export(cfg, env_name, mode, until, skip_tests):
+    def _export(cfg, env_name, mode, until, skip_tests, ignore_git):
         """
         Export and submit jbs
         """
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as cmdr:
+
+            # these do not apply when using SLURM, warn the user
+            # TODO: test the warning is shown
+            _warn_on_exit_if_param(cmdr, ignore_git, 'ignore_git')
+            _warn_on_exit_if_param(cmdr, until, 'until')
+            _warn_on_exit_if_param(cmdr, skip_tests, 'skip_tests')
+
             template = Path(env_name, 'template.sh').read_text()
             _validate_template(cmdr._env, template)
 
@@ -90,6 +104,13 @@ class SlurmExporter(abc.AbstractExporter):
                 raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
+
+            # FIXME: add unit test for this
+            if not shutil.which('sbatch'):
+                raise CommanderException(
+                    'sbatch is not installed, but it is '
+                    'required to submit the jobs to the cluster, '
+                    'please install it and try again.')
 
             _submit_to_slurm(tasks, args, env_name)
 

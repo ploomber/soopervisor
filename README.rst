@@ -43,6 +43,12 @@ Supported platforms
   * `AWS Lambda <https://soopervisor.readthedocs.io/en/latest/tutorials/aws-lambda.html>`_
 
 
+From notebook to a production pipeline
+======================================
+
+We also have `an example <https://soopervisor.readthedocs.io/en/latest/tutorials/workflow.html>`_ that shows how to use our ecosystem of tools to
+go **from a monolithic notebook to a pipeline deployed in Kubernetes.**
+
 Usage
 =====
 

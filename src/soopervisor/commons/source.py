@@ -69,7 +69,39 @@ def to_posix_str(path):
     return str(PurePosixPath(*Path(path).parts))
 
 
-def copy(cmdr, src, dst, include=None, exclude=None):
+def size_too_big(path):
+    """Returns true is file is too large (5MB)
+    """
+    five_mb = 5242880
+    return os.path.getsize(path) > five_mb
+
+
+def copy(cmdr, src, dst, include=None, exclude=None, ignore_git=False):
+    """Copy files
+
+    Parameters
+    ----------
+    cmdr : Commander
+        Commander object
+
+    src : str
+        Source folder
+
+    include : list
+        List of files or directories to include (use it if you have files
+        that are not tracked by git but you want to include anyway)
+
+    exclude : list
+        List of files or directories to exclude (use it if you are tracking
+        files with git that you don't want to include)
+
+    dst : str
+        Destiny folder
+
+    ignore_git : bool, default=False
+        If False, it only copies files tracked by git, otherwise it copies
+        everything (but still applies the include/exclude rules)
+    """
     include = set() if include is None else set(include)
     exclude = set() if exclude is None else set(exclude)
     exclude_dirs = set(p for p in exclude if Path(p).is_dir())
@@ -94,8 +126,16 @@ def copy(cmdr, src, dst, include=None, exclude=None):
             'will be included, except for files in the \'exclude\' section '
             'of soopervisor.yaml')
 
+    if not tracked and not error and not ignore_git:
+        raise ClickException("Running inside a git repository, but no files "
+                             "in the current working directory are tracked "
+                             "by git. Commit the files to include them in "
+                             "the Docker image or pass the --ignore-git "
+                             "flag to soopervisor export")
+
     for f in glob_all(path=src, exclude=dst):
-        tracked_by_git = tracked is None or to_posix_str(f) in tracked
+        tracked_by_git = (tracked is None or ignore_git
+                          or to_posix_str(f) in tracked)
         excluded = f in exclude or is_relative_to_any(f, exclude_dirs)
         included = f in include or is_relative_to_any(f, include_dirs)
         # never include .git or .gitignore
@@ -109,8 +149,13 @@ def copy(cmdr, src, dst, include=None, exclude=None):
             print(f'Copying {f} -> {target}')
 
 
-def compress_dir(src, dst):
+def compress_dir(cmdr, src, dst):
     with tarfile.open(dst, "w:gz") as tar:
         tar.add(src, arcname=os.path.basename(src))
+
+    if size_too_big(dst):
+        cmdr.warn_on_exit(f"The project's source code {str(dst)!r} is "
+                          "larger than 5MB, there may be some unnecessary "
+                          "files (e.g., data files)")
 
     shutil.rmtree(src)

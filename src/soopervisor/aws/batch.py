@@ -51,7 +51,8 @@ class AWSBatchExporter(abc.AbstractExporter):
                        templates_path=('soopervisor', 'assets')) as e:
             e.copy_template('aws-batch/Dockerfile',
                             conda=Path('environment.lock.yml').exists(),
-                            setup_py=Path('setup.py').exists())
+                            setup_py=Path('setup.py').exists(),
+                            env_name=env_name)
             e.success('Done')
             e.print(
                 f'Fill in the configuration in the {env_name!r} '
@@ -62,7 +63,7 @@ class AWSBatchExporter(abc.AbstractExporter):
 
     @staticmethod
     @requires(['boto3'], name='AWSBatchExporter')
-    def _export(cfg, env_name, mode, until, skip_tests):
+    def _export(cfg, env_name, mode, until, skip_tests, ignore_git):
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as cmdr:
             tasks, cli_args = commons.load_tasks(cmdr=cmdr,
@@ -79,7 +80,8 @@ class AWSBatchExporter(abc.AbstractExporter):
                                                  env_name,
                                                  until=until,
                                                  entry_point=cli_args[1],
-                                                 skip_tests=skip_tests)
+                                                 skip_tests=skip_tests,
+                                                 ignore_git=ignore_git)
 
             cmdr.info('Submitting jobs to AWS Batch')
 

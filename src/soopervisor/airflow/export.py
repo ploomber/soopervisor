@@ -37,7 +37,8 @@ class AirflowExporter(abc.AbstractExporter):
 
             e.copy_template('airflow/Dockerfile',
                             conda=Path('environment.lock.yml').exists(),
-                            setup_py=Path('setup.py').exists())
+                            setup_py=Path('setup.py').exists(),
+                            env_name=env_name)
 
             click.echo(
                 f'Airflow DAG declaration saved to {path_out!r}, you may '
@@ -53,7 +54,7 @@ class AirflowExporter(abc.AbstractExporter):
         pass
 
     @staticmethod
-    def _export(cfg, env_name, mode, until, skip_tests):
+    def _export(cfg, env_name, mode, until, skip_tests, ignore_git):
         """
         Copies the current source code to the target environment folder.
         The code along with the DAG declaration file can be copied to
@@ -74,7 +75,8 @@ class AirflowExporter(abc.AbstractExporter):
                 env_name,
                 until=until,
                 entry_point=args[1],
-                skip_tests=skip_tests)
+                skip_tests=skip_tests,
+                ignore_git=ignore_git)
 
             dag_dict = generate_airflow_spec(tasks, args, target_image)
 

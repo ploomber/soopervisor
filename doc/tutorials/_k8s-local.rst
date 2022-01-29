@@ -3,7 +3,7 @@
 Local example
 -------------
 
-.. important:: This tutorial requires soopervisor ``0.5.2`` or higher
+.. important:: This tutorial requires soopervisor ``0.6.1`` or higher
 
 This tutorial runs a pipeline in a local Kubernetes cluster using ``k3d``.
 
@@ -39,6 +39,13 @@ We provide a Docker image so you can quickly run this example:
         -p 2746:2746 \
         ploomber-k8s /bin/bash
 
+.. note::
+
+    We need to run ``docker run`` in privileged mode since we'll be running
+    ``docker`` commands inside the container.
+    `More on that here <https://www.docker.com/blog/docker-can-now-run-within-docker/>`_
+
+
 Create Kubernetes cluster
 *************************
 
@@ -67,6 +74,13 @@ We now install argo; note that we are using a custom installation file
 
     # check argo pods (once they're all running, argo is ready)
     kubectl get pods -n argo
+
+
+.. note::
+
+    ``argo-pns.yaml`` is a custom file that changes the Argo executor to PNS;
+    this is required to ensure Argo works on ``k3d``; however, this change
+    isn't required in a production environment.
 
 
 .. tip::
@@ -131,7 +145,7 @@ We finished configuring; let's now submit the workflow:
 .. code-block:: bash
 
     # build docker image (takes a few minutes the first time) and generate an argo's yaml spec
-    soopervisor export training --skip-tests
+    soopervisor export training --skip-tests --ignore-git
 
     # import image to the k8s cluster
     k3d image import ml-intermediate:latest --cluster mycluster
@@ -174,7 +188,7 @@ Try exporting the pipeline again:
 
 .. code-block:: bash
 
-    soopervisor export training --skip-tests
+    soopervisor export training --skip-tests --ignore-git
 
 
 You'll see a message like this: ``Loaded DAG in 'incremental' mode has no tasks to submit``.
@@ -189,7 +203,7 @@ Let's now modify one of the tasks and submit it again:
     echo -e "\nprint('Hello from Kubernetes')" >> fit.py
 
     # re-build docker image and submit
-    soopervisor export training --skip-tests
+    soopervisor export training --skip-tests --ignore-git
     k3d image import ml-intermediate:latest --cluster mycluster
     argo submit -n argo --watch training/argo.yaml
 

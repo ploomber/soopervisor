@@ -1,11 +1,13 @@
 import importlib
+import tarfile
 from pathlib import Path
 
 from ploomber.util import default
 from ploomber.io._commander import CommanderStop
+from ploomber.telemetry import telemetry
 
 from soopervisor.commons import source, dependencies
-from soopervisor.exceptions import ConfigurationError
+from soopervisor.exceptions import ConfigurationError, MissingDockerfileError
 
 
 def _validate_repository(repository):
@@ -15,7 +17,25 @@ def _validate_repository(repository):
             'in soopervisor.yaml, please add a valid value.')
 
 
-def build(e, cfg, name, until, entry_point, skip_tests=False):
+def cp_ploomber_home(pkg_name):
+    # Generate ploomber home
+    home_path = Path(telemetry.get_home_dir(), 'stats')
+    home_path = home_path.expanduser()
+
+    if home_path.exists():
+        target = Path('dist', f'{pkg_name}.tar.gz')
+        archive = tarfile.open(target, "w:gz")
+        archive.add(home_path, arcname='ploomber/stats')
+        archive.close()
+
+
+def build(e,
+          cfg,
+          env_name,
+          until,
+          entry_point,
+          skip_tests=False,
+          ignore_git=False):
     """Build a docker image
 
     Parameters
@@ -26,7 +46,7 @@ def build(e, cfg, name, until, entry_point, skip_tests=False):
     cfg
         Configuration
 
-    name : str
+    env_name : str
         Target environment name
 
     until : str
@@ -38,6 +58,10 @@ def build(e, cfg, name, until, entry_point, skip_tests=False):
     skip_tests : bool, default=False
         Skip image testing (check dag loading and File.client configuration)
     """
+
+    if not Path(env_name, 'Dockerfile').is_file():
+        raise MissingDockerfileError(env_name)
+
     # raise an error if the user didn't change the default value
     _validate_repository(cfg.repository)
 
@@ -60,8 +84,7 @@ def build(e, cfg, name, until, entry_point, skip_tests=False):
     elif Path('environment.lock.yml').exists():
         e.cp('environment.lock.yml')
 
-    # generate source distribution
-
+    # Generate source distribution
     if Path('setup.py').exists():
         # .egg-info may cause issues if MANIFEST.in was recently updated
         e.rm('dist', 'build', Path('src', pkg_name, f'{pkg_name}.egg-info'))
@@ -77,12 +100,14 @@ def build(e, cfg, name, until, entry_point, skip_tests=False):
                     src='.',
                     dst=target,
                     include=cfg.include,
-                    exclude=cfg.exclude)
-        source.compress_dir(target, Path('dist', f'{pkg_name}.tar.gz'))
+                    exclude=cfg.exclude,
+                    ignore_git=ignore_git)
+        source.compress_dir(e, target, Path('dist', f'{pkg_name}.tar.gz'))
 
+    cp_ploomber_home(pkg_name)
     e.cp('dist')
 
-    e.cd(name)
+    e.cd(env_name)
 
     image_local = f'{pkg_name}:{version}'
 

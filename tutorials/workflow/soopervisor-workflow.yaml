@@ -1,0 +1,8 @@
+training:
+  backend: argo-workflows
+  repository: null
+  mounted_volumes:
+    - name: shared-folder
+      spec:
+        hostPath:
+          path: /host

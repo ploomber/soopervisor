@@ -24,6 +24,12 @@ def monkeypatch_slurm(monkeypatch):
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
     monkeypatch.setattr(subprocess, 'run', run_mock)
 
+    def which_(arg):
+        return '/bin/sbatch' if arg == 'sbatch' else None
+
+    # exporter checks that sbatch is installed
+    monkeypatch.setattr(export.shutil, 'which', which_)
+
     return load_tasks_mock, run_mock
 
 

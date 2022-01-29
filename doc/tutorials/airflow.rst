@@ -1,6 +1,8 @@
 Airflow
 =======
 
+.. important:: This tutorial requires soopervisor ``0.6.1`` or higher
+
 .. note:: **Got questions?** Reach out to us on `Slack <https://ploomber.io/community/>`_.
 
 This tutorial shows you how to export a Ploomber pipeline to Airflow.
@@ -39,6 +41,13 @@ We provide a Docker image so you can quickly run this example:
         --env SHARED_DIR \
         --env PLOOMBER_STATS_ENABLED=false \
         ploomber-airflow /bin/bash
+
+
+.. note::
+
+    We need to run ``docker run`` in privileged mode since we'll be running
+    ``docker`` commands inside the container.
+    `More on that here <https://www.docker.com/blog/docker-can-now-run-within-docker/>`_
 
 
 Create Kubernetes cluster
@@ -105,7 +114,7 @@ Submit pipeline
     
 .. code-block:: bash
 
-    soopervisor export training --skip-tests
+    soopervisor export training --skip-tests --ignore-git
 
     # import image to the cluster
     k3d image import ml-intermediate:latest --cluster mycluster
@@ -230,7 +239,7 @@ Try exporting the pipeline again:
 
 .. code-block:: bash
 
-    soopervisor export training --skip-tests
+    soopervisor export training --skip-tests --ignore-git
 
 
 You'll see a message like this: ``Loaded DAG in 'incremental' mode has no tasks to submit``.
@@ -245,7 +254,7 @@ Let's now modify one of the tasks and submit again:
     echo -e "\nprint('Hello from Kubernetes')" >> fit.py
 
     # re-build docker image
-    soopervisor export training --skip-tests
+    soopervisor export training --skip-tests --ignore-git
 
     # import image
     k3d image import ml-intermediate:latest --cluster mycluster

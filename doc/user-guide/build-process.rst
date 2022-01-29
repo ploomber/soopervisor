@@ -1,6 +1,8 @@
 Docker building process
 ========================
 
+.. note:: This guide does not apply if using SLURM.
+
 Installing dependencies
 -----------------------
 

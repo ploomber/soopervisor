@@ -1,8 +1,25 @@
 CHANGELOG
 =========
 
-0.6.1dev
+0.6.2dev
 --------
+* Improves CLI documentation
+* Adds ``--git-ignore`` to documentation
+* Various documentation improvements
+* Changes short version of ``--until-build`` to ``-u``
+* Adds "Task Communication" user guide
+* Display warnings if passing CLI options that do not apply to SLURM
+* SLURM exporter raises error if ``sbatch`` isn't installed
+* Showing a warning if source dist is >5MB  (#53)
+* ``soopervisor add`` adds a default ``exclude`` value by extracting product paths from ``pipeline.yaml``
+* Copying user settings when generating the Docker image
+
+0.6.1 (2022-01-16)
+------------------
+* Fixes output message after exporting to Argo
+* Adds flag to ``source.copy`` to ignore git
+* ``soopervisor export`` raises and error if ``git`` isn't tracking any files
+* Adds ``--git-ignore`` to ``soopervisor export``
 
 0.6 (2022-01-04)
 ----------------

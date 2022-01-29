@@ -13,8 +13,8 @@ Pre-requisites
 
 .. important::
 
-    This integration requires ploomber 0.13.7 or higher (To upgrade:
-    ``pip install ploomber --upgrade``)
+    This integration requires ploomber 0.13.7 or higher and soopervisor 0.6
+    or higher (To upgrade: ``pip install ploomber soopervisor --upgrade``)
 
 * `docker and docker-compose <https://docs.docker.com/get-docker/>`_
 
@@ -83,9 +83,20 @@ First, let's create a SLURM cluster for testing. Create the following ``docker-c
 
 Now, start the cluster:
 
+
 .. code-block:: sh
 
     docker-compose up -d
+
+.. important::
+
+    Ensure you're running a recent version of ``docker-compose``, older
+    versions may throw an error like this: 
+
+    .. code-block:: console
+
+        Unsupported config option for volumes: 'shared-vol'
+        Unsupported config option for services: 'slurmmaster'
 
 
 .. tip::
@@ -100,7 +111,7 @@ Let's connect to the cluster to submit the jobs:
 
 .. code-block:: sh
 
-    docker compose exec slurmjupyter /bin/bash
+    docker-compose exec slurmjupyter /bin/bash
 
 
 Configure the environment:
@@ -119,10 +130,8 @@ Configure the environment:
     conda env create --name myenv
     conda activate myenv
 
-    # Install ploomber and soopervisor in the base environment
-    pip install ploomber
-    # Install soopervisor from the slurm branch
-    pip install git+https://github.com/ploomber/soopervisor
+    # install ploomber and soopervisor in the base environment
+    pip install ploomber soopervisor
     
     # Download sample pipeline to example/
     ploomber examples -n templates/ml-basic -o example
@@ -209,3 +218,6 @@ The resolution logic is as follows. Say you have a task named ``fit-gpu``:
 1. Use an exact match (i.e., ``fit-gpu.sh``)
 2. Use a filename with a double underscore placeholder (e.g., ``fit-__.sh``, or ``__-gpu.sh``)
 3. Use ``template.sh``
+
+You can use this templating feature to customize the submitted jobs, for example
+to pass custom parameters to the ``srun`` command.

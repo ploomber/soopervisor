@@ -37,11 +37,12 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
                        templates_path=('soopervisor', 'assets')) as e:
             e.copy_template('argo-workflows/Dockerfile',
                             conda=Path('environment.lock.yml').exists(),
-                            setup_py=Path('setup.py').exists())
+                            setup_py=Path('setup.py').exists(),
+                            env_name=env_name)
             e.success('Done')
 
     @staticmethod
-    def _export(cfg, env_name, mode, until, skip_tests):
+    def _export(cfg, env_name, mode, until, skip_tests, ignore_git):
         """
         Build and upload Docker image. Export Argo YAML spec.
         """
@@ -62,7 +63,8 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
                                                   env_name,
                                                   until=until,
                                                   entry_point=args[1],
-                                                  skip_tests=skip_tests)
+                                                  skip_tests=skip_tests,
+                                                  ignore_git=ignore_git)
 
             cmdr.info('Generating Argo Workflows YAML spec')
             _make_argo_spec(tasks=tasks,
@@ -72,8 +74,7 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
                             pkg_name=pkg_name,
                             target_image=target_image)
 
-            cmdr.info('Submitting jobs to Argo Workflows')
-            cmdr.success('Done. Submitted to Argo Workflows')
+            cmdr.success('Done.')
 
 
 # TODO: delete
