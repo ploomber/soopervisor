@@ -6,14 +6,14 @@ from pathlib import Path
 from collections.abc import Mapping
 from typing import Optional, List
 
-import click
 import yaml
 from pydantic import BaseModel
 from ploomber.io._commander import Commander
 
 from soopervisor import commons
 from soopervisor.exceptions import (BackendWithoutPresetsError,
-                                    InvalidPresetForBackendError)
+                                    InvalidPresetForBackendError,
+                                    ConfigurationError)
 from soopervisor._io import read_yaml_mapping
 
 
@@ -50,25 +50,27 @@ class AbstractConfig(BaseModel, abc.ABC):
 
         # check data[env_name] is a dictionary
         if not isinstance(data[env_name], Mapping):
-            raise TypeError(f'Expected {env_name!r} to contain a dictionary, '
-                            f'got {type(data[env_name]).__name__}')
+            raise ConfigurationError(
+                f'Expected key {env_name!r} in {str(path_to_config)!r} '
+                'to contain a dictionary, '
+                f'got {type(data[env_name]).__name__}')
 
         # check env_name in data, otherwise the env is corrupted
 
         if 'backend' not in data[env_name]:
-            raise click.ClickException(
-                'Missing backend key for '
-                f'target {env_name} in {path_to_config!s}. Add it and try '
-                'again.')
+            raise ConfigurationError(
+                f'Missing {"backend"!r} key for '
+                f'section {env_name!r} in {path_to_config!r}. '
+                'Add it and try again.')
 
         actual = data[env_name]['backend']
         expected = cls.get_backend_value()
 
         if actual != expected:
-            raise click.ClickException(
-                f'Invalid backend key for target {env_name} in '
-                f'{path_to_config!s}. Expected {expected!r}, actual {actual!r}'
-            )
+            raise ConfigurationError(
+                f'Invalid backend key for section {env_name!r} in '
+                f'{path_to_config!s}. Expected {expected!r}, '
+                f'actual {actual!r}')
 
         del data[env_name]['backend']
 
