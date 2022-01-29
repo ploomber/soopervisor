@@ -3,7 +3,6 @@ from pathlib import Path
 import shutil
 
 import pytest
-import moto
 import boto3
 
 from conftest import _mock_docker_calls
@@ -104,20 +103,6 @@ def monkeypatch_serve_docker(monkeypatch):
            'DAGSpec; print("File" in '
            f'DAGSpec("{path}").to_dag().clients)')
     yield _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
-
-
-@pytest.fixture
-def monkeypatch_docker_client(monkeypatch):
-    """
-    We're using an old moto version because newer ones are not working
-    (https://github.com/spulec/moto/issues/1793). The version we're using
-    (1.3.14) calls docker.from_env but since GitHub macOS machines don't
-    have docker installed and installing it takes too long, we mock the call
-
-    https://github.com/actions/virtual-environments/issues/17
-    https://github.com/marketplace/actions/setup-docker - this takes too long
-    """
-    monkeypatch.setattr(moto.batch.models.docker, 'from_env', Mock())
 
 
 @pytest.mark.parametrize(

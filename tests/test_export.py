@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 
 import pytest
-from pytest_cases import parametrize
 import boto3
 
 from conftest import _mock_docker_calls
@@ -82,29 +81,31 @@ def monkeypatch_boto3_batch_client(monkeypatch):
                         lambda name, region_name: boto3_mock)
 
 
-# monkeypatch_docker, monkeypatch_docker_client
-
-
 @pytest.fixture
-def mock_batch_env(monkeypatch_boto3_batch_client, mock_batch):
+def mock_docker_and_batch(
+    mock_batch,
+    mock_docker_calls,
+    monkeypatch_docker_client,
+    monkeypatch_boto3_batch_client,
+):
     pass
 
 
-# TODO: add the missing ones
-@parametrize('CLASS_, mock', [
-    [AirflowExporter, mock_docker_calls],
-    [ArgoWorkflowsExporter, mock_docker_calls],
-    [KubeflowExporter, mock_docker_calls],
-    [AWSBatchExporter, mock_batch_env],
+# TODO: add the missing ones and copy the duplicates (lambda)
+@pytest.mark.parametrize('CLASS_', [
+    AWSBatchExporter,
+    AirflowExporter,
+    ArgoWorkflowsExporter,
+    KubeflowExporter,
 ],
-             ids=[
-                 'airflow',
-                 'argo',
-                 'kubeflow',
-                 'batch',
-             ])
+                         ids=[
+                             'batch',
+                             'airflow',
+                             'argo',
+                             'kubeflow',
+                         ])
 def test_skip_tests(
-    mock,
+    mock_docker_and_batch,
     tmp_sample_project,
     no_sys_modules_cache,
     skip_repo_validation,

@@ -362,3 +362,17 @@ def mock_batch(aws_credentials, iam_resource, batch_client, vpc):
                                   ],
                                   state='ENABLED')
     yield batch_client
+
+
+@pytest.fixture
+def monkeypatch_docker_client(monkeypatch):
+    """
+    We're using an old moto version because newer ones are not working
+    (https://github.com/spulec/moto/issues/1793). The version we're using
+    (1.3.14) calls docker.from_env but since GitHub macOS machines don't
+    have docker installed and installing it takes too long, we mock the call
+
+    https://github.com/actions/virtual-environments/issues/17
+    https://github.com/marketplace/actions/setup-docker - this takes too long
+    """
+    monkeypatch.setattr(moto.batch.models.docker, 'from_env', Mock())
