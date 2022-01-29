@@ -271,6 +271,10 @@ class AbstractExporter(abc.ABC):
         return self._add(cfg=self._cfg, env_name=self._env_name)
 
     def export(self, mode, until=None, skip_tests=False, ignore_git=False):
+        """
+        Exports to the target environment, calls the private ._export()
+        method
+        """
         return self._export(cfg=self._cfg,
                             env_name=self._env_name,
                             mode=mode,
@@ -289,10 +293,16 @@ class AbstractExporter(abc.ABC):
     @abc.abstractmethod
     def _add():
         """
+        Private method implementing the backend-specific logic for the add
+        command
         """
         pass
 
     @staticmethod
     @abc.abstractmethod
     def _export(cfg, env_name, mode, until):
+        """
+        Private method implementing the backend-specific logic for the export
+        command
+        """
         pass
