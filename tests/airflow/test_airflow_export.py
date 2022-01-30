@@ -1,4 +1,3 @@
-import shutil
 import os
 import subprocess
 import importlib
@@ -221,20 +220,3 @@ def test_validates_repository(monkeypatch, mock_docker_calls,
     assert str(
         excinfo.value) == ("Invalid repository 'your-repository/name' "
                            "in soopervisor.yaml, please add a valid value.")
-
-
-# TODO: check with packaged project
-def test_checks_the_right_spec(monkeypatch, mock_docker_calls_serve,
-                               tmp_sample_project, no_sys_modules_cache,
-                               skip_repo_validation):
-    shutil.copy('pipeline.yaml', 'pipeline.serve.yaml')
-
-    exporter = AirflowExporter.new(path_to_config='soopervisor.yaml',
-                                   env_name='serve')
-
-    exporter.add()
-    exporter.export(mode='incremental')
-
-    expected = ('docker', 'run', 'sample_project:latest', 'ploomber', 'status',
-                '--entry-point', 'pipeline.serve.yaml')
-    assert mock_docker_calls_serve.calls[1] == expected

@@ -14,6 +14,10 @@ from soopervisor import abc
 
 
 class AirflowExporter(abc.AbstractExporter):
+    """
+    Airflow exporter, the generated Airflow DAG can be customized usin
+    presets: 'none' (default, KubernetesPodOperator), bash (DockerOperator)
+    """
     CONFIG_CLASS = AirflowConfig
 
     @staticmethod

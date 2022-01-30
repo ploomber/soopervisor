@@ -1,4 +1,3 @@
-import shutil
 import os
 import subprocess
 from pathlib import Path
@@ -225,21 +224,3 @@ def test_validates_repository(mock_docker_calls, tmp_sample_project):
     assert str(
         excinfo.value) == ("Invalid repository 'your-repository/name' "
                            "in soopervisor.yaml, please add a valid value.")
-
-
-# TODO: check with non-packaged project
-def test_checks_the_right_spec(mock_docker_calls_serve,
-                               backup_packaged_project, monkeypatch,
-                               skip_repo_validation):
-    shutil.copy('src/my_project/pipeline.yaml',
-                'src/my_project/pipeline.serve.yaml')
-
-    exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
-                                         env_name='serve')
-    exporter.add()
-    exporter.export(mode='incremental')
-
-    expected = ('docker', 'run', 'my_project:0.1dev', 'ploomber', 'status',
-                '--entry-point',
-                str(Path('src', 'my_project', 'pipeline.serve.yaml')))
-    assert mock_docker_calls_serve.calls[2] == expected
