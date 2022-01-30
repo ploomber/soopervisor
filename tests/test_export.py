@@ -5,11 +5,14 @@ from pathlib import Path
 import pytest
 import boto3
 
-from conftest import _mock_docker_calls
-from soopervisor.airflow.export import AirflowExporter
-from soopervisor.argo.export import ArgoWorkflowsExporter
-from soopervisor.aws.batch import AWSBatchExporter
-from soopervisor.kubeflow.export import KubeflowExporter
+from conftest import _mock_docker_calls, git_init
+from soopervisor.airflow.export import (AirflowExporter, commons as
+                                        airflow_commons)
+from soopervisor.argo.export import (ArgoWorkflowsExporter, commons as
+                                     argo_commons)
+from soopervisor.aws.batch import (AWSBatchExporter, commons as batch_commons)
+from soopervisor.kubeflow.export import (KubeflowExporter, commons as
+                                         kubeflow_commons)
 from soopervisor.shell.export import SlurmExporter
 from soopervisor.aws import batch
 
@@ -121,3 +124,26 @@ def test_skip_tests(
     captured = capsys.readouterr()
     assert 'Testing image' not in captured.out
     assert 'Testing File client' not in captured.out
+
+
+# TODO: check missing
+@pytest.mark.parametrize('CLASS, commons', [
+    [AirflowExporter, airflow_commons],
+    [KubeflowExporter, kubeflow_commons],
+    [AWSBatchExporter, batch_commons],
+    [ArgoWorkflowsExporter, argo_commons],
+])
+def test_stops_if_no_tasks(monkeypatch, mock_docker_calls, tmp_sample_project,
+                           no_sys_modules_cache, capsys, CLASS, commons):
+    load_tasks_mock = Mock(return_value=([], []))
+    monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
+
+    exporter = CLASS.new(path_to_config='soopervisor.yaml', env_name='serve')
+
+    git_init()
+
+    exporter.add()
+    exporter.export(mode='incremental')
+
+    captured = capsys.readouterr()
+    assert 'has no tasks to submit.' in captured.out

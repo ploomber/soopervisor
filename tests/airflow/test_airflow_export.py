@@ -12,17 +12,9 @@ from airflow.providers.cncf.kubernetes.operators.kubernetes_pod \
 from airflow.operators.bash_operator import BashOperator
 import pytest
 
-from conftest import _mock_docker_calls
+from conftest import _mock_docker_calls, git_init
 from soopervisor.airflow.export import AirflowExporter, commons
 from soopervisor.exceptions import ConfigurationError
-
-
-def git_init():
-    subprocess.check_call(['git', 'init'])
-    subprocess.check_call(['git', 'config', 'user.email', 'ci@ploomberio'])
-    subprocess.check_call(['git', 'config', 'user.name', 'Ploomber'])
-    subprocess.check_call(['git', 'add', '--all'])
-    subprocess.check_call(['git', 'commit', '-m', 'commit'])
 
 
 @pytest.fixture

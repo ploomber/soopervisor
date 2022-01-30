@@ -21,6 +21,14 @@ from ploomber.io import _commander, _commander_tester
 from soopervisor import commons
 
 
+def git_init():
+    subprocess.check_call(['git', 'init'])
+    subprocess.check_call(['git', 'config', 'user.email', 'ci@ploomberio'])
+    subprocess.check_call(['git', 'config', 'user.name', 'Ploomber'])
+    subprocess.check_call(['git', 'add', '--all'])
+    subprocess.check_call(['git', 'commit', '-m', 'commit'])
+
+
 def _mock_docker_calls(monkeypatch, cmd, proj, tag):
     """
     Mock subprocess calls made by ploomber.io._commander.Commander (which
