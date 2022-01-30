@@ -404,7 +404,7 @@ def mock_docker_calls(monkeypatch):
 
 
 @pytest.fixture
-def mock_docker_calls_serve(monkeypatch):
+def mock_docker_my_project_serve(monkeypatch):
     path = str(Path('src', 'my_project', 'pipeline.serve.yaml'))
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
@@ -414,7 +414,7 @@ def mock_docker_calls_serve(monkeypatch):
 
 
 @pytest.fixture
-def mock_my_project(monkeypatch):
+def mock_docker_my_project(monkeypatch):
     path = str(Path('src', 'my_project', 'pipeline.yaml'))
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
@@ -424,7 +424,7 @@ def mock_my_project(monkeypatch):
 
 
 @pytest.fixture
-def mock_docker_calls_serve_sample(monkeypatch):
+def mock_docker_sample_project_serve(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
            'DAGSpec("pipeline.serve.yaml").to_dag().clients)')

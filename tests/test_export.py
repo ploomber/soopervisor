@@ -151,7 +151,7 @@ def test_stops_if_no_tasks(monkeypatch, mock_docker_calls, tmp_sample_project,
         # AWSBatchExporter,
         AirflowExporter,
     ])
-def test_checks_the_right_spec(monkeypatch, mock_docker_calls_serve_sample,
+def test_checks_the_right_spec(monkeypatch, mock_docker_sample_project_serve,
                                tmp_sample_project, no_sys_modules_cache,
                                skip_repo_validation, CLASS):
     shutil.copy('pipeline.yaml', 'pipeline.serve.yaml')
@@ -163,7 +163,7 @@ def test_checks_the_right_spec(monkeypatch, mock_docker_calls_serve_sample,
 
     expected = ('docker', 'run', 'sample_project:latest', 'ploomber', 'status',
                 '--entry-point', 'pipeline.serve.yaml')
-    assert mock_docker_calls_serve_sample.calls[1] == expected
+    assert mock_docker_sample_project_serve.calls[1] == expected
 
 
 # TODO: add missing, enable aws batch
@@ -175,7 +175,7 @@ def test_checks_the_right_spec(monkeypatch, mock_docker_calls_serve_sample,
         # AWSBatchExporter,
         AirflowExporter,
     ])
-def test_checks_the_right_spec_pkg(mock_docker_calls_serve,
+def test_checks_the_right_spec_pkg(mock_docker_my_project_serve,
                                    backup_packaged_project, monkeypatch,
                                    skip_repo_validation, CLASS):
     shutil.copy('src/my_project/pipeline.yaml',
@@ -188,7 +188,7 @@ def test_checks_the_right_spec_pkg(mock_docker_calls_serve,
     expected = ('docker', 'run', 'my_project:0.1dev', 'ploomber', 'status',
                 '--entry-point',
                 str(Path('src', 'my_project', 'pipeline.serve.yaml')))
-    assert mock_docker_calls_serve.calls[2] == expected
+    assert mock_docker_my_project_serve.calls[2] == expected
 
 
 # TODO: add missing

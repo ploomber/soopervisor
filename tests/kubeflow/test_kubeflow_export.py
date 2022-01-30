@@ -14,7 +14,7 @@ from soopervisor.kubeflow.export import KubeflowExporter, commons
     ['force', ' --force'],
 ],
                          ids=['incremental', 'regular', 'force'])
-def test_export(monkeypatch, mock_my_project, backup_packaged_project,
+def test_export(monkeypatch, mock_docker_my_project, backup_packaged_project,
                 no_sys_modules_cache, skip_repo_validation, mode, args):
     load_tasks_mock = Mock(wraps=commons.load_tasks)
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)

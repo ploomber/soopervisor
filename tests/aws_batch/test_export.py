@@ -93,7 +93,7 @@ def index_commands_by_name(submitted):
         ['force', ['--force']],
     ],
 )
-def test_export(mock_batch, mock_docker_calls_serve, monkeypatch,
+def test_export(mock_batch, mock_docker_my_project_serve, monkeypatch,
                 monkeypatch_docker_client, backup_packaged_project, mode, args,
                 skip_repo_validation):
     p_home_mock = Mock()
@@ -161,7 +161,7 @@ def test_export(mock_batch, mock_docker_calls_serve, monkeypatch,
 
 
 # TODO: check with non-packaged project
-def test_checks_the_right_spec(mock_batch, mock_docker_calls_serve,
+def test_checks_the_right_spec(mock_batch, mock_docker_my_project_serve,
                                monkeypatch, monkeypatch_docker_client,
                                backup_packaged_project, skip_repo_validation):
     shutil.copy('src/my_project/pipeline.yaml',
@@ -178,4 +178,4 @@ def test_checks_the_right_spec(mock_batch, mock_docker_calls_serve,
     expected = ('docker', 'run', 'my_project:0.1dev', 'ploomber', 'status',
                 '--entry-point',
                 str(Path('src', 'my_project', 'pipeline.serve.yaml')))
-    assert mock_docker_calls_serve.calls[2] == expected
+    assert mock_docker_my_project_serve.calls[2] == expected

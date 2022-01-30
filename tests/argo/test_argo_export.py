@@ -20,8 +20,8 @@ from soopervisor import cli
     ['force', ' --force'],
 ],
                          ids=['incremental', 'regular', 'force'])
-def test_export(mock_my_project, backup_packaged_project, monkeypatch, mode,
-                args, skip_repo_validation):
+def test_export(mock_docker_my_project, backup_packaged_project, monkeypatch,
+                mode, args, skip_repo_validation):
     load_tasks_mock = Mock(wraps=commons.load_tasks)
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
@@ -76,7 +76,7 @@ def test_export(mock_my_project, backup_packaged_project, monkeypatch, mode,
     ])
 
 
-def test_custom_volumes(mock_my_project, backup_packaged_project,
+def test_custom_volumes(mock_docker_my_project, backup_packaged_project,
                         skip_repo_validation):
     exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
                                          env_name='serve')
@@ -120,7 +120,8 @@ def test_custom_volumes(mock_my_project, backup_packaged_project,
     }]
 
 
-def test_export_with_null_repository(mock_my_project, backup_packaged_project,
+def test_export_with_null_repository(mock_docker_my_project,
+                                     backup_packaged_project,
                                      skip_repo_validation, capsys):
     exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
                                          env_name='serve')
