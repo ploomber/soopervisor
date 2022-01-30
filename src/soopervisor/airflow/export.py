@@ -42,7 +42,7 @@ class AirflowExporter(abc.AbstractExporter):
             os.rename(Path(env_name, name), path_out)
 
             if cfg.preset != 'bash':
-                e.copy_template('airflow/Dockerfile',
+                e.copy_template('docker/Dockerfile',
                                 conda=Path('environment.lock.yml').exists(),
                                 setup_py=Path('setup.py').exists(),
                                 env_name=env_name)
