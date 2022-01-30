@@ -60,6 +60,15 @@ The Docker image comes with ``k3d`` pre-installed; let's create a cluster:
     kubectl get nodes
 
 
+.. note::
+
+    If you see the error message
+    ``Bind for 0.0.0.0:2746 failed: port is already allocated``, you may
+    drop the ``--port 2746:2746`` and try again:
+    ``k3d cluster create mycluster --volume $SHARED_DIR:/host`` the command
+    will work but you'll be unable to open Argo's GUI.
+
+
 Install Argo
 ************
 
@@ -102,7 +111,7 @@ Get sample Ploomber pipeline
     cd ml-intermediate
 
     # configure development environment
-    cp environment.yml environment.lock.yml
+    cp requirements.txt requirements.lock.txt
     pip install ploomber soopervisor
     pip install -r requirements.txt
 
