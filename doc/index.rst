@@ -151,6 +151,13 @@ configuration details will change, but the API remains the same:
    tutorials/aws-lambda
 
 
+
+.. toctree::
+   :caption: Cookbook
+   :hidden:
+
+   cookbook/airflow
+
 .. toctree::
    :caption: User Guide
    :hidden:
