@@ -25,16 +25,6 @@ def mock_docker_calls(monkeypatch):
     yield tester
 
 
-@pytest.fixture
-def mock_docker_calls_serve(monkeypatch):
-    path = str(Path('src', 'my_project', 'pipeline.serve.yaml'))
-    cmd = ('from ploomber.spec import '
-           'DAGSpec; print("File" in '
-           f'DAGSpec("{path}").to_dag().clients)')
-    tester = _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
-    yield tester
-
-
 @pytest.mark.parametrize('mode, args', [
     ['incremental', ''],
     ['regular', ''],
