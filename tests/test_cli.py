@@ -43,6 +43,25 @@ def monkeypatch_external(monkeypatch):
 # TODO Add test with lambda
 
 
+def test_add_unknown_backend():
+    runner = CliRunner()
+    result = runner.invoke(cli, ['add', 'something', '--backend', 'unknown'],
+                           catch_exceptions=False)
+    assert result.exit_code == 2
+    assert "Invalid value for '--backend' / '-b'" in result.stdout
+
+
+def test_export_missing_soopervisor_yaml(tmp_empty):
+    runner = CliRunner()
+    result = runner.invoke(cli, ['export', 'something'],
+                           catch_exceptions=False)
+
+    expected = ("Error: Expected a 'soopervisor.yaml' file in the "
+                "current working directory, but such files does not exist\n")
+    assert result.exit_code == 1
+    assert result.output == expected
+
+
 @pytest.mark.parametrize(
     'args, backend',
     [[['add', 'serve', '--backend', 'argo-workflows'], Backend.argo_workflows],

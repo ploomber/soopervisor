@@ -36,7 +36,10 @@ def cli():
               help='Customizes settings (backend-specific)',
               default=None)
 def add(env_name, backend, preset):
-    """Add a new target platform
+    """
+    Add a new target platform. Creates a 'soopervisor.yaml' file if needed
+
+    Example: soopervisor add cluster-training -b argo-workflows
     """
     backend = Backend(backend)
 
@@ -52,7 +55,7 @@ def add(env_name, backend, preset):
             raise click.ClickException(
                 f'{env_name!r} already exists. Select a different name.')
     except Exception as e:
-        telemetry.log_api("soopervisor_export_error",
+        telemetry.log_api("soopervisor_add_error",
                           metadata={
                               'type': backend,
                               'env_name': env_name,
@@ -99,37 +102,34 @@ def export(env_name, until_build, mode, skip_tests, ignore_git):
         'skip_tests': skip_tests,
         'ignore_git': ignore_git
     }
+
+    backend = Backend(config.get_backend(env_name))
+
+    telemetry.log_api("soopervisor_export_started",
+                      metadata={
+                          'type': backend,
+                          'input_args': input_args
+                      })
+
+    until = None
+
+    if until_build:
+        until = 'build'
+
+    # TODO: ignore mode if using aws lambda, raised exception if value
+    # is not the default
+    if backend == Backend.aws_lambda:
+        mode = None
+
+    Exporter = exporter.for_backend(backend)
+
     try:
-        backend = Backend(config.get_backend(env_name))
-
-        telemetry.log_api("soopervisor_export_started",
-                          metadata={
-                              'type': backend,
-                              'input_args': input_args
-                          })
-
-        until = None
-
-        if until_build:
-            until = 'build'
-
-        # TODO: ignore mode if using aws lambda, raised exception if value
-        # is not the default
-        if backend == Backend.aws_lambda:
-            mode = None
-
-        Exporter = exporter.for_backend(backend)
-
         Exporter.load('soopervisor.yaml',
                       env_name=env_name).export(mode=mode,
                                                 until=until,
                                                 skip_tests=skip_tests,
                                                 ignore_git=ignore_git)
-        telemetry.log_api("soopervisor_export_success",
-                          metadata={
-                              'type': backend,
-                              'input_args': input_args
-                          })
+
     except Exception as e:
         telemetry.log_api("soopervisor_export_error",
                           metadata={
@@ -138,6 +138,12 @@ def export(env_name, until_build, mode, skip_tests, ignore_git):
                               'error': e
                           })
         raise
+
+    telemetry.log_api("soopervisor_export_success",
+                      metadata={
+                          'type': backend,
+                          'input_args': input_args
+                      })
 
 
 if __name__ == '__main__':
