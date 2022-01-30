@@ -394,9 +394,8 @@ def monkeypatch_docker_client(monkeypatch):
     monkeypatch.setattr(moto.batch.models.docker, 'from_env', Mock())
 
 
-# TODO: this is still duplicated in a few places
 @pytest.fixture
-def mock_docker_calls(monkeypatch):
+def mock_docker_sample_project(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
            'DAGSpec("pipeline.yaml").to_dag().clients)')

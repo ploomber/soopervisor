@@ -80,7 +80,7 @@ def monkeypatch_boto3_batch_client(monkeypatch):
 @pytest.fixture
 def mock_docker_and_batch(
     mock_batch,
-    mock_docker_calls,
+    mock_docker_sample_project,
     monkeypatch_docker_client,
     monkeypatch_boto3_batch_client,
 ):
@@ -126,8 +126,9 @@ def test_skip_tests(
     [AWSBatchExporter, batch_commons],
     [ArgoWorkflowsExporter, argo_commons],
 ])
-def test_stops_if_no_tasks(monkeypatch, mock_docker_calls, tmp_sample_project,
-                           no_sys_modules_cache, capsys, CLASS, commons):
+def test_stops_if_no_tasks(monkeypatch, mock_docker_sample_project,
+                           tmp_sample_project, no_sys_modules_cache, capsys,
+                           CLASS, commons):
     load_tasks_mock = Mock(return_value=([], []))
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
@@ -198,7 +199,8 @@ def test_checks_the_right_spec_pkg(mock_docker_my_project_serve,
     AWSBatchExporter,
     AirflowExporter,
 ])
-def test_validates_repository(mock_docker_calls, tmp_sample_project, CLASS):
+def test_validates_repository(mock_docker_sample_project, tmp_sample_project,
+                              CLASS):
     exporter = CLASS.new(path_to_config='soopervisor.yaml', env_name='serve')
     exporter.add()
 

@@ -69,7 +69,7 @@ def test_generate_valid_airflow_dags(name, tmp_projects):
                          ])
 def test_airflow_export_sample_project(
     monkeypatch,
-    mock_docker_calls,
+    mock_docker_sample_project,
     tmp_sample_project,
     no_sys_modules_cache,
     skip_repo_validation,
