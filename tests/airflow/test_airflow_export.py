@@ -16,14 +16,6 @@ from soopervisor.airflow.export import AirflowExporter, commons
 
 
 @pytest.fixture
-def mock_docker_calls_serve(monkeypatch):
-    cmd = ('from ploomber.spec import '
-           'DAGSpec; print("File" in '
-           'DAGSpec("pipeline.serve.yaml").to_dag().clients)')
-    yield _mock_docker_calls(monkeypatch, cmd, 'sample_project', 'latest')
-
-
-@pytest.fixture
 def mock_docker_calls_callables(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '

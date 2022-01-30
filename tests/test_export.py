@@ -142,14 +142,6 @@ def test_stops_if_no_tasks(monkeypatch, mock_docker_calls, tmp_sample_project,
     assert 'has no tasks to submit.' in captured.out
 
 
-@pytest.fixture
-def mock_docker_calls_serve_sample(monkeypatch):
-    cmd = ('from ploomber.spec import '
-           'DAGSpec; print("File" in '
-           'DAGSpec("pipeline.serve.yaml").to_dag().clients)')
-    yield _mock_docker_calls(monkeypatch, cmd, 'sample_project', 'latest')
-
-
 # TODO: add missing, enable aws batch
 @pytest.mark.parametrize(
     'CLASS',
