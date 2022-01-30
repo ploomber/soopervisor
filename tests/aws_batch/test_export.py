@@ -5,20 +5,9 @@ import shutil
 import pytest
 import boto3
 
-from conftest import _mock_docker_calls
 from soopervisor.aws import batch
 from soopervisor.aws.batch import commons
 from ploomber.util import util
-
-
-# TODO: check for duplicates
-@pytest.fixture
-def monkeypatch_serve_docker(monkeypatch):
-    path = str(Path('src', 'my_project', 'pipeline.serve.yaml'))
-    cmd = ('from ploomber.spec import '
-           'DAGSpec; print("File" in '
-           f'DAGSpec("{path}").to_dag().clients)')
-    yield _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
 
 
 def test_error_if_missing_boto3(monkeypatch, backup_packaged_project):
@@ -104,7 +93,7 @@ def index_commands_by_name(submitted):
         ['force', ['--force']],
     ],
 )
-def test_export(mock_batch, mock_my_project, monkeypatch,
+def test_export(mock_batch, mock_docker_calls_serve, monkeypatch,
                 monkeypatch_docker_client, backup_packaged_project, mode, args,
                 skip_repo_validation):
     p_home_mock = Mock()
@@ -172,7 +161,7 @@ def test_export(mock_batch, mock_my_project, monkeypatch,
 
 
 # TODO: check with non-packaged project
-def test_checks_the_right_spec(mock_batch, monkeypatch_serve_docker,
+def test_checks_the_right_spec(mock_batch, mock_docker_calls_serve,
                                monkeypatch, monkeypatch_docker_client,
                                backup_packaged_project, skip_repo_validation):
     shutil.copy('src/my_project/pipeline.yaml',
@@ -189,4 +178,4 @@ def test_checks_the_right_spec(mock_batch, monkeypatch_serve_docker,
     expected = ('docker', 'run', 'my_project:0.1dev', 'ploomber', 'status',
                 '--entry-point',
                 str(Path('src', 'my_project', 'pipeline.serve.yaml')))
-    assert monkeypatch_serve_docker.calls[2] == expected
+    assert mock_docker_calls_serve.calls[2] == expected

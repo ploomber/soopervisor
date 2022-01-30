@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import boto3
 
-from conftest import _mock_docker_calls, git_init
+from conftest import git_init
 from soopervisor.airflow.export import (AirflowExporter, commons as
                                         airflow_commons)
 from soopervisor.argo.export import (ArgoWorkflowsExporter, commons as
