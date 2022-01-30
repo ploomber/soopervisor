@@ -11,7 +11,7 @@ from airflow.providers.cncf.kubernetes.operators.kubernetes_pod \
 from airflow.operators.bash_operator import BashOperator
 import pytest
 
-from conftest import _mock_docker_calls, git_init
+from conftest import _mock_commander_calls, git_init
 from soopervisor.airflow.export import AirflowExporter, commons
 
 
@@ -20,7 +20,7 @@ def mock_docker_calls_callables(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
            'DAGSpec("pipeline.yaml").to_dag().clients)')
-    yield _mock_docker_calls(monkeypatch, cmd, 'callables', 'latest')
+    yield _mock_commander_calls(monkeypatch, cmd, 'callables', 'latest')
 
 
 # need to modify the env.airflow.yaml name

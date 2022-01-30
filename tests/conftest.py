@@ -31,7 +31,7 @@ def git_init():
     subprocess.check_call(['git', 'commit', '-m', 'commit'])
 
 
-def _mock_docker_calls(monkeypatch, cmd, proj, tag):
+def _mock_commander_calls(monkeypatch, cmd, proj, tag):
     """
     Mock subprocess calls made by ploomber.io._commander.Commander (which
     is used interally by the soopervisor.commons.docker module).
@@ -400,7 +400,7 @@ def mock_docker_calls(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
            'DAGSpec("pipeline.yaml").to_dag().clients)')
-    yield _mock_docker_calls(monkeypatch, cmd, 'sample_project', 'latest')
+    yield _mock_commander_calls(monkeypatch, cmd, 'sample_project', 'latest')
 
 
 @pytest.fixture
@@ -409,7 +409,7 @@ def mock_docker_my_project_serve(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
            f'DAGSpec("{path}").to_dag().clients)')
-    tester = _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
+    tester = _mock_commander_calls(monkeypatch, cmd, 'my_project', '0.1dev')
     yield tester
 
 
@@ -419,7 +419,7 @@ def mock_docker_my_project(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
            f'DAGSpec("{path}").to_dag().clients)')
-    tester = _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
+    tester = _mock_commander_calls(monkeypatch, cmd, 'my_project', '0.1dev')
     yield tester
 
 
@@ -428,4 +428,4 @@ def mock_docker_sample_project_serve(monkeypatch):
     cmd = ('from ploomber.spec import '
            'DAGSpec; print("File" in '
            'DAGSpec("pipeline.serve.yaml").to_dag().clients)')
-    yield _mock_docker_calls(monkeypatch, cmd, 'sample_project', 'latest')
+    yield _mock_commander_calls(monkeypatch, cmd, 'sample_project', 'latest')
