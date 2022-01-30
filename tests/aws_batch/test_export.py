@@ -8,7 +8,6 @@ import boto3
 from conftest import _mock_docker_calls
 from soopervisor.aws import batch
 from soopervisor.aws.batch import commons
-from soopervisor.exceptions import ConfigurationError
 from ploomber.util import util
 
 
@@ -178,20 +177,6 @@ def test_export(mock_batch, monkeypatch_docker, monkeypatch,
         'features': ['ploomber', 'task', 'features'] + entry + args,
         'fit': ['ploomber', 'task', 'fit'] + entry + args
     }
-
-
-def test_validates_repository(mock_batch, monkeypatch_docker, monkeypatch,
-                              monkeypatch_docker_client,
-                              backup_packaged_project):
-    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
-    exporter.add()
-
-    with pytest.raises(ConfigurationError) as excinfo:
-        exporter.export(mode='incremental')
-
-    assert str(
-        excinfo.value) == ("Invalid repository 'your-repository/name' "
-                           "in soopervisor.yaml, please add a valid value.")
 
 
 # TODO: check with non-packaged project

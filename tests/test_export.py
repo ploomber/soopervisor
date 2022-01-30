@@ -67,15 +67,6 @@ def test_add_creates_necessary_files(CLASS_, files, tmp_sample_project,
     assert set(os.listdir('serve')) == files
 
 
-# TODO: this is still duplicated in a few places
-@pytest.fixture
-def mock_docker_calls(monkeypatch):
-    cmd = ('from ploomber.spec import '
-           'DAGSpec; print("File" in '
-           'DAGSpec("pipeline.yaml").to_dag().clients)')
-    yield _mock_docker_calls(monkeypatch, cmd, 'sample_project', 'latest')
-
-
 @pytest.fixture
 def monkeypatch_boto3_batch_client(monkeypatch):
     """

@@ -384,3 +384,12 @@ def monkeypatch_docker_client(monkeypatch):
     https://github.com/marketplace/actions/setup-docker - this takes too long
     """
     monkeypatch.setattr(moto.batch.models.docker, 'from_env', Mock())
+
+
+# TODO: this is still duplicated in a few places
+@pytest.fixture
+def mock_docker_calls(monkeypatch):
+    cmd = ('from ploomber.spec import '
+           'DAGSpec; print("File" in '
+           'DAGSpec("pipeline.yaml").to_dag().clients)')
+    yield _mock_docker_calls(monkeypatch, cmd, 'sample_project', 'latest')
