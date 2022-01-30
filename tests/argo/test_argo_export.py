@@ -10,19 +10,8 @@ from argo.workflows.dsl import Workflow
 from ploomber.spec import DAGSpec
 from click.testing import CliRunner
 
-from conftest import _mock_docker_calls
 from soopervisor.argo.export import ArgoWorkflowsExporter, commons
 from soopervisor import cli
-
-
-@pytest.fixture
-def mock_docker_calls(monkeypatch):
-    path = str(Path('src', 'my_project', 'pipeline.yaml'))
-    cmd = ('from ploomber.spec import '
-           'DAGSpec; print("File" in '
-           f'DAGSpec("{path}").to_dag().clients)')
-    tester = _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
-    yield tester
 
 
 @pytest.mark.parametrize('mode, args', [
@@ -31,7 +20,7 @@ def mock_docker_calls(monkeypatch):
     ['force', ' --force'],
 ],
                          ids=['incremental', 'regular', 'force'])
-def test_export(mock_docker_calls, backup_packaged_project, monkeypatch, mode,
+def test_export(mock_my_project, backup_packaged_project, monkeypatch, mode,
                 args, skip_repo_validation):
     load_tasks_mock = Mock(wraps=commons.load_tasks)
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
@@ -87,7 +76,7 @@ def test_export(mock_docker_calls, backup_packaged_project, monkeypatch, mode,
     ])
 
 
-def test_custom_volumes(mock_docker_calls, backup_packaged_project,
+def test_custom_volumes(mock_my_project, backup_packaged_project,
                         skip_repo_validation):
     exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
                                          env_name='serve')
@@ -131,8 +120,7 @@ def test_custom_volumes(mock_docker_calls, backup_packaged_project,
     }]
 
 
-def test_export_with_null_repository(mock_docker_calls,
-                                     backup_packaged_project,
+def test_export_with_null_repository(mock_my_project, backup_packaged_project,
                                      skip_repo_validation, capsys):
     exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
                                          env_name='serve')

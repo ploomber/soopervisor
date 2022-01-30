@@ -11,15 +11,7 @@ from soopervisor.aws.batch import commons
 from ploomber.util import util
 
 
-@pytest.fixture
-def monkeypatch_docker(monkeypatch):
-    path = str(Path('src', 'my_project', 'pipeline.yaml'))
-    cmd = ('from ploomber.spec import '
-           'DAGSpec; print("File" in '
-           f'DAGSpec("{path}").to_dag().clients)')
-    yield _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
-
-
+# TODO: check for duplicates
 @pytest.fixture
 def monkeypatch_serve_docker(monkeypatch):
     path = str(Path('src', 'my_project', 'pipeline.serve.yaml'))
@@ -112,7 +104,7 @@ def index_commands_by_name(submitted):
         ['force', ['--force']],
     ],
 )
-def test_export(mock_batch, monkeypatch_docker, monkeypatch,
+def test_export(mock_batch, mock_my_project, monkeypatch,
                 monkeypatch_docker_client, backup_packaged_project, mode, args,
                 skip_repo_validation):
     p_home_mock = Mock()

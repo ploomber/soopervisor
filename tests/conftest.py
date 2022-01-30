@@ -411,3 +411,13 @@ def mock_docker_calls_serve(monkeypatch):
            f'DAGSpec("{path}").to_dag().clients)')
     tester = _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
     yield tester
+
+
+@pytest.fixture
+def mock_my_project(monkeypatch):
+    path = str(Path('src', 'my_project', 'pipeline.yaml'))
+    cmd = ('from ploomber.spec import '
+           'DAGSpec; print("File" in '
+           f'DAGSpec("{path}").to_dag().clients)')
+    tester = _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
+    yield tester

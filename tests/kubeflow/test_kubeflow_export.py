@@ -4,21 +4,7 @@ from unittest.mock import Mock, ANY
 import yaml
 import pytest
 
-from conftest import _mock_docker_calls
 from soopervisor.kubeflow.export import KubeflowExporter, commons
-
-
-@pytest.fixture
-def mock_docker_calls(monkeypatch):
-    path = str(Path('src', 'my_project', 'pipeline.yaml'))
-    cmd = ('from ploomber.spec import '
-           'DAGSpec; print("File" in '
-           f'DAGSpec("{path}").to_dag().clients)')
-    tester = _mock_docker_calls(monkeypatch,
-                                cmd,
-                                proj='my_project',
-                                tag='0.1dev')
-    yield tester
 
 
 # Test the task output is same as it's product
@@ -28,7 +14,7 @@ def mock_docker_calls(monkeypatch):
     ['force', ' --force'],
 ],
                          ids=['incremental', 'regular', 'force'])
-def test_export(monkeypatch, mock_docker_calls, backup_packaged_project,
+def test_export(monkeypatch, mock_my_project, backup_packaged_project,
                 no_sys_modules_cache, skip_repo_validation, mode, args):
     load_tasks_mock = Mock(wraps=commons.load_tasks)
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
