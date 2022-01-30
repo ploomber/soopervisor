@@ -1,6 +1,14 @@
 Kubeflow
 ========
-.. note:: **The Kubeflow tutorial is in beta! Got questions or found issues?** Reach out to us on `Slack <https://ploomber.io/community/>`_.
+
+.. important::
+
+    The kubeflow integration requires ``soopervvisor>=0.7``
+
+.. important::
+
+    **The Kubeflow tutorial is in beta! Got questions or found issues?**
+    Reach out to us on `Slack <https://ploomber.io/community/>`_.
 
 This tutorial shows you how to export a Ploomber pipeline to Kubeflow.
 
