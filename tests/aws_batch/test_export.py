@@ -180,23 +180,6 @@ def test_export(mock_batch, monkeypatch_docker, monkeypatch,
     }
 
 
-
-def test_skip_tests(mock_batch, monkeypatch_docker, monkeypatch,
-                    monkeypatch_docker_client, backup_packaged_project, capsys,
-                    skip_repo_validation):
-    boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
-    monkeypatch.setattr(batch.boto3, 'client',
-                        lambda name, region_name: boto3_mock)
-
-    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
-    exporter.add()
-    exporter.export(mode='incremental', skip_tests=True)
-
-    captured = capsys.readouterr()
-    assert 'Testing image' not in captured.out
-    assert 'Testing File client' not in captured.out
-
-
 def test_validates_repository(mock_batch, monkeypatch_docker, monkeypatch,
                               monkeypatch_docker_client,
                               backup_packaged_project):
