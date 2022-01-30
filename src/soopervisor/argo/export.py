@@ -14,7 +14,7 @@ except ImportError:
     # if python<3.7
     import importlib_resources as pkg_resources
 
-from soopervisor import assets
+from soopervisor.assets import argo as assets_argo
 from soopervisor import abc
 from soopervisor.commons import docker
 from soopervisor import commons
@@ -35,7 +35,7 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
         """
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
-            e.copy_template('argo-workflows/Dockerfile',
+            e.copy_template('argo/Dockerfile',
                             conda=Path('environment.lock.yml').exists(),
                             setup_py=Path('setup.py').exists(),
                             env_name=env_name)
@@ -131,7 +131,7 @@ def _make_argo_spec(tasks, args, env_name, cfg, pkg_name, target_image):
         volume_mounts = []
 
     argo_spec = yaml.safe_load(
-        pkg_resources.read_text(assets, 'argo-workflow.yaml'))
+        pkg_resources.read_text(assets_argo, 'template.yaml'))
     argo_spec['spec']['volumes'] = volumes
 
     tasks_specs = []
