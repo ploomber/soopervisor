@@ -180,17 +180,6 @@ def test_export(mock_batch, monkeypatch_docker, monkeypatch,
     }
 
 
-def test_stops_if_no_tasks(monkeypatch, backup_packaged_project, capsys):
-    load_tasks_mock = Mock(return_value=([], ['--entry-point pipeline.yaml']))
-    monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
-
-    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
-    exporter.add()
-    exporter.export(mode='incremental')
-
-    captured = capsys.readouterr()
-    assert 'has no tasks to submit.' in captured.out
-
 
 def test_skip_tests(mock_batch, monkeypatch_docker, monkeypatch,
                     monkeypatch_docker_client, backup_packaged_project, capsys,

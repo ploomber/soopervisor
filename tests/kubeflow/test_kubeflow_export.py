@@ -105,17 +105,3 @@ def test_export(monkeypatch, mock_docker_calls, backup_packaged_project,
         assert args in container_cmd
     assert get_task['container']['image'] == 'image_target:0.1dev'
     assert spec['metadata']['generateName'] == 'my-project-'
-
-
-def test_stops_if_no_tasks(mock_docker_calls, backup_packaged_project,
-                           monkeypatch, capsys):
-    load_tasks_mock = Mock(return_value=([], []))
-    monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
-
-    exporter = KubeflowExporter.new(path_to_config='soopervisor.yaml',
-                                    env_name='serve')
-    exporter.add()
-    exporter.export(mode='incremental', until=None)
-
-    captured = capsys.readouterr()
-    assert 'has no tasks to submit.' in captured.out

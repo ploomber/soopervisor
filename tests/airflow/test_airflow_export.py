@@ -190,23 +190,6 @@ def test_export_airflow_callables(monkeypatch, mock_docker_calls_callables,
     assert {tuple(t.cmds) for t in td.values()} == {('bash', '-cx')}
 
 
-def test_stops_if_no_tasks(monkeypatch, mock_docker_calls, tmp_sample_project,
-                           no_sys_modules_cache, capsys):
-    load_tasks_mock = Mock(return_value=([], []))
-    monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
-
-    exporter = AirflowExporter.new(path_to_config='soopervisor.yaml',
-                                   env_name='serve')
-
-    git_init()
-
-    exporter.add()
-    exporter.export(mode='incremental')
-
-    captured = capsys.readouterr()
-    assert 'has no tasks to submit.' in captured.out
-
-
 def test_validates_repository(monkeypatch, mock_docker_calls,
                               tmp_sample_project, no_sys_modules_cache):
     exporter = AirflowExporter.new(path_to_config='soopervisor.yaml',
