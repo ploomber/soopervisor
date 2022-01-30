@@ -13,7 +13,6 @@ import pytest
 
 from conftest import _mock_docker_calls, git_init
 from soopervisor.airflow.export import AirflowExporter, commons
-from soopervisor.exceptions import ConfigurationError
 
 
 @pytest.fixture
@@ -188,18 +187,3 @@ def test_export_airflow_callables(monkeypatch, mock_docker_calls_callables,
 
     assert {t.image for t in td.values()} == {'image_target:latest'}
     assert {tuple(t.cmds) for t in td.values()} == {('bash', '-cx')}
-
-
-def test_validates_repository(monkeypatch, mock_docker_calls,
-                              tmp_sample_project, no_sys_modules_cache):
-    exporter = AirflowExporter.new(path_to_config='soopervisor.yaml',
-                                   env_name='serve')
-
-    exporter.add()
-
-    with pytest.raises(ConfigurationError) as excinfo:
-        exporter.export(mode='incremental')
-
-    assert str(
-        excinfo.value) == ("Invalid repository 'your-repository/name' "
-                           "in soopervisor.yaml, please add a valid value.")

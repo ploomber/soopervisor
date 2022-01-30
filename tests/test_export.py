@@ -16,6 +16,7 @@ from soopervisor.kubeflow.export import (KubeflowExporter, commons as
                                          kubeflow_commons)
 from soopervisor.shell.export import SlurmExporter
 from soopervisor.aws import batch
+from soopervisor.exceptions import ConfigurationError
 
 CLASSES = [
     AirflowExporter,
@@ -215,3 +216,22 @@ def test_checks_the_right_spec_pkg(mock_docker_calls_serve,
                 '--entry-point',
                 str(Path('src', 'my_project', 'pipeline.serve.yaml')))
     assert mock_docker_calls_serve.calls[2] == expected
+
+
+# TODO: add missing
+@pytest.mark.parametrize('CLASS', [
+    ArgoWorkflowsExporter,
+    KubeflowExporter,
+    AWSBatchExporter,
+    AirflowExporter,
+])
+def test_validates_repository(mock_docker_calls, tmp_sample_project, CLASS):
+    exporter = CLASS.new(path_to_config='soopervisor.yaml', env_name='serve')
+    exporter.add()
+
+    with pytest.raises(ConfigurationError) as excinfo:
+        exporter.export(mode='incremental', until=None, skip_tests=True)
+
+    assert str(
+        excinfo.value) == ("Invalid repository 'your-repository/name' "
+                           "in soopervisor.yaml, please add a valid value.")

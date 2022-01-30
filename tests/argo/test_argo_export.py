@@ -13,7 +13,6 @@ from click.testing import CliRunner
 from conftest import _mock_docker_calls
 from soopervisor.argo.export import ArgoWorkflowsExporter, commons
 from soopervisor import cli
-from soopervisor.exceptions import ConfigurationError
 
 
 @pytest.fixture
@@ -197,16 +196,3 @@ def test_generate_valid_argo_specs(name, tmp_projects):
     # validate argo workflow
     content = Path('serve', 'argo.yaml').read_text()
     assert Workflow.from_dict(yaml.safe_load(content))
-
-
-def test_validates_repository(mock_docker_calls, tmp_sample_project):
-    exporter = ArgoWorkflowsExporter.new(path_to_config='soopervisor.yaml',
-                                         env_name='serve')
-    exporter.add()
-
-    with pytest.raises(ConfigurationError) as excinfo:
-        exporter.export(mode='incremental', until=None, skip_tests=True)
-
-    assert str(
-        excinfo.value) == ("Invalid repository 'your-repository/name' "
-                           "in soopervisor.yaml, please add a valid value.")
