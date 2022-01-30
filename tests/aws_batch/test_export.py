@@ -11,6 +11,24 @@ from soopervisor.aws.batch import commons
 from ploomber.util import util
 
 
+@pytest.fixture
+def monkeypatch_docker(monkeypatch):
+    path = str(Path('src', 'my_project', 'pipeline.yaml'))
+    cmd = ('from ploomber.spec import '
+           'DAGSpec; print("File" in '
+           f'DAGSpec("{path}").to_dag().clients)')
+    yield _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
+
+
+@pytest.fixture
+def monkeypatch_serve_docker(monkeypatch):
+    path = str(Path('src', 'my_project', 'pipeline.serve.yaml'))
+    cmd = ('from ploomber.spec import '
+           'DAGSpec; print("File" in '
+           f'DAGSpec("{path}").to_dag().clients)')
+    yield _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
+
+
 def test_error_if_missing_boto3(monkeypatch, backup_packaged_project):
 
     exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
@@ -84,24 +102,6 @@ def index_commands_by_name(submitted):
         key: val['containerOverrides']['command']
         for key, val in submitted.items()
     }
-
-
-@pytest.fixture
-def monkeypatch_docker(monkeypatch):
-    path = str(Path('src', 'my_project', 'pipeline.yaml'))
-    cmd = ('from ploomber.spec import '
-           'DAGSpec; print("File" in '
-           f'DAGSpec("{path}").to_dag().clients)')
-    yield _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
-
-
-@pytest.fixture
-def monkeypatch_serve_docker(monkeypatch):
-    path = str(Path('src', 'my_project', 'pipeline.serve.yaml'))
-    cmd = ('from ploomber.spec import '
-           'DAGSpec; print("File" in '
-           f'DAGSpec("{path}").to_dag().clients)')
-    yield _mock_docker_calls(monkeypatch, cmd, 'my_project', '0.1dev')
 
 
 @pytest.mark.parametrize(

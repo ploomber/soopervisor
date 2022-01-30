@@ -22,6 +22,8 @@ from soopervisor import commons
 
 
 def git_init():
+    """Creates an empty git repository and commits
+    """
     subprocess.check_call(['git', 'init'])
     subprocess.check_call(['git', 'config', 'user.email', 'ci@ploomberio'])
     subprocess.check_call(['git', 'config', 'user.name', 'Ploomber'])
@@ -56,6 +58,8 @@ def _mock_docker_calls(monkeypatch, cmd, proj, tag):
 
 
 def _path_to_tests():
+    """Returns absolute path to the tests/ directory
+    """
     return Path(__file__).absolute().parent
 
 
@@ -77,6 +81,8 @@ def external_access(monkeypatch_session):
 
 @pytest.fixture
 def root_path():
+    """Returns absolute path to the root directory
+    """
     return _path_to_tests().parent
 
 
@@ -87,6 +93,8 @@ def faker():
 
 @pytest.fixture
 def tmp_empty(tmp_path):
+    """Creates a temporary empty folder and moves to it
+    """
     old = os.getcwd()
     os.chdir(str(tmp_path))
     yield str(Path(tmp_path).resolve())
