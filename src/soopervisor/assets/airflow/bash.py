@@ -3,7 +3,7 @@ from pathlib import Path
 
 from airflow import DAG
 from airflow.utils.dates import days_ago
-from airflow.operators.bash_operator import BashOperator
+from airflow.operators.bash import BashOperator
 
 default_args = {
     'start_date': days_ago(0),

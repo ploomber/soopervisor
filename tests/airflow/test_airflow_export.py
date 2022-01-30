@@ -8,7 +8,7 @@ import json
 from airflow import DAG
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod \
     import KubernetesPodOperator
-from airflow.operators.bash_operator import BashOperator
+from airflow.operators.bash import BashOperator
 from airflow.operators.docker_operator import DockerOperator
 import pytest
 

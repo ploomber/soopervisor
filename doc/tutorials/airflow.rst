@@ -3,7 +3,11 @@ Airflow
 
 .. important:: This tutorial requires soopervisor ``0.6.1`` or higher
 
-.. note:: **Got questions?** Reach out to us on `Slack <https://ploomber.io/community/>`_.
+.. note::
+
+    This tutorial exports an Airflow DAG using the ``KubernetesPodOperator``, to
+    use alternative Operators, see :doc:`Airflow cookbook <../cookbook/airflow>`.
+    **Got questions?** Reach out to us on `Slack <https://ploomber.io/community/>`_.
 
 This tutorial shows you how to export a Ploomber pipeline to Airflow.
 
@@ -77,7 +81,7 @@ Get sample Ploomber pipeline
     ploomber examples -n templates/ml-intermediate -o ml-intermediate
     cd ml-intermediate
 
-    cp environment.yml environment.lock.yml
+    cp requirements.txt requirements.lock.txt
     # configure development environment
     pip install ploomber soopervisor
     pip install -r requirements.txt
@@ -164,7 +168,7 @@ If everything is working, you should see the ``ml-intermediate`` DAG here:
     airflow dags list
 
 
-Let's start the airflow UI and scheduler:
+Let's start the airflow UI and scheduler (this will take a few seconds):
 
 .. NOTE: we're starting airflow until this point because if we start it
 .. at the beginning and then add the DAG, Airflow won't pick it up
@@ -284,34 +288,9 @@ To delete the cluster:
     k3d cluster delete mycluster
 
 
-Using the DockerOperator
-------------------------
+Using other Operator
+--------------------
 
-If you prefer so, you may switch ``KubernetesPodOperator`` for
-``DockerOperator``. Edit the generated ``.py`` file:
+If you want to generate Airflow DAGs using other operators, check out the
+:doc:`Airflow cookbook <../cookbook/airflow>`
 
-.. code-block:: python
-
-    # ...
-    # ...
-
-    from airflow.providers.docker.operators.docker import DockerOperator
-
-    # ...
-    # ...
-
-    for task in spec['tasks']:
-        DockerOperator(image=spec['image'],
-                       command=task['command'],
-                       dag=dag,
-                       task_id=task['name'],
-                       # other arguments you may want...
-                       )
-
-
-.. attention::
-
-    Due to a
-    `bug in the DockerOperator <https://github.com/apache/airflow/issues/13487>`_,
-    we must set ``enable_xcom_pickling = True`` in ``airflow.cfg`` file. By
-    default, this file is located at ``~/airflow/airflow.cfg``.

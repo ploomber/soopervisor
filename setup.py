@@ -52,6 +52,8 @@ DEV = [
     'apache-airflow',
     # KubernetesPodOperator
     'apache-airflow-providers-cncf-kubernetes',
+    # DockerOperator
+    'apache-airflow-providers-docker',
     # exporting to kubeflow
     'kfp',
     # to validate argo specs
