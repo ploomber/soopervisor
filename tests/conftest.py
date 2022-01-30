@@ -21,6 +21,19 @@ from ploomber.io import _commander, _commander_tester
 from soopervisor import commons
 
 
+class CustomCommander(_commander.Commander):
+    """
+    A subclass of Commander that ignores calls to
+    CustomCommander.run('docker', ...)
+    """
+
+    def run(self, *args, **kwargs):
+        if args[0] == 'docker':
+            print(f'ignoring: {args} {kwargs}')
+        else:
+            return super().run(*args, **kwargs)
+
+
 def git_init():
     """Creates an empty git repository and commits
     """

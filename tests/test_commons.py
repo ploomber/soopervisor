@@ -14,6 +14,16 @@ from ploomber.io._commander import Commander
 from soopervisor.commons import source, conda, dependencies
 from soopervisor import commons
 from soopervisor.exceptions import MissingDockerfileError
+from soopervisor.abc import AbstractDockerConfig
+
+from conftest import CustomCommander
+
+
+class ConcreteDockerConfig(AbstractDockerConfig):
+
+    @classmethod
+    def get_backend_value(self):
+        return 'backend-value'
 
 
 @pytest.fixture
@@ -458,3 +468,64 @@ def test_error_if_missing_dockerfile(tmp_empty):
                              entry_point=Mock())
 
     assert excinfo.value.env_name == 'some_name'
+
+
+def _list_files(path):
+    """Return files in a .tar.gz file, ignoring hidden files
+    """
+    with tarfile.open(path) as tar:
+        return set(f for f in tar.getnames()
+                   if not Path(f).name.startswith('.'))
+
+
+@pytest.mark.xfail(reason='current implementation overwrites files')
+def test_cp_ploomber_home(tmp_empty, monkeypatch):
+    monkeypatch.setattr(commons.docker.telemetry, 'get_home_dir', lambda: '.')
+
+    Path('stats').mkdir()
+    Path('stats', 'another').touch()
+    Path('dist').mkdir()
+    Path('file').touch()
+    path = Path('dist', 'some-package.tar.gz')
+
+    with tarfile.open(path, 'w:gz') as tar:
+        tar.add('file')
+
+    before = _list_files(path)
+    commons.docker.cp_ploomber_home('some-package')
+    after = _list_files(path)
+
+    assert before == {'file'}
+    assert after == {'ploomber/stats', 'ploomber/stats/another', 'file'}
+
+
+def test_docker_build(tmp_sample_project):
+    Path('some-env').mkdir()
+    Path('some-env', 'Dockerfile').touch()
+
+    with CustomCommander(workspace='some-env') as cmdr:
+        commons.docker.build(cmdr,
+                             ConcreteDockerConfig(),
+                             'some-env',
+                             until=None,
+                             entry_point='pipeline.yaml')
+
+    existing = _list_files(Path('dist', 'sample_project.tar.gz'))
+
+    expected = {
+        'sample_project/env.serve.yaml',
+        'sample_project',
+        'sample_project/some-env/Dockerfile',
+        'sample_project/clean.py',
+        'sample_project/plot.py',
+        'sample_project/environment.yml',
+        'sample_project/env.yaml',
+        'sample_project/README.md',
+        'sample_project/environment.lock.yml',
+        'sample_project/some-env',
+        'sample_project/some-env/environment.lock.yml',
+        'sample_project/raw.py',
+        'sample_project/pipeline.yaml',
+    }
+
+    assert existing == expected

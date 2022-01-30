@@ -92,7 +92,6 @@ def build(e,
                     ignore_git=ignore_git)
         source.compress_dir(e, target, Path('dist', f'{pkg_name}.tar.gz'))
 
-    cp_ploomber_home(pkg_name)
     e.cp('dist')
 
     e.cd(env_name)
