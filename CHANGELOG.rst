@@ -13,6 +13,9 @@ CHANGELOG
 * Showing a warning if source dist is >5MB  (#53)
 * ``soopervisor add`` adds a default ``exclude`` value by extracting product paths from ``pipeline.yaml``
 * Copying user settings when generating the Docker image
+* Experimental Kubeflow integration
+* Airflow integration allows to choose between ``BashOperator`` and ``KubernetesPodOperator`` using ``--preset``
+* Many modules and test cases re-written for better code quality and maintainability
 
 0.6.1 (2022-01-16)
 ------------------
