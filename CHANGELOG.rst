@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.6.2dev
---------
+0.7 (2022-01-31)
+----------------
 * Improves CLI documentation
 * Adds ``--git-ignore`` to documentation
 * Various documentation improvements
