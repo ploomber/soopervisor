@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+0.7.1dev
+--------
+
 0.7 (2022-01-31)
 ----------------
 * Improves CLI documentation
