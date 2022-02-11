@@ -10,6 +10,12 @@ Airflow
 Step 1: Add target environment
 ------------------------------
 
+.. tip::
+
+    To get a sample pipeline to try this out,
+    `see this. <https://docs.ploomber.io/en/latest/user-guide/templates.html#downloading-a-template>`_
+
+
 ``KubernetesPodOperator``
 *************************
 
@@ -67,3 +73,11 @@ Step 2: Generate Airflow DAG
 
     # export target environment named 'airflow'
     soopervisor export airflow
+
+
+.. important::
+
+    For your pipeline to run successfully, tasks must write their outputs to a
+    common location. You can do this either by
+    creating a shared disk or by adding a storage client.
+    :doc:`Click here to learn more. <../user-guide/task-comm>`

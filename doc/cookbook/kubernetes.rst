@@ -10,6 +10,11 @@ Kubernetes (Argo)
 Step 1: Add target environment
 ------------------------------
 
+.. tip::
+
+    To get a sample pipeline to try this out,
+    `see this. <https://docs.ploomber.io/en/latest/user-guide/templates.html#downloading-a-template>`_
+
 .. code-block:: sh
 
     # add a target environment named 'argo'
@@ -30,7 +35,7 @@ Step 2: Generate Argo Spec (``YAML``)
     # generate argo yaml spec
     soopervisor export argo --skip-tests  --ignore-git
 
-The command will generate build the docker image, push it to the repository
+The command will build the docker image, push it to the repository
 and generate an Argo spec at ``argo/argo.yaml``.
 
 Note that the command above will only export outdated tasks (the ones whose
