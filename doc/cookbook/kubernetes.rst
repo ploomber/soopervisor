@@ -45,7 +45,7 @@ tasks:
 
 .. important::
 
-    For your pipeline to run successfully, tasks write their outputs in a
+    For your pipeline to run successfully, tasks must write their outputs to a
     common location. You can do this either by
     creating a shared disk or by adding a storage client.
     :doc:`Click here to learn more. <../user-guide/task-comm>`

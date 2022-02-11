@@ -158,6 +158,7 @@ configuration details will change, but the API remains the same:
 
    cookbook/airflow
    cookbook/kubernetes
+   cookbook/slurm
 
 .. toctree::
    :caption: User Guide
@@ -175,6 +176,7 @@ configuration details will change, but the API remains the same:
 
    api/cli
    api/kubernetes
+   api/slurm
 
 
 .. toctree::
