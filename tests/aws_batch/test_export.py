@@ -21,7 +21,8 @@ def test_error_if_missing_boto3(monkeypatch, backup_packaged_project):
     with pytest.raises(ImportError) as excinfo:
         exporter.export(mode='incremental')
 
-    assert 'boto3 is required to use AWSBatchExporter' in str(excinfo.value)
+    assert ("'boto3' is required to use 'AWSBatchExporter'"
+            in str(excinfo.value))
 
 
 def process_submit_job_call(call):

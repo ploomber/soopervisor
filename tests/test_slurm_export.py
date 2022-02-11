@@ -123,17 +123,10 @@ def test_slurm_export_sample_project(monkeypatch_slurm, tmp_sample_project):
              check=True)
     ])
 
-    expected = """\
-#!/bin/bash
-#SBATCH --job-name=plot
-#SBATCH --output=result.out
-#
+    script = Path('_job.sh').read_text()
 
-source myproj/bin/activate
-srun ploomber task plot --entry-point pipeline.yaml\
-"""
-
-    assert Path('_job.sh').read_text() == expected
+    assert '#SBATCH --job-name=plot' in script
+    assert 'srun ploomber task plot --entry-point pipeline.yaml' in script
 
 
 def test_slurm_export_sample_project_matches_script_file(
