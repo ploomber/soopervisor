@@ -1,12 +1,11 @@
 Full workflow
 =============
 
-.. important:: This tutorial requires soopervisor ``0.6.1`` or higher
 
 .. important::
 
-    This tutorial requires ``soopervisor`` ``0.5.2`` or higher, and
-    ``soorgeon`` ``0.0.2`` or higher.
+    This tutorial requires ``soopervisor`` ``0.6.2`` or higher, and
+    ``soorgeon`` ``0.0.10`` or higher.
 
 
 This tutorial shows how to go from a monolithic Jupyter notebook to a
@@ -33,20 +32,22 @@ We provide a Docker image so you can quickly run this example:
     git clone https://github.com/ploomber/soopervisor
     cd soopervisor/tutorials/workflow
 
-    # create a directory to store the pipeline output
-    export SHARED_DIR=$HOME/ploomber-workflow
-    mkdir -p $SHARED_DIR
-
     # build image
     docker build --tag ploomber-workflow .
+
+    # create a directory to store the pipeline output
+    export SHARED_DIR=$HOME/ploomber-workflow
+    rm -rf $SHARED_DIR
+    mkdir -p $SHARED_DIR
 
     # start (takes ~1 minute to be ready)
     docker run -i -t \
         --privileged=true -v /var/run/docker.sock:/var/run/docker.sock \
-        --volume $SHARED_DIR:/mnt/shared-folder \
+        --volume $SHARED_DIR:/mnt/project \
         --env SHARED_DIR \
         --env PLOOMBER_STATS_ENABLED=false \
         -p 2746:2746 \
+        -p 8888:8888 \
         ploomber-workflow
 
 
@@ -56,8 +57,8 @@ We provide a Docker image so you can quickly run this example:
     ``docker`` commands inside the container.
     `More on that here <https://www.docker.com/blog/docker-can-now-run-within-docker/>`_
 
-.. Upon initialization, JupyterLab will be running at https://127.0.0.1:8888
 
+Upon initialization, JupyterLab will be running at http://127.0.0.1:8888
 
 Refactor notebook
 -----------------
@@ -66,7 +67,7 @@ First, we use ``soorgeon`` to refactor the notebook:
 
 .. code-block:: bash
 
-    soorgeon refactor nb.ipynb --product-prefix /mnt/shared-folder/output
+    soorgeon refactor nb.ipynb -p /mnt/project/output -d parquet
 
 
 We can generate a plot to visualize the dependencies:
@@ -91,6 +92,10 @@ Soopervisor allows you to configure the target platform using a
 
 .. code-block:: bash
 
+    # soopervisor add requires a requirements.lock.txt file
+    cp requirements.txt requirements.lock.txt
+
+    # add the taget environment
     soopervisor add training --backend argo-workflows
 
 
@@ -112,10 +117,10 @@ We finished configuring; let's now submit the workflow:
 .. code-block:: bash
 
     # build docker image and generate an argo's yaml spec
-    soopervisor export training --skip-tests --ignore-git
+    soopervisor export training --skip-tests --ignore-git --mode force
 
     # import image to the k8s cluster
-    k3d image import shared-folder:latest --cluster mycluster
+    k3d image import project:latest --cluster mycluster
 
     # submit workflow
     argo submit -n argo --watch training/argo.yaml
@@ -132,7 +137,7 @@ Once the execution finishes, take a look at the generated artifacts:
 
 .. code-block:: sh
 
-    ls /mnt/shared-folder
+    ls /mnt/project
 
 
 .. tip:: 
@@ -143,7 +148,7 @@ Once the execution finishes, take a look at the generated artifacts:
     .. code-block:: sh
 
         # port forwarding to enable the UI
-        kubectl -n argo port-forward svc/argo-server 2746:2746
+        kubectl -n argo port-forward --address 0.0.0.0 svc/argo-server 2746:2746
 
     Then, open: https://127.0.0.1:2746
 
