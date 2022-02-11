@@ -3,7 +3,9 @@ Airflow
 
 .. note::
 
-    Using the ``--preset`` option requires ``soopervisor>=0.7``
+    This is a quick reference. For a full
+    tutorial, :doc:`click here. <../tutorials/airflow>`
+
 
 Step 1: Add target environment
 ------------------------------
@@ -15,6 +17,10 @@ Step 1: Add target environment
 
     # add a target environment named 'airflow' (uses KubernetesPodOperator)
     soopervisor add airflow --backend airflow
+
+.. note::
+
+    Using the ``--preset`` option requires ``soopervisor>=0.7``
 
 .. code-block:: sh
 
@@ -29,7 +35,7 @@ Step 1: Add target environment
 
     If using ``--preset bash``, the ``BashOperator`` tasks will use
     ``ploomber`` CLI to execute your pipeline. Edit the ``cwd`` argument in
-    ``BashOperator`` so your DAG executes in a directory where it can import
+    ``BashOperator`` so your DAG runs in a directory where it can import
     your project's ``pipeline.yaml`` and source code.
 
 .. code-block:: sh

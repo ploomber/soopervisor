@@ -157,6 +157,7 @@ configuration details will change, but the API remains the same:
    :hidden:
 
    cookbook/airflow
+   cookbook/kubernetes
 
 .. toctree::
    :caption: User Guide
