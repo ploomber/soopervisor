@@ -57,9 +57,9 @@ def add(env_name, backend, preset):
     except Exception as e:
         telemetry.log_api("soopervisor_add_error",
                           metadata={
-                              'type': backend,
+                              'type': backend.value,
                               'env_name': env_name,
-                              'error': e
+                              'error': str(e)
                           })
         raise
 
@@ -68,7 +68,7 @@ def add(env_name, backend, preset):
 
     telemetry.log_api("soopervisor_add_success",
                       metadata={
-                          'type': backend,
+                          'type': backend.value,
                           'env_name': env_name
                       })
 
@@ -107,7 +107,7 @@ def export(env_name, until_build, mode, skip_tests, ignore_git):
 
     telemetry.log_api("soopervisor_export_started",
                       metadata={
-                          'type': backend,
+                          'type': backend.value,
                           'input_args': input_args
                       })
 
@@ -133,15 +133,15 @@ def export(env_name, until_build, mode, skip_tests, ignore_git):
     except Exception as e:
         telemetry.log_api("soopervisor_export_error",
                           metadata={
-                              'type': backend,
+                              'type': backend.value,
                               'input_args': input_args,
-                              'error': e
+                              'error': str(e)
                           })
         raise
 
     telemetry.log_api("soopervisor_export_success",
                       metadata={
-                          'type': backend,
+                          'type': backend.value,
                           'input_args': input_args
                       })
 
