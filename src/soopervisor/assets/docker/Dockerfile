@@ -10,12 +10,12 @@ RUN mamba env update --name base --file project/{{name}} && conda clean --all --
 RUN pip install --requirement project/{{name}} && rm -rf /root/.cache/pip/
 {% endif %}
 
+COPY dist/ploomber /root/.ploomber/
 COPY dist/* project/
 WORKDIR /project/
 
 # extract to get any config files at the root
 RUN tar --strip-components=1 -zxvf *.tar.gz
-RUN cp -r /project/ploomber/ /root/.ploomber/  || echo 'ploomber home does not exist'
 
 {% if setup_py %}
 # install from the source distribution

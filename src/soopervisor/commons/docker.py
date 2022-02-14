@@ -1,4 +1,4 @@
-import tarfile
+import shutil
 from pathlib import Path
 
 from ploomber.io._commander import CommanderStop
@@ -15,16 +15,16 @@ def _validate_repository(repository):
             'in soopervisor.yaml, please add a valid value.')
 
 
-def cp_ploomber_home(pkg_name):
+def cp_ploomber_home(env_name):
     # Generate ploomber home
-    home_path = Path(telemetry.get_home_dir(), 'stats')
+    home_path = Path(telemetry.get_home_dir())
     home_path = home_path.expanduser()
 
+    target = Path(env_name, 'dist', 'ploomber')
+
+    # FIXME: create an empty folder, otherwise docker build will fail
     if home_path.exists():
-        target = Path('dist', f'{pkg_name}.tar.gz')
-        archive = tarfile.open(target, "w:gz")
-        archive.add(home_path, arcname='ploomber/stats')
-        archive.close()
+        shutil.copytree(home_path, target)
 
 
 def build(e,
@@ -92,7 +92,12 @@ def build(e,
                     ignore_git=ignore_git)
         source.compress_dir(e, target, Path('dist', f'{pkg_name}.tar.gz'))
 
+    # copy dist/ (which contains the .tar.gz) {env-name}/dist/
+    # so {env-name}/Dockerfile can copy it into the container
     e.cp('dist')
+
+    # copy ploomber home (~/.ploomber by default) to {env-name}/dist/ploomber
+    cp_ploomber_home(env_name)
 
     e.cd(env_name)
 
@@ -144,14 +149,17 @@ def build(e,
 
     if cfg.repository:
         image_target = cfg.repository
+
         # Adding the latest tag if not a remote repo
         if ":" not in image_target:
             image_target = f'{image_target}:{version}'
+
         e.run('docker',
               'tag',
               image_local,
               image_target,
               description='Tagging')
+
         e.run('docker', 'push', image_target, description='Pushing image')
     else:
         image_target = image_local

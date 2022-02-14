@@ -3,6 +3,7 @@ import tarfile
 import subprocess
 from pathlib import Path
 from unittest.mock import Mock
+from glob import glob
 
 import yaml
 import pytest
@@ -20,7 +21,6 @@ from conftest import CustomCommander
 
 
 class ConcreteDockerConfig(AbstractDockerConfig):
-
     @classmethod
     def get_backend_value(self):
         return 'backend-value'
@@ -470,36 +470,37 @@ def test_error_if_missing_dockerfile(tmp_empty):
     assert excinfo.value.env_name == 'some_name'
 
 
-def _list_files(path):
-    """Return files in a .tar.gz file, ignoring hidden files
-    """
-    with tarfile.open(path) as tar:
-        return set(f for f in tar.getnames()
-                   if not Path(f).name.startswith('.'))
-
-
-@pytest.mark.xfail(reason='current implementation overwrites files')
 def test_cp_ploomber_home(tmp_empty, monkeypatch):
-    monkeypatch.setattr(commons.docker.telemetry, 'get_home_dir', lambda: '.')
+    monkeypatch.setattr(commons.docker.telemetry, 'get_home_dir',
+                        lambda: 'home-dir')
 
-    Path('stats').mkdir()
-    Path('stats', 'another').touch()
-    Path('dist').mkdir()
-    Path('file').touch()
-    path = Path('dist', 'some-package.tar.gz')
+    home = Path('home-dir')
+    home.mkdir()
+    (home / 'some-file').touch()
+    (home / 'dir').mkdir()
+    (home / 'dir' / 'another-file').touch()
 
-    with tarfile.open(path, 'w:gz') as tar:
-        tar.add('file')
+    commons.docker.cp_ploomber_home('some-env')
+    files = glob('some-env/dist/ploomber/**', recursive=True)
 
-    before = _list_files(path)
-    commons.docker.cp_ploomber_home('some-package')
-    after = _list_files(path)
+    assert files == [
+        'some-env/dist/ploomber/',
+        'some-env/dist/ploomber/dir',
+        'some-env/dist/ploomber/dir/another-file',
+        'some-env/dist/ploomber/some-file',
+    ]
 
-    assert before == {'file'}
-    assert after == {'ploomber/stats', 'ploomber/stats/another', 'file'}
 
+def test_docker_build_copies_ploomber_home(tmp_sample_project, monkeypatch):
+    monkeypatch.setattr(commons.docker.telemetry, 'get_home_dir',
+                        lambda: 'home-dir')
 
-def test_docker_build(tmp_sample_project):
+    home = Path('home-dir')
+    home.mkdir()
+    (home / 'some-file').touch()
+    (home / 'dir').mkdir()
+    (home / 'dir' / 'another-file').touch()
+
     Path('some-env').mkdir()
     Path('some-env', 'Dockerfile').touch()
 
@@ -510,22 +511,17 @@ def test_docker_build(tmp_sample_project):
                              until=None,
                              entry_point='pipeline.yaml')
 
-    existing = _list_files(Path('dist', 'sample_project.tar.gz'))
+        files = glob('dist/ploomber/**', recursive=True)
 
-    expected = {
-        'sample_project/env.serve.yaml',
-        'sample_project',
-        'sample_project/some-env/Dockerfile',
-        'sample_project/clean.py',
-        'sample_project/plot.py',
-        'sample_project/environment.yml',
-        'sample_project/env.yaml',
-        'sample_project/README.md',
-        'sample_project/environment.lock.yml',
-        'sample_project/some-env',
-        'sample_project/some-env/environment.lock.yml',
-        'sample_project/raw.py',
-        'sample_project/pipeline.yaml',
-    }
+    assert files == [
+        'dist/ploomber/',
+        'dist/ploomber/dir',
+        'dist/ploomber/dir/another-file',
+        'dist/ploomber/some-file',
+    ]
 
-    assert existing == expected
+
+def test_docker_commands():
+    # test docker commands match what we'd expect
+    # NOTE: test when soopervisor.yaml image contains tag and when it doesn't
+    pass
