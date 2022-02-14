@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+0.7.3dev
+--------
+
 0.7.2 (2022-02-14)
 ------------------
 * Fixes an error that caused ``soopervisor export`` to fail due to non-serializable object
