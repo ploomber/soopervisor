@@ -491,6 +491,10 @@ def test_cp_ploomber_home(tmp_empty, monkeypatch):
     ]
 
 
+def test_cp_ploomber_home_creates_empty_folder_if_home_does_not_exist():
+    # otherwise dockerfile wont work
+    raise NotImplementedError
+
 def test_docker_build_copies_ploomber_home(tmp_sample_project, monkeypatch):
     monkeypatch.setattr(commons.docker.telemetry, 'get_home_dir',
                         lambda: 'home-dir')
@@ -665,3 +669,9 @@ def test_docker_commands_until(tmp_sample_project, until, skip_tests, cfg,
                              skip_tests=skip_tests)
 
     assert cmdr.run.call_args_list == expected
+
+
+def test_dockerfile():
+    # let's actually run a docker build command and see if the image
+    # is working
+    raise NotImplementedError
