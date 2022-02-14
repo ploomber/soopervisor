@@ -1,15 +1,21 @@
 CHANGELOG
 =========
 
-0.7.2dev
---------
+0.7.2 (2022-02-14)
+------------------
+* Fixes an error that caused ``soopervisor export`` to fail due to non-serializable object
 
 0.7.1 (2022-02-13)
 ------------------
+**Important:** We detected a problem with this release when running ``soopervisor export``. Please use ``0.7.2``
+
 * Fixes error that caused docker image building to fail if the repository didn't have a version
 
 0.7 (2022-01-31)
 ----------------
+
+**Important:** We detected a problem with this release when running ``soopervisor export``. Please use ``0.7.2``
+
 * Improves CLI documentation
 * Adds ``--git-ignore`` to documentation
 * Various documentation improvements
