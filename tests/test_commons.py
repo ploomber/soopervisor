@@ -2,7 +2,7 @@ import os
 import tarfile
 import subprocess
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, call, ANY
 from glob import glob
 
 import yaml
@@ -10,7 +10,7 @@ import pytest
 from click import ClickException
 from ploomber.spec import DAGSpec
 from ploomber.executors import Serial
-from ploomber.io._commander import Commander
+from ploomber.io._commander import Commander, CommanderStop
 
 from soopervisor.commons import source, conda, dependencies
 from soopervisor import commons
@@ -521,7 +521,147 @@ def test_docker_build_copies_ploomber_home(tmp_sample_project, monkeypatch):
     ]
 
 
-def test_docker_commands():
-    # test docker commands match what we'd expect
-    # NOTE: test when soopervisor.yaml image contains tag and when it doesn't
-    pass
+_TEST_DAG = ('from ploomber.spec import DAGSpec; '
+             'print("File" in DAGSpec("pipeline.yaml").to_dag().clients)')
+
+_DOCKER_BUILD_CALL = call('docker',
+                          'build',
+                          '.',
+                          '--tag',
+                          'sample_project:latest',
+                          description='Building image')
+
+_DOCKER_TEST_STATUS = call(
+    'docker',
+    'run',
+    'sample_project:latest',
+    'ploomber',
+    'status',
+    '--entry-point',
+    'pipeline.yaml',
+    description='Testing image',
+    error_message='Error while testing your docker image with',
+    hint=ANY)
+
+_DOCKER_TEST_CLIENT = call('docker',
+                           'run',
+                           'sample_project:latest',
+                           'python',
+                           '-c',
+                           _TEST_DAG,
+                           description='Testing File client',
+                           error_message='Missing File client',
+                           hint=ANY,
+                           capture_output=True,
+                           expected_output='True\n',
+                           show_cmd=False)
+
+
+@pytest.mark.parametrize('until, skip_tests, cfg, expected', [
+    [
+        None, False, {},
+        [_DOCKER_BUILD_CALL, _DOCKER_TEST_STATUS, _DOCKER_TEST_CLIENT]
+    ],
+    [None, True, {}, [_DOCKER_BUILD_CALL]],
+    [
+        None, False,
+        dict(repository='repo.domain.com/project'),
+        [
+            _DOCKER_BUILD_CALL, _DOCKER_TEST_STATUS, _DOCKER_TEST_CLIENT,
+            call('docker',
+                 'tag',
+                 'sample_project:latest',
+                 'repo.domain.com/project:latest',
+                 description='Tagging'),
+            call('docker',
+                 'push',
+                 'repo.domain.com/project:latest',
+                 description='Pushing image')
+        ]
+    ],
+    [
+        None, False,
+        dict(repository='repo.domain.com/project:1.2'),
+        [
+            _DOCKER_BUILD_CALL, _DOCKER_TEST_STATUS, _DOCKER_TEST_CLIENT,
+            call('docker',
+                 'tag',
+                 'sample_project:latest',
+                 'repo.domain.com/project:1.2',
+                 description='Tagging'),
+            call('docker',
+                 'push',
+                 'repo.domain.com/project:1.2',
+                 description='Pushing image')
+        ]
+    ],
+],
+                         ids=[
+                             'no-repo',
+                             'skip-tests',
+                             'with-repo',
+                             'with-repo-and-tag',
+                         ])
+def test_docker_commands(tmp_sample_project, until, skip_tests, cfg, expected):
+    Path('some-env').mkdir()
+    Path('some-env', 'Dockerfile').touch()
+
+    cmdr = Mock()
+
+    commons.docker.build(cmdr,
+                         ConcreteDockerConfig(**cfg),
+                         'some-env',
+                         until=until,
+                         entry_point='pipeline.yaml',
+                         skip_tests=skip_tests)
+
+    assert cmdr.run.call_args_list == expected
+
+
+@pytest.mark.parametrize('until, skip_tests, cfg, expected', [
+    [
+        'build', False,
+        dict(repository='repo.domain.com/project'),
+        [
+            _DOCKER_BUILD_CALL,
+            _DOCKER_TEST_STATUS,
+            _DOCKER_TEST_CLIENT,
+        ]
+    ],
+    [
+        'push', False,
+        dict(repository='repo.domain.com/project:1.2'),
+        [
+            _DOCKER_BUILD_CALL, _DOCKER_TEST_STATUS, _DOCKER_TEST_CLIENT,
+            call('docker',
+                 'tag',
+                 'sample_project:latest',
+                 'repo.domain.com/project:1.2',
+                 description='Tagging'),
+            call('docker',
+                 'push',
+                 'repo.domain.com/project:1.2',
+                 description='Pushing image')
+        ]
+    ],
+],
+                         ids=[
+                             'with-repo-until-build',
+                             'with-repo-until-push',
+                         ])
+def test_docker_commands_until(tmp_sample_project, until, skip_tests, cfg,
+                               expected):
+    Path('some-env').mkdir()
+    Path('some-env', 'Dockerfile').touch()
+
+    cmdr = Mock()
+
+    with pytest.raises(CommanderStop):
+        commons.docker.build(cmdr,
+                             ConcreteDockerConfig(**cfg),
+                             'some-env',
+                             until=until,
+                             entry_point='pipeline.yaml',
+                             skip_tests=skip_tests)
+
+    assert cmdr.run.call_args_list == expected
