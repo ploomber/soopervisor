@@ -58,5 +58,5 @@ def test_export(monkeypatch, mock_docker_my_project, backup_packaged_project,
     assert cmd in container_cmd
     if args:
         assert args in container_cmd
-    assert get_task['container']['image'] == 'image_target:0.1dev'
+    assert get_task['container']['image'] == 'your-repository/name:0.1dev'
     assert spec['metadata']['generateName'] == 'my-project-'
