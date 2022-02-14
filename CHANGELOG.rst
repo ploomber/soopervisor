@@ -1,8 +1,9 @@
 CHANGELOG
 =========
 
-0.7.1dev
---------
+0.7.1 (2022-02-13)
+------------------
+* Fixes error that caused docker image building to fail if the repository didn't have a version
 
 0.7 (2022-01-31)
 ----------------
