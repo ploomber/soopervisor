@@ -146,7 +146,7 @@ def build(e,
         image_target = cfg.repository
         # Adding the latest tag if not a remote repo
         if ":" not in image_target:
-            image_target = f'image_target:{version}'
+            image_target = f'{image_target}:{version}'
         e.run('docker',
               'tag',
               image_local,
