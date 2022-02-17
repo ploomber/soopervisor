@@ -22,9 +22,11 @@ def cp_ploomber_home(env_name):
 
     target = Path(env_name, 'dist', 'ploomber')
 
-    # FIXME: create an empty folder, otherwise docker build will fail
     if home_path.exists():
         shutil.copytree(home_path, target)
+    else:
+        # create an empty folder, otherwise docker build will fail
+        Path(target).mkdir(exist_ok=True, parents=True)
 
 
 def build(e,

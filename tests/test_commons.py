@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 from unittest.mock import Mock, call, ANY
 from glob import glob
+import sys
 
 import yaml
 import pytest
@@ -491,9 +492,15 @@ def test_cp_ploomber_home(tmp_empty, monkeypatch):
     ]
 
 
-def test_cp_ploomber_home_creates_empty_folder_if_home_does_not_exist():
-    # otherwise dockerfile wont work
-    raise NotImplementedError
+def test_cp_ploomber_home_creates_empty_folder_if_home_does_not_exist(
+        tmp_empty, monkeypatch):
+    monkeypatch.setattr(commons.docker.telemetry, 'get_home_dir',
+                        lambda: 'some-missing-directory')
+
+    commons.docker.cp_ploomber_home('some-env')
+
+    assert Path('some-env', 'dist', 'ploomber').is_dir()
+
 
 def test_docker_build_copies_ploomber_home(tmp_sample_project, monkeypatch):
     monkeypatch.setattr(commons.docker.telemetry, 'get_home_dir',
@@ -671,7 +678,39 @@ def test_docker_commands_until(tmp_sample_project, until, skip_tests, cfg,
     assert cmdr.run.call_args_list == expected
 
 
-def test_dockerfile():
-    # let's actually run a docker build command and see if the image
-    # is working
-    raise NotImplementedError
+def test_dockerfile(tmp_empty):
+    with Commander(workspace='some-env',
+                   templates_path=('soopervisor', 'assets')) as e:
+        e.copy_template('docker/Dockerfile', conda=False, setup_py=False)
+
+    os.chdir('some-env')
+
+    Path('dist').mkdir()
+    Path('file').touch()
+
+    with tarfile.open(Path('dist', 'some-file.tar.gz'), 'w:gz') as tar:
+        tar.add(os.path.basename('file'))
+
+    Path('requirements.lock.txt').write_text('pkgmt')
+
+    Path('dist', 'ploomber').mkdir(parents=True)
+    Path('dist', 'ploomber', 'file').touch()
+
+    subprocess.check_call(['docker', 'build', '.', '--tag', 'testing'])
+
+    
+
+    # check uncompressed tarball
+    result = subprocess.check_output(
+        ['docker', 'run', '-i', '-t', 'testing', 'ls', '/project/file'])
+    result = result.decode(sys.stdout.encoding)
+
+    # check ploomber home
+    result = subprocess.check_output(
+        ['docker', 'run', '-i', '-t', 'testing', 'ls', '/root/.ploomber'])
+    result = result.decode(sys.stdout.encoding)
+
+    # check ploomber home
+    result = subprocess.check_output(
+        ['docker', 'run', '-i', '-t', 'testing', 'pip', 'freeze'])
+    result = result.decode(sys.stdout.encoding)
