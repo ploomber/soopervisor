@@ -698,8 +698,6 @@ def test_dockerfile(tmp_empty):
 
     subprocess.check_call(['docker', 'build', '.', '--tag', 'testing'])
 
-    
-
     # check uncompressed tarball
     result = subprocess.check_output(
         ['docker', 'run', '-i', '-t', 'testing', 'ls', '/project/file'])
