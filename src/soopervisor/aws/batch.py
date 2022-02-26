@@ -5,6 +5,7 @@ from pathlib import Path
 
 from ploomber.io._commander import Commander, CommanderStop
 from ploomber.util.util import requires
+from ploomber.cloud import pkg
 
 from soopervisor.aws.config import AWSBatchConfig
 from soopervisor.commons import docker
@@ -120,7 +121,22 @@ def submit_dag(
 
     cmdr.info('Submitting jobs...')
 
+    res = pkg.runs_new()
+
     for name, upstream in tasks.items():
+
+        if res:
+            ploomber_task = [
+                'python',
+                '-m',
+                'ploomber.cli.task',
+                name,
+                '--task-id',
+                res[0][name],
+            ]
+        else:
+            ploomber_task = ['ploomber', 'task', name]
+
         response = client.submit_job(
             jobName=name,
             jobQueue=job_queue,
@@ -128,7 +144,7 @@ def submit_dag(
             dependsOn=[{
                 "jobId": job_ids[name]
             } for name in upstream],
-            containerOverrides={"command": ['ploomber', 'task', name] + args})
+            containerOverrides={"command": ploomber_task + args})
 
         job_ids[name] = response["jobId"]
 
