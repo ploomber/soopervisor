@@ -121,7 +121,7 @@ def submit_dag(
 
     cmdr.info('Submitting jobs...')
 
-    res = pkg.runs_new()
+    res = pkg.runs_new(list(tasks))
 
     for name, upstream in tasks.items():
 
