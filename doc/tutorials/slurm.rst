@@ -2,6 +2,7 @@ Slurm
 =====
 
 .. tip:: **Got questions?** Reach out to us on `Slack <https://ploomber.io/community/>`_.
+        
         **Have a cluster?** Go straight to the guide on `executing your pipelines <https://soopervisor.readthedocs.io/en/latest/cookbook/slurm.html>`_.
 
 This tutorial shows you how to export a Ploomber pipeline to `SLURM <https://slurm.schedmd.com/documentation.html>`_.
