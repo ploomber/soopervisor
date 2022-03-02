@@ -121,19 +121,28 @@ def submit_dag(
 
     cmdr.info('Submitting jobs...')
 
-    res = pkg.runs_new(tasks)
+    out = pkg.runs_update(tasks)
 
     for name, upstream in tasks.items():
 
-        if res:
+        if out:
             ploomber_task = [
                 'python',
                 '-m',
                 'ploomber.cli.task',
                 name,
                 '--task-id',
-                res[0][name],
+                out['taskids'][name],
             ]
+
+            metadata = out['metadata']
+
+            if 'github_number' in metadata:
+                ploomber_task += ploomber_task + [
+                    '--github-number',
+                    metadata['github_number'],
+                ]
+
         else:
             ploomber_task = ['ploomber', 'task', name]
 
