@@ -139,18 +139,6 @@ def submit_dag(
                 out['taskids'][name],
             ]
 
-            metadata = out['metadata']
-
-            if metadata['github_number']:
-                ploomber_task += ploomber_task + [
-                    '--github-number',
-                    metadata['github_number'],
-                    '--github-owner',
-                    metadata['github_owner'],
-                    '--github-repo',
-                    metadata['github_repo'],
-                ]
-
         else:
             ploomber_task = ['ploomber', 'task', name]
 
