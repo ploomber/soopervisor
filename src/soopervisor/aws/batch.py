@@ -1,6 +1,7 @@
 """
 Running pipelines on AWS Batch
 """
+import json
 from pathlib import Path
 
 from ploomber.io._commander import Commander, CommanderStop
@@ -121,7 +122,10 @@ def submit_dag(
 
     cmdr.info('Submitting jobs...')
 
-    out = pkg.runs_update(tasks)
+    # docker.build moves to the env folder
+    params = json.loads(Path('../.ploomber-cloud').read_text())
+
+    out = pkg.runs_update(params['runid'], tasks)
 
     for name, upstream in tasks.items():
 
@@ -137,7 +141,7 @@ def submit_dag(
 
             metadata = out['metadata']
 
-            if 'github_number' in metadata:
+            if metadata['github_number']:
                 ploomber_task += ploomber_task + [
                     '--github-number',
                     metadata['github_number'],
