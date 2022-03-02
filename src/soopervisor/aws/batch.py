@@ -145,6 +145,10 @@ def submit_dag(
                 ploomber_task += ploomber_task + [
                     '--github-number',
                     metadata['github_number'],
+                    '--github-owner',
+                    metadata['github_owner'],
+                    '--github-repo',
+                    metadata['github_repo'],
                 ]
 
         else:
