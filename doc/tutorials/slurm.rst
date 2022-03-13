@@ -129,7 +129,7 @@ Configure the environment:
     eval "$($HOME/miniconda/bin/conda shell.bash hook)"
 
     # Create and activate env
-    conda create --name myenv python=3.9
+    conda create --name myenv python=3.9 -y
     conda activate myenv
 
     # install ploomber and soopervisor in the base environment
