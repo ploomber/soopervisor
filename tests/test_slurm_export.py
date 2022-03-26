@@ -171,7 +171,10 @@ def test_slurm_export_sample_project_incremental(monkeypatch,
         mock.stdout = value
         return mock
 
-    run_mock = Mock(side_effect=[factory(b'0'), factory(b'1'), factory(b'2')])
+    run_mock = Mock()
+    run_mock.run = Mock(
+        side_effect=[factory(
+            b'0'), factory(b'1'), factory(b'2')])
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
     monkeypatch.setattr(export, 'run', run_mock)
 

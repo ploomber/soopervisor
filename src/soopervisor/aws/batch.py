@@ -3,7 +3,6 @@ Running pipelines on AWS Batch
 """
 import json
 from pathlib import Path
-from functools import partial
 
 from ploomber.io._commander import Commander, CommanderStop
 from ploomber.util.util import requires
@@ -50,7 +49,7 @@ def _submit_dag(
     container_properties,
     region_name,
     cmdr,
-    call_api,
+    is_cloud,
 ):
     client = boto3.client('batch', region_name=region_name)
     container_properties['image'] = remote_name
@@ -65,14 +64,16 @@ def _submit_dag(
 
     cmdr.info('Submitting jobs...')
 
-    # docker.build moves to the env folder
-    params = json.loads(Path('../.ploomber-cloud').read_text())
-
-    out = api.runs_update(params['runid'], tasks)
+    if is_cloud:
+        # docker.build moves to the env folder
+        params = json.loads(Path('../.ploomber-cloud').read_text())
+        out = api.runs_update(params['runid'], tasks)
+    else:
+        out, params = None, None
 
     for name, upstream in tasks.items():
 
-        if out:
+        if is_cloud:
             ploomber_task = [
                 'python',
                 '-m',
@@ -98,16 +99,16 @@ def _submit_dag(
 
         cmdr.print(f'Submitted task {name!r}...')
 
-    api.runs_register_ids(params['runid'], job_ids)
-
-
-submit_dag_no_api = partial(_submit_dag, call_api=False)
-submit_dag_api = partial(_submit_dag, call_api=True)
+    if is_cloud:
+        api.runs_register_ids(params['runid'], job_ids)
 
 
 class AWSBatchExporter(abc.AbstractExporter):
     CONFIG_CLASS = AWSBatchConfig
-    SUBMIT_DAG = submit_dag_no_api
+
+    @classmethod
+    def _submit_dag(cls, *args, **kwargs):
+        return _submit_dag(*args, **kwargs, is_cloud=False)
 
     @staticmethod
     def _validate(cfg, dag, env_name):
@@ -153,18 +154,22 @@ class AWSBatchExporter(abc.AbstractExporter):
 
             cmdr.info('Submitting jobs to AWS Batch')
 
-            cls.SUBMIT_DAG(tasks=tasks,
-                           args=cli_args,
-                           job_def=pkg_name,
-                           remote_name=remote_name,
-                           job_queue=cfg.job_queue,
-                           container_properties=cfg.container_properties,
-                           region_name=cfg.region_name,
-                           cmdr=cmdr)
+            cls._submit_dag(tasks=tasks,
+                            args=cli_args,
+                            job_def=pkg_name,
+                            remote_name=remote_name,
+                            job_queue=cfg.job_queue,
+                            container_properties=cfg.container_properties,
+                            region_name=cfg.region_name,
+                            cmdr=cmdr)
 
             cmdr.success('Done. Submitted to AWS Batch')
 
 
+# TODO: add tests
 class CloudExporter(AWSBatchExporter):
     CONFIG_CLASS = CloudConfig
-    SUBMIT_DAG = submit_dag_api
+
+    @classmethod
+    def _submit_dag(cls, *args, **kwargs):
+        return _submit_dag(*args, **kwargs, is_cloud=True)

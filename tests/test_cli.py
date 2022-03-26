@@ -22,7 +22,7 @@ def monkeypatch_external(monkeypatch):
     monkeypatch.setattr(argo_export, 'Commander', CustomCommander)
     monkeypatch.setattr(airflow_export, 'Commander', CustomCommander)
     monkeypatch.setattr(batch, 'Commander', CustomCommander)
-    monkeypatch.setattr(batch, 'submit_dag', Mock())
+    monkeypatch.setattr(batch, '_submit_dag', Mock())
     mock_copy = Mock(wraps=docker.source.copy)
     monkeypatch.setattr(docker.source, 'copy', mock_copy)
     return mock_copy
