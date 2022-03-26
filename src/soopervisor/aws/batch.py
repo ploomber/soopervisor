@@ -6,7 +6,7 @@ from pathlib import Path
 
 from ploomber.io._commander import Commander, CommanderStop
 from ploomber.util.util import requires
-from ploomber.cloud import pkg
+from ploomber.cloud import api
 
 from soopervisor.aws.config import AWSBatchConfig
 from soopervisor.commons import docker
@@ -125,7 +125,7 @@ def submit_dag(
     # docker.build moves to the env folder
     params = json.loads(Path('../.ploomber-cloud').read_text())
 
-    out = pkg.runs_update(params['runid'], tasks)
+    out = api.runs_update(params['runid'], tasks)
 
     for name, upstream in tasks.items():
 
@@ -155,4 +155,4 @@ def submit_dag(
 
         cmdr.print(f'Submitted task {name!r}...')
 
-    pkg.runs_register_ids(params['runid'], job_ids)
+    api.runs_register_ids(params['runid'], job_ids)
