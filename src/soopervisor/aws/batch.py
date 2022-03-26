@@ -154,3 +154,5 @@ def submit_dag(
         job_ids[name] = response["jobId"]
 
         cmdr.print(f'Submitted task {name!r}...')
+
+    pkg.runs_register_ids(params['runid'], job_ids)
