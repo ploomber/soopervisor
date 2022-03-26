@@ -25,8 +25,13 @@ class AWSBatchConfig(AbstractDockerConfig):
                     ))
 
 
-class AWSLambdaConfig(AbstractConfig):
+class CloudConfig(AWSBatchConfig):
+    @classmethod
+    def get_backend_value(cls):
+        return Backend.cloud.value
 
+
+class AWSLambdaConfig(AbstractConfig):
     @classmethod
     def get_backend_value(cls):
         return Backend.aws_lambda.value

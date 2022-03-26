@@ -3,12 +3,13 @@ Running pipelines on AWS Batch
 """
 import json
 from pathlib import Path
+from functools import partial
 
 from ploomber.io._commander import Commander, CommanderStop
 from ploomber.util.util import requires
 from ploomber.cloud import api
 
-from soopervisor.aws.config import AWSBatchConfig
+from soopervisor.aws.config import AWSBatchConfig, CloudConfig
 from soopervisor.commons import docker
 from soopervisor import commons
 from soopervisor import abc
@@ -40,66 +41,7 @@ except ModuleNotFoundError:
 # add a way to skip tests when submitting
 
 
-class AWSBatchExporter(abc.AbstractExporter):
-    CONFIG_CLASS = AWSBatchConfig
-
-    @staticmethod
-    def _validate(cfg, dag, env_name):
-        pass
-
-    @staticmethod
-    def _add(cfg, env_name):
-        with Commander(workspace=env_name,
-                       templates_path=('soopervisor', 'assets')) as e:
-            e.copy_template('docker/Dockerfile',
-                            conda=Path('environment.lock.yml').exists(),
-                            setup_py=Path('setup.py').exists(),
-                            env_name=env_name)
-            e.success('Done')
-            e.print(
-                f'Fill in the configuration in the {env_name!r} '
-                'section in soopervisor.yaml then submit to AWS Batch with: '
-                f'soopervisor export {env_name}')
-
-        # TODO: run dag checks: client configured, ploomber status
-
-    @staticmethod
-    @requires(['boto3'], name='AWSBatchExporter')
-    def _export(cfg, env_name, mode, until, skip_tests, ignore_git):
-        with Commander(workspace=env_name,
-                       templates_path=('soopervisor', 'assets')) as cmdr:
-            tasks, cli_args = commons.load_tasks(cmdr=cmdr,
-                                                 name=env_name,
-                                                 mode=mode)
-
-            if not tasks:
-                raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
-                                    'tasks to submit. Try "--mode force" to '
-                                    'submit all tasks regardless of status')
-
-            pkg_name, remote_name = docker.build(cmdr,
-                                                 cfg,
-                                                 env_name,
-                                                 until=until,
-                                                 entry_point=cli_args[1],
-                                                 skip_tests=skip_tests,
-                                                 ignore_git=ignore_git)
-
-            cmdr.info('Submitting jobs to AWS Batch')
-
-            submit_dag(tasks=tasks,
-                       args=cli_args,
-                       job_def=pkg_name,
-                       remote_name=remote_name,
-                       job_queue=cfg.job_queue,
-                       container_properties=cfg.container_properties,
-                       region_name=cfg.region_name,
-                       cmdr=cmdr)
-
-            cmdr.success('Done. Submitted to AWS Batch')
-
-
-def submit_dag(
+def _submit_dag(
     tasks,
     args,
     job_def,
@@ -108,6 +50,7 @@ def submit_dag(
     container_properties,
     region_name,
     cmdr,
+    call_api,
 ):
     client = boto3.client('batch', region_name=region_name)
     container_properties['image'] = remote_name
@@ -156,3 +99,72 @@ def submit_dag(
         cmdr.print(f'Submitted task {name!r}...')
 
     api.runs_register_ids(params['runid'], job_ids)
+
+
+submit_dag_no_api = partial(_submit_dag, call_api=False)
+submit_dag_api = partial(_submit_dag, call_api=True)
+
+
+class AWSBatchExporter(abc.AbstractExporter):
+    CONFIG_CLASS = AWSBatchConfig
+    SUBMIT_DAG = submit_dag_no_api
+
+    @staticmethod
+    def _validate(cfg, dag, env_name):
+        pass
+
+    @staticmethod
+    def _add(cfg, env_name):
+        with Commander(workspace=env_name,
+                       templates_path=('soopervisor', 'assets')) as e:
+            e.copy_template('docker/Dockerfile',
+                            conda=Path('environment.lock.yml').exists(),
+                            setup_py=Path('setup.py').exists(),
+                            env_name=env_name)
+            e.success('Done')
+            e.print(
+                f'Fill in the configuration in the {env_name!r} '
+                'section in soopervisor.yaml then submit to AWS Batch with: '
+                f'soopervisor export {env_name}')
+
+        # TODO: run dag checks: client configured, ploomber status
+
+    @classmethod
+    @requires(['boto3'], name='AWSBatchExporter')
+    def _export(cls, cfg, env_name, mode, until, skip_tests, ignore_git):
+        with Commander(workspace=env_name,
+                       templates_path=('soopervisor', 'assets')) as cmdr:
+            tasks, cli_args = commons.load_tasks(cmdr=cmdr,
+                                                 name=env_name,
+                                                 mode=mode)
+
+            if not tasks:
+                raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
+                                    'tasks to submit. Try "--mode force" to '
+                                    'submit all tasks regardless of status')
+
+            pkg_name, remote_name = docker.build(cmdr,
+                                                 cfg,
+                                                 env_name,
+                                                 until=until,
+                                                 entry_point=cli_args[1],
+                                                 skip_tests=skip_tests,
+                                                 ignore_git=ignore_git)
+
+            cmdr.info('Submitting jobs to AWS Batch')
+
+            cls.SUBMIT_DAG(tasks=tasks,
+                           args=cli_args,
+                           job_def=pkg_name,
+                           remote_name=remote_name,
+                           job_queue=cfg.job_queue,
+                           container_properties=cfg.container_properties,
+                           region_name=cfg.region_name,
+                           cmdr=cmdr)
+
+            cmdr.success('Done. Submitted to AWS Batch')
+
+
+class CloudExporter(AWSBatchExporter):
+    CONFIG_CLASS = CloudConfig
+    SUBMIT_DAG = submit_dag_api
