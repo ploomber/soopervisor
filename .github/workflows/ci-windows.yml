@@ -23,6 +23,7 @@ jobs:
       run: |
         pip install invoke
         pip install -e tests/assets/my_project
+        pip install https://github.com/ploomber/ploomber@cloud
         pip install ".[dev]"
     - name: Test with pytest
       env:
