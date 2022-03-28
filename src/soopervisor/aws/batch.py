@@ -1,6 +1,7 @@
 """
 Running pipelines on AWS Batch
 """
+import os
 import json
 from pathlib import Path
 
@@ -83,17 +84,28 @@ def _submit_dag(
                 out['taskids'][name],
             ]
 
+            container_overrides = {
+                "command":
+                ploomber_task + args,
+                "environment": [
+                    {
+                        "name": "PLOOMBER_CLOUD_KEY",
+                        "value": os.environ["PLOOMBER_CLOUD_KEY"]
+                    },
+                ]
+            }
+
         else:
             ploomber_task = ['ploomber', 'task', name]
+            container_overrides = {"command": ploomber_task + args}
 
-        response = client.submit_job(
-            jobName=name,
-            jobQueue=job_queue,
-            jobDefinition=jd['jobDefinitionArn'],
-            dependsOn=[{
-                "jobId": job_ids[name]
-            } for name in upstream],
-            containerOverrides={"command": ploomber_task + args})
+        response = client.submit_job(jobName=name,
+                                     jobQueue=job_queue,
+                                     jobDefinition=jd['jobDefinitionArn'],
+                                     dependsOn=[{
+                                         "jobId": job_ids[name]
+                                     } for name in upstream],
+                                     containerOverrides=container_overrides)
 
         job_ids[name] = response["jobId"]
 
