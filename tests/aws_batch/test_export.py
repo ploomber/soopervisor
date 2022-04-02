@@ -2,6 +2,8 @@ from unittest.mock import MagicMock, Mock
 from pathlib import Path
 import shutil
 
+from pydantic import ValidationError
+import yaml
 import pytest
 import boto3
 
@@ -180,3 +182,148 @@ def test_checks_the_right_spec(mock_batch, mock_docker_my_project_serve,
                 '--entry-point',
                 str(Path('src', 'my_project', 'pipeline.serve.yaml')))
     assert mock_docker_my_project_serve.calls[2] == expected
+
+
+@pytest.fixture
+def mock_aws_batch(mock_batch, mock_docker_my_project_serve, monkeypatch,
+                   monkeypatch_docker_client, backup_packaged_project,
+                   skip_repo_validation):
+    p_home_mock = Mock()
+    monkeypatch.setattr(commons.docker, 'cp_ploomber_home', p_home_mock)
+    batch_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
+    monkeypatch.setattr(batch.boto3, 'client',
+                        lambda name, region_name: batch_mock)
+    load_tasks_mock = Mock(wraps=commons.load_tasks)
+    monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
+
+    return batch_mock
+
+
+@pytest.mark.parametrize('task_resources, resource_requirements', [
+    [
+        {
+            'fit': {
+                'vcpus': 32,
+                'memory': 32768
+            },
+            'get': {
+                'vcpus': 4,
+                'memory': 4096
+            }
+        },
+        {
+            'fit': [
+                {
+                    'value': '32',
+                    'type': 'VCPU'
+                },
+                {
+                    'value': '32768',
+                    'type': 'MEMORY'
+                },
+            ],
+            'get': [
+                {
+                    'value': '4',
+                    'type': 'VCPU'
+                },
+                {
+                    'value': '4096',
+                    'type': 'MEMORY'
+                },
+            ]
+        },
+    ],
+    [
+        {
+            'fit': {
+                'vcpus': 32,
+                'memory': 32768
+            }
+        },
+        {
+            'fit': [
+                {
+                    'value': '32',
+                    'type': 'VCPU'
+                },
+                {
+                    'value': '32768',
+                    'type': 'MEMORY'
+                },
+            ]
+        },
+    ],
+    [
+        {
+            'fit': {
+                'vcpus': 32,
+                'memory': 32768,
+                'gpu': 2,
+            }
+        },
+        {
+            'fit': [
+                {
+                    'value': '32',
+                    'type': 'VCPU'
+                },
+                {
+                    'value': '32768',
+                    'type': 'MEMORY'
+                },
+                {
+                    'value': '2',
+                    'type': 'GPU'
+                },
+            ]
+        },
+    ],
+])
+def test_custom_task_resources(mock_aws_batch, monkeypatch, task_resources,
+                               resource_requirements):
+    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
+    exporter.add()
+
+    # customize soopervisor.yaml
+    config = yaml.safe_load(Path('soopervisor.yaml').read_text())
+    config['train']['task_resources'] = task_resources
+    Path('soopervisor.yaml').write_text(yaml.dump(config))
+
+    # mock commander
+    commander_mock = MagicMock()
+    monkeypatch.setattr(batch, 'Commander',
+                        lambda workspace, templates_path: commander_mock)
+
+    # reload exporter to force reloading soopervisor.yaml
+    exporter = batch.AWSBatchExporter.load(path_to_config='soopervisor.yaml',
+                                           env_name='train')
+    exporter.export(mode='incremental')
+
+    submitted = index_submit_job_by_task_name(
+        mock_aws_batch.submit_job.call_args_list)
+
+    reqs_fit = submitted['fit']['containerOverrides']['resourceRequirements']
+    assert reqs_fit == resource_requirements['fit']
+
+    reqs_get = submitted['get']['containerOverrides']['resourceRequirements']
+    assert reqs_get == resource_requirements.get('get', [])
+
+
+def test_validates_task_resources(mock_aws_batch):
+    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
+    exporter.add()
+
+    # customize soopervisor.yaml
+    config = yaml.safe_load(Path('soopervisor.yaml').read_text())
+    config['train']['task_resources'] = {
+        'fit': {
+            'vcpusss': 32,
+            'memory': 32768,
+        }
+    }
+    Path('soopervisor.yaml').write_text(yaml.dump(config))
+
+    with pytest.raises(ValidationError):
+        batch.AWSBatchExporter.load(path_to_config='soopervisor.yaml',
+                                    env_name='train')

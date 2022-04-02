@@ -41,6 +41,31 @@ except ModuleNotFoundError:
 # add a way to skip tests when submitting
 
 
+def _transform_task_resources(resources):
+    resources_out = []
+
+    if resources.vcpus:
+        resources_out.append({'value': str(resources.vcpus), 'type': 'VCPU'})
+
+    if resources.memory:
+        resources_out.append({
+            'value': str(resources.memory),
+            'type': 'MEMORY'
+        })
+
+    if resources.gpu:
+        resources_out.append({'value': str(resources.gpu), 'type': 'GPU'})
+
+    return resources_out
+
+
+def _process_task_resources(task_resources, tasks):
+    return {
+        key: _transform_task_resources(value)
+        for key, value in task_resources.items()
+    }
+
+
 def _submit_dag(
     tasks,
     args,
@@ -51,9 +76,12 @@ def _submit_dag(
     region_name,
     cmdr,
     is_cloud,
+    cfg,
 ):
     client = boto3.client('batch', region_name=region_name)
     container_properties['image'] = remote_name
+
+    task_resources = _process_task_resources(cfg.task_resources, tasks)
 
     cmdr.info(f'Registering {job_def!r} job definition...')
     jd = client.register_job_definition(
@@ -98,6 +126,10 @@ def _submit_dag(
         else:
             ploomber_task = ['ploomber', 'task', name]
             container_overrides = {"command": ploomber_task + args}
+
+        # add requested resources
+        container_overrides['resourceRequirements'] = task_resources.get(
+            name, [])
 
         response = client.submit_job(jobName=name,
                                      jobQueue=job_queue,
@@ -173,7 +205,8 @@ class AWSBatchExporter(abc.AbstractExporter):
                             job_queue=cfg.job_queue,
                             container_properties=cfg.container_properties,
                             region_name=cfg.region_name,
-                            cmdr=cmdr)
+                            cmdr=cmdr,
+                            cfg=cfg)
 
             cmdr.success('Done. Submitted to AWS Batch')
 
