@@ -158,8 +158,8 @@ Open the ``soopervisor.yaml`` file and fill in the missing values in
       job_queue: your-job-queue
       region_name: your-region-name
       container_properties:
-      memory: 16384
-      vcpus: 8
+        memory: 16384
+        vcpus: 8
 
 Submit for execution:
 
