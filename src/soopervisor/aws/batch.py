@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from ploomber.io._commander import Commander, CommanderStop
+from ploomber.io import pretty_print
 from ploomber.util.util import requires
 from ploomber.cloud import api
 
@@ -41,6 +42,8 @@ except ModuleNotFoundError:
 # add a way to skip tests when submitting
 
 
+# FIXME: move this logic to ploomber so we validate it
+# before and after we submit the code
 def _transform_task_resources(resources):
     resources_out = []
 
@@ -60,6 +63,18 @@ def _transform_task_resources(resources):
 
 
 def _process_task_resources(task_resources, tasks):
+    keys_dag = set(tasks)
+    keys_resources = set(task_resources)
+
+    unexpected = keys_resources - keys_dag
+
+    if unexpected:
+        unexpected_ = pretty_print.iterable(unexpected)
+        existing = pretty_print.iterable(keys_dag)
+        raise ValueError("Unexpected task names in task_resources: "
+                         f"{unexpected_}. Expected:"
+                         f"{existing}")
+
     return {
         key: _transform_task_resources(value)
         for key, value in task_resources.items()

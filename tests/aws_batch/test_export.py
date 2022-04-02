@@ -327,3 +327,32 @@ def test_validates_task_resources(mock_aws_batch):
     with pytest.raises(ValidationError):
         batch.AWSBatchExporter.load(path_to_config='soopervisor.yaml',
                                     env_name='train')
+
+
+def test_validates_names_in_task_resources(mock_aws_batch, monkeypatch):
+    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
+    exporter.add()
+
+    # customize soopervisor.yaml
+    config = yaml.safe_load(Path('soopervisor.yaml').read_text())
+    config['train']['task_resources'] = {
+        'not-a-task': {
+            'vcpus': 32,
+            'memory': 32768,
+        }
+    }
+    Path('soopervisor.yaml').write_text(yaml.dump(config))
+
+    # mock commander
+    commander_mock = MagicMock()
+    monkeypatch.setattr(batch, 'Commander',
+                        lambda workspace, templates_path: commander_mock)
+
+    # reload exporter to force reloading soopervisor.yaml
+    exporter = batch.AWSBatchExporter.load(path_to_config='soopervisor.yaml',
+                                           env_name='train')
+
+    with pytest.raises(ValueError) as excinfo:
+        exporter.export(mode='incremental')
+
+    assert ("Unexpected task names in task_resources" in str(excinfo.value))
