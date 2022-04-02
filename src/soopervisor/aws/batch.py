@@ -1,6 +1,7 @@
 """
 Running pipelines on AWS Batch
 """
+from uuid import uuid4
 import os
 import json
 from pathlib import Path
@@ -63,6 +64,9 @@ def _transform_task_resources(resources):
 
 
 def _process_task_resources(task_resources, tasks):
+    if not task_resources:
+        return {}
+
     keys_dag = set(tasks)
     keys_resources = set(task_resources)
 
@@ -213,9 +217,11 @@ class AWSBatchExporter(abc.AbstractExporter):
 
             cmdr.info('Submitting jobs to AWS Batch')
 
+            # add a unique suffix to prevent collisions
+            suffix = str(uuid4())[:8]
             cls._submit_dag(tasks=tasks,
                             args=cli_args,
-                            job_def=pkg_name,
+                            job_def=f'{pkg_name}-{suffix}',
                             remote_name=remote_name,
                             job_queue=cfg.job_queue,
                             container_properties=cfg.container_properties,

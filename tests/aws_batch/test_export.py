@@ -99,6 +99,7 @@ def index_commands_by_name(submitted):
 def test_export(mock_batch, mock_docker_my_project_serve, monkeypatch,
                 monkeypatch_docker_client, backup_packaged_project, mode, args,
                 skip_repo_validation):
+    monkeypatch.setattr(batch, 'uuid4', lambda: 'uuid4')
     p_home_mock = Mock()
     monkeypatch.setattr(commons.docker, 'cp_ploomber_home', p_home_mock)
     boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
@@ -143,7 +144,7 @@ def test_export(mock_batch, mock_docker_my_project_serve, monkeypatch,
     assert all(['your-job-queue' in j['jobQueue'] for j in jobs_info])
 
     # check created a job definition with the right name
-    assert all(['my_project:1' in j['jobDefinition'] for j in jobs_info])
+    assert all(['my_project-uuid4:1' in j['jobDefinition'] for j in jobs_info])
 
     assert dependencies == {
         'get': set(),
