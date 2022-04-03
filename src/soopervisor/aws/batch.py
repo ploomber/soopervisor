@@ -103,6 +103,7 @@ def _submit_dag(
     task_resources = _process_task_resources(cfg.task_resources, tasks)
 
     cmdr.info(f'Registering {job_def!r} job definition...')
+
     jd = client.register_job_definition(
         jobDefinitionName=job_def,
         type='container',
@@ -177,6 +178,10 @@ class AWSBatchExporter(abc.AbstractExporter):
     def _validate(cfg, dag, env_name):
         pass
 
+    @classmethod
+    def _no_tasks_to_submit(cls):
+        pass
+
     @staticmethod
     def _add(cfg, env_name):
         with Commander(workspace=env_name,
@@ -203,6 +208,7 @@ class AWSBatchExporter(abc.AbstractExporter):
                                                  mode=mode)
 
             if not tasks:
+                cls._no_tasks_to_submit()
                 raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
@@ -235,6 +241,11 @@ class AWSBatchExporter(abc.AbstractExporter):
 # TODO: add tests
 class CloudExporter(AWSBatchExporter):
     CONFIG_CLASS = CloudConfig
+
+    @classmethod
+    def _no_tasks_to_submit(cls):
+        params = json.loads(Path('.ploomber-cloud').read_text())
+        api.run_finished(params['runid'])
 
     @classmethod
     def _submit_dag(cls, *args, **kwargs):
