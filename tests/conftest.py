@@ -26,7 +26,6 @@ class CustomCommander(_commander.Commander):
     A subclass of Commander that ignores calls to
     CustomCommander.run('docker', ...)
     """
-
     def run(self, *args, **kwargs):
         if args[0] == 'docker':
             print(f'ignoring: {args} {kwargs}')
@@ -243,6 +242,22 @@ def tmp_projects(download_projects, tmp_path):
     shutil.copytree(download_projects, target)
     os.chdir(str(target))
     yield str(Path(target).resolve())
+    os.chdir(old)
+
+
+@pytest.fixture
+def tmp_lazy_load(download_projects, tmp_path):
+    relative_path_project = "assets/lazy-load"
+    old = os.getcwd()
+    tmp = Path(tmp_path, relative_path_project)
+    fast_pipeline = _path_to_tests() / relative_path_project
+    shutil.copytree(str(fast_pipeline), str(tmp))
+
+    os.chdir(str(tmp))
+    Path('requirements.lock.txt').touch()
+
+    yield tmp
+
     os.chdir(old)
 
 

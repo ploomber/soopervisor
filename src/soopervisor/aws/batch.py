@@ -200,12 +200,14 @@ class AWSBatchExporter(abc.AbstractExporter):
 
     @classmethod
     @requires(['boto3'], name='AWSBatchExporter')
-    def _export(cls, cfg, env_name, mode, until, skip_tests, ignore_git):
+    def _export(cls, cfg, env_name, mode, until, skip_tests, ignore_git,
+                lazy_import):
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as cmdr:
             tasks, cli_args = commons.load_tasks(cmdr=cmdr,
                                                  name=env_name,
-                                                 mode=mode)
+                                                 mode=mode,
+                                                 lazy_import=lazy_import)
 
             if not tasks:
                 cls._no_tasks_to_submit()

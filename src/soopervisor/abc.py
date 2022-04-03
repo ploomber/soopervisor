@@ -258,14 +258,14 @@ class AbstractExporter(abc.ABC):
         self._validate(self._cfg, self._dag, self._env_name)
 
     @classmethod
-    def load(cls, path_to_config, env_name):
+    def load(cls, path_to_config, env_name, lazy_import=False):
         """
         Loads an exporter using settings from an existing configuration file
         """
         # run some basic validations
         cls.validate()
 
-        dag, _ = load_dag_and_spec(env_name)
+        dag, _ = load_dag_and_spec(env_name, lazy_import=lazy_import)
 
         cfg = cls.CONFIG_CLASS.load(path_to_config=path_to_config,
                                     env_name=env_name)
@@ -273,13 +273,13 @@ class AbstractExporter(abc.ABC):
         return cls(cfg, dag, env_name)
 
     @classmethod
-    def new(cls, path_to_config, env_name, preset=None):
+    def new(cls, path_to_config, env_name, preset=None, lazy_import=False):
         """
         """
         # run some basic validations
         cls.validate()
 
-        dag, spec = load_dag_and_spec(env_name)
+        dag, spec = load_dag_and_spec(env_name, lazy_import=lazy_import)
 
         if issubclass(cls.CONFIG_CLASS, AbstractDockerConfig):
             # it the spec has products store in relative paths, get them and
@@ -325,7 +325,12 @@ class AbstractExporter(abc.ABC):
 
         return self._add(cfg=self._cfg, env_name=self._env_name)
 
-    def export(self, mode, until=None, skip_tests=False, ignore_git=False):
+    def export(self,
+               mode,
+               until=None,
+               skip_tests=False,
+               ignore_git=False,
+               lazy_import=False):
         """
         Exports to the target environment, calls the private ._export()
         method
@@ -337,7 +342,8 @@ class AbstractExporter(abc.ABC):
                             mode=mode,
                             until=until,
                             skip_tests=skip_tests,
-                            ignore_git=ignore_git)
+                            ignore_git=ignore_git,
+                            lazy_import=lazy_import)
 
     @staticmethod
     @abc.abstractmethod

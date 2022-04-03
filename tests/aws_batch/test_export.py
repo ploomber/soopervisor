@@ -357,3 +357,36 @@ def test_validates_names_in_task_resources(mock_aws_batch, monkeypatch):
         exporter.export(mode='incremental')
 
     assert ("Unexpected task names in task_resources" in str(excinfo.value))
+
+
+@pytest.fixture
+def mock_aws_batch_lazy_load(mock_batch, mock_docker_my_project_serve,
+                             monkeypatch, monkeypatch_docker_client,
+                             tmp_lazy_load, skip_repo_validation):
+    p_home_mock = Mock()
+    monkeypatch.setattr(commons.docker, 'cp_ploomber_home', p_home_mock)
+    batch_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
+    monkeypatch.setattr(batch.boto3, 'client',
+                        lambda name, region_name: batch_mock)
+    load_tasks_mock = Mock(wraps=commons.load_tasks)
+    monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
+
+    return batch_mock
+
+
+def test_lazy_load(mock_aws_batch_lazy_load, monkeypatch):
+    exporter = batch.AWSBatchExporter.new('soopervisor.yaml',
+                                          'train',
+                                          lazy_import=True)
+    exporter.add()
+
+    # mock commander
+    commander_mock = MagicMock()
+    monkeypatch.setattr(batch, 'Commander',
+                        lambda workspace, templates_path: commander_mock)
+
+    # reload exporter to force reloading soopervisor.yaml
+    exporter = batch.AWSBatchExporter.load(path_to_config='soopervisor.yaml',
+                                           env_name='train',
+                                           lazy_import=True)
+    exporter.export(mode='incremental', lazy_import=True)

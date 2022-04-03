@@ -40,7 +40,7 @@ def product_prefixes_from_spec(spec):
     return sorted(set(parents_flat)) or None
 
 
-def find_spec(cmdr, name):
+def find_spec(cmdr, name, lazy_import=False):
     """
     Find spec to use. It first tries to load a file with pipeline.{name}.yaml,
     if that doesn't exist, it tries to load a pipeline.yaml
@@ -48,7 +48,8 @@ def find_spec(cmdr, name):
     cmdr.info('Loading DAG')
 
     try:
-        spec, relative_path = DAGSpec._find_relative(name=name)
+        spec, relative_path = DAGSpec._find_relative(name=name,
+                                                     lazy_import=lazy_import)
         cmdr.print(f'Found {spec.path!s}. Loading...')
     except DAGSpecInvalidError:
         cmdr.print(f'No pipeline.{name}.yaml found, '
@@ -56,13 +57,13 @@ def find_spec(cmdr, name):
         spec = None
 
     if spec is None:
-        spec, relative_path = DAGSpec._find_relative()
+        spec, relative_path = DAGSpec._find_relative(lazy_import=lazy_import)
         cmdr.print(f'Found {spec.path!s}. Loading...')
 
     return spec, relative_path
 
 
-def load_dag(cmdr, name=None, mode='incremental'):
+def load_dag(cmdr, name=None, mode='incremental', lazy_import=False):
     """Load tasks names and their upstream dependencies
 
     Parameters
@@ -91,7 +92,9 @@ def load_dag(cmdr, name=None, mode='incremental'):
 
     valid = Mode.get_values()
 
-    spec, relative_path = find_spec(cmdr=cmdr, name=name)
+    spec, relative_path = find_spec(cmdr=cmdr,
+                                    name=name,
+                                    lazy_import=lazy_import)
     dag = spec.to_dag()
 
     if mode not in valid:
@@ -114,7 +117,7 @@ def load_dag(cmdr, name=None, mode='incremental'):
     return dag, relative_path
 
 
-def load_tasks(cmdr, name=None, mode='incremental'):
+def load_tasks(cmdr, name=None, mode='incremental', lazy_import=False):
     """Load tasks names and their upstream dependencies
 
     Parameters
@@ -143,7 +146,7 @@ def load_tasks(cmdr, name=None, mode='incremental'):
         A list of arguments to pass to "ploomber task {name}"
     """
 
-    dag, relative_path = load_dag(cmdr, name, mode)
+    dag, relative_path = load_dag(cmdr, name, mode, lazy_import=lazy_import)
 
     if mode == 'incremental':
         tasks = []
@@ -167,12 +170,14 @@ def load_tasks(cmdr, name=None, mode='incremental'):
     return out, args
 
 
-def load_dag_and_spec(env_name):
+def load_dag_and_spec(env_name, lazy_import=False):
     # initialize dag (needed for validation)
     # TODO: _export also has to find_spec, maybe load it here and
     # pass it directly to _export?
     with Commander() as cmdr:
-        spec, _ = commons.find_spec(cmdr=cmdr, name=env_name)
+        spec, _ = commons.find_spec(cmdr=cmdr,
+                                    name=env_name,
+                                    lazy_import=lazy_import)
 
     dag = spec.to_dag().render(force=True, show_progress=False)
 
