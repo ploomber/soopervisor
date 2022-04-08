@@ -104,11 +104,6 @@ def _submit_dag(
 
     cmdr.info(f'Registering {job_def!r} job definition...')
 
-    jd = client.register_job_definition(
-        jobDefinitionName=job_def,
-        type='container',
-        containerProperties=container_properties)
-
     job_ids = dict()
 
     cmdr.info('Submitting jobs...')
@@ -116,9 +111,16 @@ def _submit_dag(
     if is_cloud:
         # docker.build moves to the env folder
         params = json.loads(Path('../.ploomber-cloud').read_text())
+
+        # note: this will trigger an error if the user has no quota left
         out = api.runs_update(params['runid'], tasks)
     else:
         out, params = None, None
+
+    jd = client.register_job_definition(
+        jobDefinitionName=job_def,
+        type='container',
+        containerProperties=container_properties)
 
     for name, upstream in tasks.items():
 
@@ -139,6 +141,10 @@ def _submit_dag(
                     {
                         "name": "PLOOMBER_CLOUD_KEY",
                         "value": os.environ["PLOOMBER_CLOUD_KEY"]
+                    },
+                    {
+                        "name": "PLOOMBER_CLOUD_HOST",
+                        "value": os.environ["PLOOMBER_CLOUD_HOST"]
                     },
                 ]
             }
