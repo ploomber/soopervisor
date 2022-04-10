@@ -106,6 +106,8 @@ def build(e,
     if 'DOCKER_ARGS' in os.environ:
         args = args + shlex.split(os.environ['DOCKER_ARGS'])
 
+    print(f'docker args: {args}')
+
     # how to allow passing --no-cache?
     e.run(*args, description='Building image')
 
