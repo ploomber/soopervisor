@@ -98,13 +98,16 @@ def build(e,
 
     image_local = f'{pkg_name}:{version}'
 
+    import os
+    import shlex
+
+    args = ['docker', 'build', '.', '--tag', image_local]
+
+    if 'DOCKER_ARGS' in os.environ:
+        args = args + shlex.split(os.environ['DOCKER_ARGS'])
+
     # how to allow passing --no-cache?
-    e.run('docker',
-          'build',
-          '.',
-          '--tag',
-          image_local,
-          description='Building image')
+    e.run(*args, description='Building image')
 
     if not skip_tests:
         # test "ploomber status" in docker image
