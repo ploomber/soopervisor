@@ -12,6 +12,7 @@ from ploomber.util.util import requires
 from ploomber.cloud import api
 
 from soopervisor.aws.config import AWSBatchConfig, CloudConfig
+from soopervisor.aws.util import TaskResources
 from soopervisor.commons import docker
 from soopervisor import commons
 from soopervisor import abc
@@ -60,7 +61,7 @@ def _transform_task_resources(resources):
     if resources.gpu:
         resources_out.append({'value': str(resources.gpu), 'type': 'GPU'})
 
-    return resources_out
+    return TaskResources(resources_out)
 
 
 def _process_task_resources(task_resources, tasks):

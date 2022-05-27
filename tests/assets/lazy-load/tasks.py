@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 from sklearn import datasets
 # this will only pass if using lazy load
-import some_unknown_package
+import some_unknown_package  # noqa
 
 
 def get(product):
