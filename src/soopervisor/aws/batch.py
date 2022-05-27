@@ -60,7 +60,7 @@ def _transform_task_resources(resources):
     if resources.gpu:
         resources_out.append({'value': str(resources.gpu), 'type': 'GPU'})
 
-    return TaskResources(resources_out)
+    return resources_out
 
 
 def _process_task_resources(task_resources, tasks):
@@ -70,10 +70,10 @@ def _process_task_resources(task_resources, tasks):
     # TODO: validation. check that the task names match with at least one
     # pattern, otherwise show an error (or maybe just a warning)
 
-    return {
+    return TaskResources({
         key: _transform_task_resources(value)
         for key, value in task_resources.items()
-    }
+    })
 
 
 def _submit_dag(
