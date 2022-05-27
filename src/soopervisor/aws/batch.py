@@ -7,7 +7,6 @@ import json
 from pathlib import Path
 
 from ploomber.io._commander import Commander, CommanderStop
-from ploomber.io import pretty_print
 from ploomber.util.util import requires
 from ploomber.cloud import api
 
@@ -68,17 +67,8 @@ def _process_task_resources(task_resources, tasks):
     if not task_resources:
         return {}
 
-    keys_dag = set(tasks)
-    keys_resources = set(task_resources)
-
-    unexpected = keys_resources - keys_dag
-
-    if unexpected:
-        unexpected_ = pretty_print.iterable(unexpected)
-        existing = pretty_print.iterable(keys_dag)
-        raise ValueError("Unexpected task names in task_resources: "
-                         f"{unexpected_}. Expected:"
-                         f"{existing}")
+    # TODO: validation. check that the task names match with at least one
+    # pattern, otherwise show an error (or maybe just a warning)
 
     return {
         key: _transform_task_resources(value)
