@@ -203,6 +203,45 @@ def mock_aws_batch(mock_batch, mock_docker_my_project_serve, monkeypatch,
 @pytest.mark.parametrize('task_resources, resource_requirements', [
     [
         {
+            'fi*': {
+                'vcpus': 32,
+                'memory': 32768,
+                'gpu': 1,
+            },
+            'get': {
+                'vcpus': 4,
+                'memory': 4096
+            }
+        },
+        {
+            'fit': [
+                {
+                    'value': '32',
+                    'type': 'VCPU'
+                },
+                {
+                    'value': '32768',
+                    'type': 'MEMORY'
+                },
+                {
+                    'value': '1',
+                    'type': 'GPU'
+                },
+            ],
+            'get': [
+                {
+                    'value': '4',
+                    'type': 'VCPU'
+                },
+                {
+                    'value': '4096',
+                    'type': 'MEMORY'
+                },
+            ]
+        },
+    ],
+    [
+        {
             'fit': {
                 'vcpus': 32,
                 'memory': 32768
