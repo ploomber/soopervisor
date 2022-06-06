@@ -184,5 +184,7 @@ def build(e,
         if until == 'push':
             raise CommanderStop('Done. Image pushed to repository.')
         image_target_list.append(image_target)
+        e.force_delete()
+
     print("pkg_name : {}, image_target : {}".format(pkg_name, image_target_list))
     return pkg_name, image_target_list
