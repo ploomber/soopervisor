@@ -128,6 +128,20 @@ def tmp_sample_project(tmp_path):
 
     os.chdir(old)
 
+@pytest.fixture
+def tmp_sample_project_multiple_requirement(tmp_path):
+    relative_path_project = "assets/multiple_requirements_project"
+    old = os.getcwd()
+    tmp = Path(tmp_path, relative_path_project)
+    sample_project = _path_to_tests() / relative_path_project
+    shutil.copytree(str(sample_project), str(tmp))
+
+    os.chdir(str(tmp))
+
+    yield tmp
+
+    os.chdir(old)
+
 
 @pytest.fixture
 def tmp_fast_pipeline(tmp_path):
