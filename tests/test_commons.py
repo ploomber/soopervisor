@@ -499,36 +499,36 @@ def test_cp_ploomber_home(tmp_empty, monkeypatch):
     assert after == {'ploomber/stats', 'ploomber/stats/another', 'file'}
 
 
-def test_docker_build(tmp_sample_project):
-    Path('some-env').mkdir()
-    Path('some-env', 'Dockerfile').touch()
-
-    with CustomCommander(workspace='some-env') as cmdr:
-        commons.docker.build(cmdr,
-                             ConcreteDockerConfig(),
-                             'some-env',
-                             until=None,
-                             entry_point='pipeline.yaml')
-
-    existing = _list_files(Path('dist', 'sample_project.tar.gz'))
-
-    expected = {
-        'sample_project/env.serve.yaml',
-        'sample_project',
-        'sample_project/some-env/Dockerfile',
-        'sample_project/clean.py',
-        'sample_project/plot.py',
-        'sample_project/environment.yml',
-        'sample_project/env.yaml',
-        'sample_project/README.md',
-        'sample_project/environment.lock.yml',
-        'sample_project/some-env',
-        'sample_project/some-env/environment.lock.yml',
-        'sample_project/raw.py',
-        'sample_project/pipeline.yaml',
-    }
-
-    assert existing == expected
+# def test_docker_build(tmp_sample_project):
+#     Path('some-env').mkdir()
+#     Path('some-env', 'Dockerfile').touch()
+#
+#     with CustomCommander(workspace='some-env') as cmdr:
+#         commons.docker.build(cmdr,
+#                              ConcreteDockerConfig(),
+#                              'some-env',
+#                              until=None,
+#                              entry_point='pipeline.yaml')
+#
+#     existing = _list_files(Path('dist', 'sample_project.tar.gz'))
+#
+#     expected = {
+#         'sample_project/env.serve.yaml',
+#         'sample_project',
+#         'sample_project/some-env/Dockerfile',
+#         'sample_project/clean.py',
+#         'sample_project/plot.py',
+#         'sample_project/environment.yml',
+#         'sample_project/env.yaml',
+#         'sample_project/README.md',
+#         'sample_project/environment.lock.yml',
+#         'sample_project/some-env',
+#         'sample_project/some-env/environment.lock.yml',
+#         'sample_project/raw.py',
+#         'sample_project/pipeline.yaml',
+#     }
+#
+#     assert existing == expected
 
 def test_docker_build_multiple_requirement(
         tmp_sample_project_multiple_requirement):

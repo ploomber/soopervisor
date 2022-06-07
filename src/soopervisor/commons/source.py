@@ -94,7 +94,7 @@ def size_too_big(path):
     return os.path.getsize(path) > five_mb
 
 
-def copy(cmdr, src, dst, include=None, exclude=None, ignore_git=False):
+def copy(cmdr, src, dst, include=None, exclude=None, ignore_git=False, rename_files = {}):
     """Copy files
 
     Parameters
@@ -158,16 +158,19 @@ def copy(cmdr, src, dst, include=None, exclude=None, ignore_git=False):
         included = f in include or is_relative_to_any(f, include_dirs)
         # never include .git or .gitignore
         never_include = Path(f).name.startswith('.git') or '__pycache__' in f
-
         if ((tracked_by_git or included) and not excluded
                 and not never_include):
-            target = Path(dst, f)
+            if f in rename_files:
+                target = Path(dst, rename_files[f])
+            else:
+                target = Path(dst, f)
             target.parent.mkdir(exist_ok=True, parents=True)
             shutil.copy(f, dst=target)
             print(f'Copying {f} -> {target}')
 
 
 def compress_dir(cmdr, src, dst):
+    print("Compressing directory , src : {}, dst : {}".format(src, dst))
     with tarfile.open(dst, "w:gz") as tar:
         tar.add(src, arcname=os.path.basename(src))
 

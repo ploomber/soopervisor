@@ -1,3 +1,4 @@
+import os
 import tarfile
 from pathlib import Path
 
@@ -71,6 +72,10 @@ def build(e,
     dependency_files = requirement_files if requirement_files \
         else dependencies.all_dependencies('environment', 'yml')
 
+    all_dependency_paths = []
+    for task,paths in dependency_files.items():
+        all_dependency_paths = all_dependency_paths + [paths['dependency'], paths['lock']]
+
     image_target_list = []
 
     all_lock_files = {}
@@ -96,21 +101,23 @@ def build(e,
             target = Path('dist', pkg_name)
             print("target = Path('dist', pkg_name) : {}".format(Path('dist', pkg_name)))
             e.info('Packaging code')
-            other_lock_files = [file for file in list(all_lock_files.values())
+            other_lock_files = [file for file in all_dependency_paths
                                 if file != lock_file]
             exclude = cfg.exclude
             if cfg.exclude and other_lock_files:
                 exclude = cfg.exclude + other_lock_files
             elif not cfg.exclude and other_lock_files:
                 exclude = other_lock_files
-            #print('Exclude : {}'.format(exclude))
+
             print('Other lock files : {}'.format(other_lock_files))
+            rename_files = {lock_file: 'requirements.lock.txt'}
             source.copy(cmdr=e,
                         src='.',
                         dst=target,
                         include=cfg.include,
                         exclude=exclude,
-                        ignore_git=ignore_git)
+                        ignore_git=ignore_git,
+                        rename_files=rename_files)
             print('Compressing directory . src : {}, dst : {}'.format(target, Path('dist', f'{pkg_name}.tar.gz')))
             source.compress_dir(e, target, Path('dist', f'{pkg_name}.tar.gz'))
 
@@ -120,7 +127,7 @@ def build(e,
         print("env_name : {}".format(env_name))
         e.cd(env_name)
 
-        image_local = f'{pkg_name}-{task}:{version}'
+        image_local = f'{pkg_name}-{task.replace("*","all")}:{version}'
         print("image_local : {}".format(image_local))
         # how to allow passing --no-cache?
         e.run('docker',
@@ -184,7 +191,9 @@ def build(e,
         if until == 'push':
             raise CommanderStop('Done. Image pushed to repository.')
         image_target_list.append(image_target)
-        e.force_delete()
+        #e.force_delete()
+        e.cd('..')
+
 
     print("pkg_name : {}, image_target : {}".format(pkg_name, image_target_list))
     return pkg_name, image_target_list
