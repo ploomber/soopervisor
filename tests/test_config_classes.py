@@ -119,7 +119,8 @@ def test_hints(class_, hints):
                 'vcpus': 8
             },
             'job_queue': 'your-job-queue',
-            'region_name': 'your-region-name'
+            'region_name': 'your-region-name',
+            'task_resources': None,
         },
     ],
     [

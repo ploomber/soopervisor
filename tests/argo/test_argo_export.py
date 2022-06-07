@@ -34,7 +34,10 @@ def test_export(mock_docker_my_project, backup_packaged_project, monkeypatch,
     spec = yaml.safe_load(yaml_str)
     dag = DAGSpec.find().to_dag()
 
-    load_tasks_mock.assert_called_once_with(cmdr=ANY, name='serve', mode=mode)
+    load_tasks_mock.assert_called_once_with(cmdr=ANY,
+                                            name='serve',
+                                            mode=mode,
+                                            lazy_import=False)
 
     # make sure the "source" key is represented in literal style
     # (https://yaml-multiline.info/) to make the generated script more readable

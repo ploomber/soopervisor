@@ -81,7 +81,8 @@ class SlurmExporter(abc.AbstractExporter):
         pass
 
     @staticmethod
-    def _export(cfg, env_name, mode, until, skip_tests, ignore_git):
+    def _export(cfg, env_name, mode, until, skip_tests, ignore_git,
+                lazy_import):
         """
         Export and submit jbs
         """
@@ -99,7 +100,8 @@ class SlurmExporter(abc.AbstractExporter):
 
             tasks, args = commons.load_tasks(cmdr=cmdr,
                                              name=env_name,
-                                             mode=mode)
+                                             mode=mode,
+                                             lazy_import=lazy_import)
 
             if not tasks:
                 raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '

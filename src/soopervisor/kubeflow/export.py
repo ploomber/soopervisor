@@ -39,7 +39,8 @@ class KubeflowExporter(abc.AbstractExporter):
         pass
 
     @staticmethod
-    def _export(cfg, env_name, mode, until, skip_tests, ignore_git):
+    def _export(cfg, env_name, mode, until, skip_tests, ignore_git,
+                lazy_import):
         """
         Copies the current source code to the target environment folder.
         The code along with the DAG declaration file can be copied to
@@ -50,7 +51,8 @@ class KubeflowExporter(abc.AbstractExporter):
             tasks, args = commons.load_tasks(cmdr=e, name=env_name, mode=mode)
             dag, relative_path = commons.load_dag(cmdr=e,
                                                   name=env_name,
-                                                  mode=mode)
+                                                  mode=mode,
+                                                  lazy_import=lazy_import)
             products_list = {}
 
             # TODO deal with the second mode.

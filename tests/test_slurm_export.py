@@ -97,7 +97,8 @@ def test_slurm_export_sample_project(monkeypatch_slurm, tmp_sample_project):
 
     load_tasks_mock.assert_called_once_with(cmdr=ANY,
                                             name='serve',
-                                            mode='incremental')
+                                            mode='incremental',
+                                            lazy_import=False)
 
     run_mock.assert_has_calls([
         call(['sbatch', '--parsable', '_job.sh'],
@@ -186,7 +187,8 @@ def test_slurm_export_sample_project_incremental(monkeypatch,
 
     load_tasks_mock.assert_called_once_with(cmdr=ANY,
                                             name='serve',
-                                            mode='incremental')
+                                            mode='incremental',
+                                            lazy_import=False)
 
     run_mock.assert_not_called()
 

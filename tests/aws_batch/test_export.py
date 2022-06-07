@@ -126,7 +126,8 @@ def test_export(mock_batch, mock_docker_my_project_serve, monkeypatch,
 
     load_tasks_mock.assert_called_once_with(cmdr=commander_mock.__enter__(),
                                             name='train',
-                                            mode=mode)
+                                            mode=mode,
+                                            lazy_import=False)
 
     submitted = index_submit_job_by_task_name(
         boto3_mock.submit_job.call_args_list)
@@ -369,17 +370,22 @@ def test_validates_task_resources(mock_aws_batch):
                                     env_name='train')
 
 
-def test_validates_names_in_task_resources(mock_aws_batch, monkeypatch):
+@pytest.mark.parametrize('keys', [
+    ['not-a-task'],
+    ['not-a-task', 'also-not-a-valid-task-name'],
+])
+def test_validates_names_in_task_resources(mock_aws_batch, monkeypatch, keys):
     exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
     exporter.add()
 
     # customize soopervisor.yaml
     config = yaml.safe_load(Path('soopervisor.yaml').read_text())
     config['train']['task_resources'] = {
-        'not-a-task': {
+        key: {
             'vcpus': 32,
             'memory': 32768,
         }
+        for key in keys
     }
     Path('soopervisor.yaml').write_text(yaml.dump(config))
 
@@ -395,7 +401,9 @@ def test_validates_names_in_task_resources(mock_aws_batch, monkeypatch):
     with pytest.raises(ValueError) as excinfo:
         exporter.export(mode='incremental')
 
-    assert ("Unexpected task names in task_resources" in str(excinfo.value))
+    assert ("The following keys in the task_resources section"
+            in str(excinfo.value))
+    assert all([key in str(excinfo.value) for key in keys])
 
 
 @pytest.fixture

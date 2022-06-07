@@ -5,6 +5,7 @@ from uuid import uuid4
 import os
 import json
 from pathlib import Path
+import fnmatch
 
 from ploomber.io._commander import Commander, CommanderStop
 from ploomber.util.util import requires
@@ -63,12 +64,31 @@ def _transform_task_resources(resources):
     return resources_out
 
 
+def _validate_keys(task_resources, tasks):
+    names = list(tasks)
+
+    faulty_keys = []
+
+    # validate that all keys in task_resources match at least one task name
+    for pattern in task_resources:
+        matches = fnmatch.filter(names, pattern)
+
+        if not matches:
+            faulty_keys.append(pattern)
+
+    if faulty_keys:
+        faulty_keys_out = '\n* '.join(faulty_keys)
+        raise ValueError('The following keys in the task_resources section '
+                         'did not match any pipeline tasks. Delete them '
+                         'or ensure they match at least one task '
+                         f'name:\n{faulty_keys_out}')
+
+
 def _process_task_resources(task_resources, tasks):
     if not task_resources:
         return {}
 
-    # TODO: validation. check that the task names match with at least one
-    # pattern, otherwise show an error (or maybe just a warning)
+    _validate_keys(task_resources, tasks)
 
     return TaskResources({
         key: _transform_task_resources(value)
