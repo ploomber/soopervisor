@@ -2,7 +2,7 @@ import shutil
 import fnmatch
 import os
 from pathlib import Path
-import subprocess
+from subprocess import run
 
 from ploomber.io._commander import Commander, CommanderStop, CommanderException
 from jinja2 import Template, meta
@@ -168,7 +168,7 @@ def _submit_to_slurm(tasks, args, workspace):
         click.echo(f'_job.sh content:\n{script}')
 
         # submit job
-        res = subprocess.run(cmd, capture_output=True, check=True)
+        res = run(cmd, capture_output=True, check=True)
 
         # retrieve the job id, we'll use this to register --dependency
         name2id[name] = res.stdout.decode().strip()

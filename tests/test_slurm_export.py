@@ -5,7 +5,7 @@ import pytest
 from jinja2 import Template
 
 from ploomber.spec import DAGSpec
-from soopervisor.shell.export import (SlurmExporter, commons, subprocess,
+from soopervisor.shell.export import (SlurmExporter, commons,
                                       _script_name_for_task_name)
 from soopervisor.shell import export
 
@@ -21,7 +21,7 @@ def monkeypatch_slurm(monkeypatch):
 
     run_mock = Mock(side_effect=[factory(b'0'), factory(b'1'), factory(b'2')])
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
-    monkeypatch.setattr(subprocess, 'run', run_mock)
+    monkeypatch.setattr(export, 'run', run_mock)
 
     def which_(arg):
         return '/bin/sbatch' if arg == 'sbatch' else None
@@ -173,7 +173,7 @@ def test_slurm_export_sample_project_incremental(monkeypatch,
 
     run_mock = Mock(side_effect=[factory(b'0'), factory(b'1'), factory(b'2')])
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
-    monkeypatch.setattr(subprocess, 'run', run_mock)
+    monkeypatch.setattr(export, 'run', run_mock)
 
     exporter = SlurmExporter.new(path_to_config='soopervisor.yaml',
                                  env_name='serve')
