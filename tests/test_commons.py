@@ -275,6 +275,32 @@ def test_copy_ignore_git(tmp_empty):
     assert Path('dist', 'another').is_file()
 
 
+def test_copy_warn_if_file_too_big(cmdr, tmp_empty, monkeypatch, capsys):
+    # mock files to be 11MB
+    monkeypatch.setattr(source.os.path, 'getsize',
+                        Mock(return_value=1024 * 1024 * 11.1243214124))
+
+    Path('file').touch()
+    Path('dir').mkdir()
+    Path('dir', 'another').touch()
+    Path('dir', 'others').touch()
+    git_init()
+
+    source.copy(cmdr, '.', 'dist')
+
+    expected = set(Path(p) for p in (
+        'dist/file',
+        'dist/dir/another',
+        'dist/dir/others',
+    ))
+
+    captured = capsys.readouterr()
+
+    assert set(Path(p) for p in source.glob_all('dist')) == expected
+    assert 'The following files are too big. ' in captured.out
+    assert 'file' in captured.out
+
+
 def test_compress_dir(tmp_empty):
     dir = Path('dist', 'project-name')
     dir.mkdir(parents=True)
@@ -529,3 +555,44 @@ def test_docker_build(tmp_sample_project):
     }
 
     assert existing == expected
+
+
+def test_docker_build_big_file_warns(tmp_sample_project, monkeypatch, capsys):
+    monkeypatch.setattr(source.os.path, 'getsize',
+                        Mock(return_value=1024 * 1024 * 11))
+
+    Path('some-env').mkdir()
+    Path('some-env', 'Dockerfile').touch()
+
+    with CustomCommander(workspace='some-env') as cmdr:
+        commons.docker.build(cmdr,
+                             ConcreteDockerConfig(),
+                             'some-env',
+                             until=None,
+                             entry_point='pipeline.yaml')
+
+    existing = _list_files(Path('dist', 'sample_project.tar.gz'))
+
+    expected = {
+        'sample_project/env.serve.yaml',
+        'sample_project',
+        'sample_project/some-env/Dockerfile',
+        'sample_project/clean.py',
+        'sample_project/plot.py',
+        'sample_project/environment.yml',
+        'sample_project/env.yaml',
+        'sample_project/README.md',
+        'sample_project/environment.lock.yml',
+        'sample_project/some-env',
+        'sample_project/some-env/environment.lock.yml',
+        'sample_project/raw.py',
+        'sample_project/pipeline.yaml',
+    }
+
+    captured = capsys.readouterr()
+
+    assert existing == expected
+
+    assert 'The following files are too big. ' in captured.out
+    assert 'README.md' in captured.out
+    assert 'raw.py' in captured.out
