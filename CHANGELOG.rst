@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+0.8.1dev
+--------
+
 0.8 (2022-06-09)
 ----------------
 * Dropping support for Python 3.6
