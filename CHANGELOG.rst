@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.7.3dev
---------
+0.8 (2022-06-09)
+----------------
 * Dropping support for Python 3.6
 * Adds ``task_resources`` to AWS Batch
 * AWS Batch exporter now generates a unique job definition name on each submission
