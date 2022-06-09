@@ -38,7 +38,7 @@ def all_dependencies(prefix, suffix, lock='lock'):
     ]
     for filename in matched_files:
         task_name = [s for s in filename.split(".") if s not in (prefix, lock, suffix)]
-        task_name = 'main' if not task_name else task_name[0]
+        task_name = 'default' if not task_name else task_name[0]
         if lock in filename:
             task_files[task_name]['lock'] = filename
         else:

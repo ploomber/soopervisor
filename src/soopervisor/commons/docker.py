@@ -27,6 +27,28 @@ def cp_ploomber_home(pkg_name):
         archive.add(home_path, arcname='ploomber/stats')
         archive.close()
 
+def generate_task_image_map(task, image):
+    """Match task names to image names
+       e.g., tasks fit-0, fit-1, etc
+       will be mapped to image fit-__.
+       Other tasks ( default ) which do not
+       correspond to pattern task-* will be
+       mapped to main. Example:
+       {
+        'default' : 'main',
+        'fit-0' : 'project-fit-__:latest',
+        'fit-1' : 'project-fit-__:latest'
+        }
+
+       Parameters
+       ----------
+       task : list
+
+       image : list
+
+    """
+
+
 
 def build(e,
           cfg,
@@ -57,7 +79,7 @@ def build(e,
     skip_tests : bool, default=False
         Skip image testing (check dag loading and File.client configuration)
     """
-    print('Exclude : {}'.format(cfg.exclude))
+
     if not Path(env_name, 'Dockerfile').is_file():
         raise MissingDockerfileError(env_name)
 
@@ -71,12 +93,16 @@ def build(e,
     requirement_files = dependencies.all_dependencies('requirements', 'txt')
     dependency_files = requirement_files if requirement_files \
         else dependencies.all_dependencies('environment', 'yml')
+    print('Dependency files : {}'.format(dependency_files))
 
     all_dependency_paths = []
     for task,paths in dependency_files.items():
+        # TODO: If requirements.txt files are not mandatory dependency key will be absent
         all_dependency_paths = all_dependency_paths + [paths['dependency'], paths['lock']]
 
     image_target_list = []
+
+    taskpattern_image_map = {}
 
     all_lock_files = {}
     for task, filepath in dependency_files.items():
@@ -110,7 +136,8 @@ def build(e,
                 exclude = other_lock_files
 
             print('Other lock files : {}'.format(other_lock_files))
-            rename_files = {lock_file: 'requirements.lock.txt'}
+            rename_files = {lock_file: 'requirements.lock.txt'} if 'requirements' in lock_file \
+                else {lock_file: 'environment.lock.yml'}
             source.copy(cmdr=e,
                         src='.',
                         dst=target,
@@ -127,7 +154,7 @@ def build(e,
         print("env_name : {}".format(env_name))
         e.cd(env_name)
 
-        image_local = f'{pkg_name}-{task.replace("*","all")}:{version}'
+        image_local = f'{pkg_name}:{version}-{task.replace("*","ploomber")}'
         print("image_local : {}".format(image_local))
         # how to allow passing --no-cache?
         e.run('docker',
@@ -177,7 +204,7 @@ def build(e,
             image_target = cfg.repository
             # Adding the latest tag if not a remote repo
             if ":" not in image_target:
-                image_target = f'{image_target}:{version}'
+                image_target = f'{image_target}:{version}-{task.replace("*","ploomber")}'
                 print('Image_target with version : {}'.format(image_target))
             e.run('docker',
                   'tag',
@@ -191,9 +218,9 @@ def build(e,
         if until == 'push':
             raise CommanderStop('Done. Image pushed to repository.')
         image_target_list.append(image_target)
-        #e.force_delete()
+        taskpattern_image_map[task] = image_target
         e.cd('..')
 
 
     print("pkg_name : {}, image_target : {}".format(pkg_name, image_target_list))
-    return pkg_name, image_target_list
+    return pkg_name, image_target_list, taskpattern_image_map
