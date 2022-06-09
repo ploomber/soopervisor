@@ -161,6 +161,12 @@ Open the ``soopervisor.yaml`` file and fill in the missing values in
         memory: 16384
         vcpus: 8
 
+
+.. tip::
+
+    You can request custom resources per task, check out the
+    :doc:`API <../api/aws-batch>` to learn more.
+
 Submit for execution:
 
 .. code-block:: sh
