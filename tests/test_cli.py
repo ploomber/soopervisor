@@ -31,6 +31,28 @@ def monkeypatch_external(monkeypatch):
 # TODO Add test with lambda
 
 
+@pytest.mark.parametrize('args, backend', [
+    [['add', 'serve', '--backend', 'argo-workflows'], Backend.argo_workflows],
+    [['add', 'serve', '--backend', 'airflow'], Backend.airflow],
+    [['add', 'serve', '--backend', 'kubeflow'], Backend.kubeflow],
+    [['add', 'serve', '--backend', 'aws-batch'], Backend.aws_batch],
+    [['add', 'serve', '--backend', 'slurm'], Backend.slurm],
+],
+                         ids=[
+                             'argo',
+                             'airflow',
+                             'kubeflow',
+                             'batch',
+                             'slurm',
+                         ])
+def test_suggestion_after_add(args, backend, tmp_sample_project):
+    runner = CliRunner()
+    result = runner.invoke(cli, args, catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert "Environment added, to export it" in result.output
+
+
 def test_add_unknown_backend():
     runner = CliRunner()
     result = runner.invoke(cli, ['add', 'something', '--backend', 'unknown'],
