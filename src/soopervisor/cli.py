@@ -72,6 +72,12 @@ def add(env_name, backend, preset):
                           'env_name': env_name
                       })
 
+    click.echo('Environment added, to export it:\n'
+               f'\t $ soopervisor export {env_name}\n'
+               'To force execution of all tasks:\n'
+               f'\t $ soopervisor export {env_name} '
+               '--mode force\n')
+
 
 @cli.command()
 @click.argument('env_name')
