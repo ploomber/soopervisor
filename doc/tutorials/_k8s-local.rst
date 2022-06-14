@@ -163,7 +163,7 @@ We finished configuring; let's now submit the workflow:
     argo submit -n argo --watch training/argo.yaml
 
 
-**Congratulations! You just ran Ploomber on Kubernetes! 🎉**
+Congratulations! You just ran Ploomber on Kubernetes! 🎉
 
 
 .. note::
