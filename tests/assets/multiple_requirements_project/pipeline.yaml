@@ -6,9 +6,13 @@ tasks:
     name: raw
     product: {'nb': '{{path.products}}/data.ipynb', 'data': '{{path.products}}/data.csv'}
 
-  - source: clean.py
-    name: clean
-    product: {'nb': '{{path.products}}/clean.ipynb', 'data': '{{path.products}}/clean.csv'}
+  - source: clean_one.py
+    name: clean-1
+    product: {'nb': '{{path.products}}/clean_one.ipynb', 'data': '{{path.products}}/clean.csv'}
+
+  - source: clean_two.py
+      name: clean-2
+      product: { 'nb': '{{path.products}}/clean_two.ipynb', 'data': '{{path.products}}/clean.csv' }
 
   - source: plot.py
     name: plot

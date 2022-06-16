@@ -1,5 +1,5 @@
-import os
 import tarfile
+import os
 from pathlib import Path
 
 from ploomber.io._commander import CommanderStop
@@ -16,6 +16,29 @@ def _validate_repository(repository):
             'in soopervisor.yaml, please add a valid value.')
 
 
+def _get_dependencies():
+    """
+    Fetch all dependency files and corresponding lock files
+    mapped to corresponding task patterns, e.g., requirements.fit-*.txt
+    and requirements.fit-*.lock.txt mapped to pattern fit-*.
+    """
+
+    lock_paths = {}
+    # all_dependency_paths = []
+
+    requirement_files = dependencies.get_task_dependency_files(
+        'requirements', 'txt')
+    dependency_files = requirement_files if requirement_files \
+        else dependencies.get_task_dependency_files('environment', 'yml')
+
+    for task, paths in dependency_files.items():
+        #all_dependency_paths = all_dependency_paths + [paths['dependency'], paths['lock']]
+        #all_dependency_paths = all_dependency_paths + [paths['lock']]
+        lock_paths[task] = paths['lock']
+
+    return dependency_files, lock_paths
+
+
 def cp_ploomber_home(pkg_name):
     # Generate ploomber home
     home_path = Path(telemetry.get_home_dir(), 'stats')
@@ -26,28 +49,6 @@ def cp_ploomber_home(pkg_name):
         archive = tarfile.open(target, "w:gz")
         archive.add(home_path, arcname='ploomber/stats')
         archive.close()
-
-def generate_task_image_map(task, image):
-    """Match task names to image names
-       e.g., tasks fit-0, fit-1, etc
-       will be mapped to image fit-__.
-       Other tasks ( default ) which do not
-       correspond to pattern task-* will be
-       mapped to main. Example:
-       {
-        'default' : 'main',
-        'fit-0' : 'project-fit-__:latest',
-        'fit-1' : 'project-fit-__:latest'
-        }
-
-       Parameters
-       ----------
-       task : list
-
-       image : list
-
-    """
-
 
 
 def build(e,
@@ -90,52 +91,48 @@ def build(e,
 
     dependencies.check_lock_files_exist()
 
-    requirement_files = dependencies.all_dependencies('requirements', 'txt')
-    dependency_files = requirement_files if requirement_files \
-        else dependencies.all_dependencies('environment', 'yml')
-    print('Dependency files : {}'.format(dependency_files))
+    dependency_files, lock_paths = _get_dependencies()
 
-    all_dependency_paths = []
-    for task,paths in dependency_files.items():
-        # TODO: If requirements.txt files are not mandatory dependency key will be absent
-        all_dependency_paths = all_dependency_paths + [paths['dependency'], paths['lock']]
+    task_pattern_image_map = {}
 
-    image_target_list = []
-
-    taskpattern_image_map = {}
-
-    all_lock_files = {}
-    for task, filepath in dependency_files.items():
-        all_lock_files[task] = filepath['lock']
-
-    for task, lock_file in all_lock_files.items():
+    for task, lock_file in lock_paths.items():
         if Path(lock_file).exists():
             e.cp(lock_file)
-            print('Requirements filepath : {}'.format(lock_file))
 
-        print("Path('setup.py').exists(): {}".format(Path('setup.py').exists()))
         # Generate source distribution
         if Path('setup.py').exists():
+            # raise error if multiple requirements files found
+            for task_pattern in list(dependency_files.keys()):
+                if task_pattern != 'default':
+                    raise NotImplementedError(
+                        "Multiple requirements.*.lock.txt or "
+                        "environment.*.lock.yml files found along "
+                        "with setup.py file. Please have either "
+                        "of the two in the project root.")
             # .egg-info may cause issues if MANIFEST.in was recently updated
-            e.rm('dist', 'build', Path('src', pkg_name, f'{pkg_name}.egg-info'))
-            e.run('python', '-m', 'build', '--sdist', description='Packaging code')
+            e.rm('dist', 'build', Path('src', pkg_name,
+                                       f'{pkg_name}.egg-info'))
+            e.run('python',
+                  '-m',
+                  'build',
+                  '--sdist',
+                  description='Packaging code')
 
             # raise error if include is not None? and suggest to use MANIFEST.in
             # instead
         else:
             e.rm('dist')
             target = Path('dist', pkg_name)
-            print("target = Path('dist', pkg_name) : {}".format(Path('dist', pkg_name)))
             e.info('Packaging code')
-            other_lock_files = [file for file in all_dependency_paths
-                                if file != lock_file]
+            other_lock_files = [
+                file for file in list(lock_paths.values()) if file != lock_file
+            ]
             exclude = cfg.exclude
             if cfg.exclude and other_lock_files:
                 exclude = cfg.exclude + other_lock_files
             elif not cfg.exclude and other_lock_files:
                 exclude = other_lock_files
 
-            print('Other lock files : {}'.format(other_lock_files))
             rename_files = {lock_file: 'requirements.lock.txt'} if 'requirements' in lock_file \
                 else {lock_file: 'environment.lock.yml'}
             source.copy(cmdr=e,
@@ -145,17 +142,16 @@ def build(e,
                         exclude=exclude,
                         ignore_git=ignore_git,
                         rename_files=rename_files)
-            print('Compressing directory . src : {}, dst : {}'.format(target, Path('dist', f'{pkg_name}.tar.gz')))
+
+            # need to remove this existing tar.gz file before next loop
             source.compress_dir(e, target, Path('dist', f'{pkg_name}.tar.gz'))
 
-        print('Calling e.cp(dist. Current requirement file : {}'.format(lock_file))
         e.cp('dist')
 
-        print("env_name : {}".format(env_name))
         e.cd(env_name)
 
         image_local = f'{pkg_name}:{version}-{task.replace("*","ploomber")}'
-        print("image_local : {}".format(image_local))
+
         # how to allow passing --no-cache?
         e.run('docker',
               'build',
@@ -199,13 +195,13 @@ def build(e,
 
         if until == 'build':
             raise CommanderStop('Done. Run "docker images" to see your image.')
-        print("cfg.respository : {}".format(cfg.repository))
+
         if cfg.repository:
             image_target = cfg.repository
             # Adding the latest tag if not a remote repo
             if ":" not in image_target:
                 image_target = f'{image_target}:{version}-{task.replace("*","ploomber")}'
-                print('Image_target with version : {}'.format(image_target))
+
             e.run('docker',
                   'tag',
                   image_local,
@@ -217,10 +213,10 @@ def build(e,
 
         if until == 'push':
             raise CommanderStop('Done. Image pushed to repository.')
-        image_target_list.append(image_target)
-        taskpattern_image_map[task] = image_target
+        #image_target_list.append(image_target)
+        task_pattern_image_map[task] = image_target
+        e.rm('dist')
         e.cd('..')
 
-
-    print("pkg_name : {}, image_target : {}".format(pkg_name, image_target_list))
-    return pkg_name, image_target_list, taskpattern_image_map
+    e.info('Images generated : {}'.format(task_pattern_image_map))
+    return pkg_name, task_pattern_image_map

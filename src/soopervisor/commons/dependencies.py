@@ -4,14 +4,17 @@ from pathlib import Path
 from collections import defaultdict
 
 
-def _no_missing_locks(prefix, suffix, lock):
-    tasks = all_locks(prefix, suffix)
+def _no_missing_dependencies(prefix, suffix):
+    tasks = get_task_dependency_files(prefix, suffix)
     # Every requirements.*.txt file should have a corresponding
     # requirements.*.lock.txt file
-    return 2 * len(set(tasks)) == len(tasks)
+    for task_pattern, paths in tasks.items():
+        if 'dependency' not in paths or 'lock' not in paths:
+            return False
+    return len(tasks) > 0
 
 
-def all_dependencies(prefix, suffix, lock='lock'):
+def get_task_dependency_files(prefix, suffix, lock='lock'):
     """
     Return all requirements/ environment files
     for each task in the below dict format:
@@ -20,7 +23,7 @@ def all_dependencies(prefix, suffix, lock='lock'):
                  'lock': path of lock file
                }
     }
-    task_name is 'main' for requirements.txt / environment.yml
+    task_name is 'default' for requirements.txt / environment.yml
 
     Parameters
     ----------
@@ -37,14 +40,15 @@ def all_dependencies(prefix, suffix, lock='lock'):
         path.name for path in list(Path('.').glob(f"{prefix}*.{suffix}"))
     ]
     for filename in matched_files:
-        task_name = [s for s in filename.split(".") if s not in (prefix, lock, suffix)]
+        task_name = [
+            s for s in filename.split(".") if s not in (prefix, lock, suffix)
+        ]
         task_name = 'default' if not task_name else task_name[0]
         if lock in filename:
             task_files[task_name]['lock'] = filename
         else:
             task_files[task_name]['dependency'] = filename
     return task_files
-
 
 
 def check_lock_files_exist():
@@ -58,14 +62,13 @@ pip: pip freeze > requirements.lock.txt
 conda: conda env export --no-build --file environment.lock.yml
 """)
 
-    #
-    # if not (_no_missing_locks('requirements', 'txt', 'lock')
-    #         and _no_missing_locks('environment', 'yml', 'lock')):
-    #     raise click.ClickException("""
-    #     Expected requirements.<task-name>.lock.txt file for \
-    #     each requirements.<task-name>.txt file OR \
-    #     environment.<task-name>.lock.yml for each \
-    #     environment.<task-name>.yml file at the root directory.
-    #     Add relevant lock files and try again.
-    #
-    #     """)
+    if not _no_missing_dependencies('requirements', 'txt') \
+            and not _no_missing_dependencies('environment', 'yml'):
+        raise click.ClickException("""
+        Expected requirements.<task-name>.lock.txt file for \
+        each requirements.<task-name>.txt file OR \
+        environment.<task-name>.lock.yml for each \
+        environment.<task-name>.yml file at the root directory.
+        Add relevant files and try again.
+
+        """)
