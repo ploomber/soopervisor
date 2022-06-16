@@ -531,6 +531,39 @@ def test_cp_ploomber_home(tmp_empty, monkeypatch):
     assert after == {'ploomber/stats', 'ploomber/stats/another', 'file'}
 
 
+def test_get_dependencies():
+    Path('requirements.txt').touch()
+    Path('requirements.lock.txt').touch()
+    Path('requirements.clean-*.txt').touch()
+    Path('requirements.clean-*.lock.txt').touch()
+    Path('requirements.load-*.txt').touch()
+    Path('requirements.load-*.lock.txt').touch()
+
+    dependency_files, lock_paths = commons.docker.get_dependencies()
+
+    expected_dependency_files = {
+        'load-*': {
+            'dependency': 'requirements.load-*.txt',
+            'lock': 'requirements.load-*.lock.txt'
+        },
+        'default': {
+            'dependency': 'requirements.txt',
+            'lock': 'requirements.lock.txt'
+        },
+        'clean-*': {
+            'lock': 'requirements.clean-*.lock.txt',
+            'dependency': 'requirements.clean-*.txt'
+        }
+    }
+    expected_lock_paths = {
+        'load-*': 'requirements.load-*.lock.txt',
+        'default': 'requirements.lock.txt',
+        'clean-*': 'requirements.clean-*.lock.txt'
+    }
+    assert dependency_files == expected_dependency_files
+    assert lock_paths == expected_lock_paths
+
+
 def test_docker_build(tmp_sample_project):
     Path('some-env').mkdir()
     Path('some-env', 'Dockerfile').touch()

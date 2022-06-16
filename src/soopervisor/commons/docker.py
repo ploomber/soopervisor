@@ -16,25 +16,22 @@ def _validate_repository(repository):
             'in soopervisor.yaml, please add a valid value.')
 
 
-def _get_dependencies():
+def get_dependencies():
     """
     Fetch all dependency files and corresponding lock files
     mapped to corresponding task patterns, e.g., requirements.fit-*.txt
     and requirements.fit-*.lock.txt mapped to pattern fit-*.
     """
 
-    lock_paths = {}
-    # all_dependency_paths = []
-
     requirement_files = dependencies.get_task_dependency_files(
         'requirements', 'txt')
     dependency_files = requirement_files if requirement_files \
         else dependencies.get_task_dependency_files('environment', 'yml')
 
-    for task, paths in dependency_files.items():
-        #all_dependency_paths = all_dependency_paths + [paths['dependency'], paths['lock']]
-        #all_dependency_paths = all_dependency_paths + [paths['lock']]
-        lock_paths[task] = paths['lock']
+    lock_paths = {
+        task: paths['lock']
+        for task, paths in dependency_files.items()
+    }
 
     return dependency_files, lock_paths
 
@@ -91,7 +88,7 @@ def build(e,
 
     dependencies.check_lock_files_exist()
 
-    dependency_files, lock_paths = _get_dependencies()
+    dependency_files, lock_paths = get_dependencies()
 
     task_pattern_image_map = {}
 
