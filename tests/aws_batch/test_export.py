@@ -248,11 +248,6 @@ def test_export_multiple_images(mock_batch, monkeypatch,
 
     }
 
-
-
-
-    
-
     assert dependencies == {
         'raw': set(),
         'clean-1': {'raw'},
