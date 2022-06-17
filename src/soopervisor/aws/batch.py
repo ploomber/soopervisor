@@ -142,7 +142,7 @@ def _submit_dag(
         jobDefinitionName=job_def,
         type='container',
         containerProperties=container_properties)
-    task_pattern_jd_map['default'] = jd
+    task_pattern_jd_map[default_image_key] = jd
 
     # Register job definitions for task specific images
     for pattern, image in task_pattern_image_map.items():
@@ -200,7 +200,7 @@ def _submit_dag(
 
         response = client.submit_job(jobName=name,
                                      jobQueue=job_queue,
-                                     jobDefinition=jd['jobDefinitionArn'],
+                                     jobDefinition=task_jd['jobDefinitionArn'],
                                      dependsOn=[{
                                          "jobId": job_ids[name]
                                      } for name in upstream],

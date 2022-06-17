@@ -8,11 +8,11 @@ tasks:
 
   - source: clean_one.py
     name: clean-1
-    product: {'nb': '{{path.products}}/clean_one.ipynb', 'data': '{{path.products}}/clean.csv'}
+    product: {'nb': '{{path.products}}/clean_one.ipynb', 'data': '{{path.products}}/clean_one.csv'}
 
   - source: clean_two.py
-      name: clean-2
-      product: { 'nb': '{{path.products}}/clean_two.ipynb', 'data': '{{path.products}}/clean.csv' }
+    name: clean-2
+    product: { 'nb': '{{path.products}}/clean_two.ipynb', 'data': '{{path.products}}/clean_two.csv' }
 
   - source: plot.py
     name: plot

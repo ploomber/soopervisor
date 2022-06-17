@@ -4,7 +4,7 @@ Generate plot
 import pandas as pd
 
 # + tags=["parameters"]
-upstream = ['clean']
+upstream = ['clean-2']
 product = None
 # -
 
