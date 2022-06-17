@@ -8,11 +8,14 @@ DEFAULT_IMAGE_NAME = 'default'
 
 def _no_missing_dependencies(prefix, suffix):
     tasks = get_task_dependency_files(prefix, suffix)
-    # Every requirements.*.txt file should have a corresponding
-    # requirements.*.lock.txt file
-    for task_pattern, paths in tasks.items():
-        if 'dependency' not in paths or 'lock' not in paths:
-            return False
+    if len(tasks) > 1:
+        # If multiple dependency file present, every
+        # requirements.*.txt/ environment.*.yml file
+        # should have a corresponding requirements.*.lock.txt/
+        # environment.*.lock.yml file
+        for task_pattern, paths in tasks.items():
+            if 'dependency' not in paths or 'lock' not in paths:
+                return False
     return len(tasks) > 0
 
 
