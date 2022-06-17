@@ -51,80 +51,41 @@ def cp_ploomber_home(pkg_name):
 def modify_wildcard(entity):
     return entity.replace("*", "ploomber")
 
-def build(e,
+
+def get_dependencies():
+    """
+    Fetch all dependency files and corresponding lock files
+    mapped to corresponding task patterns, e.g., requirements.fit-*.txt
+    and requirements.fit-*.lock.txt mapped to pattern fit-*.
+    """
+
+    requirement_files = dependencies.get_task_dependency_files(
+        'requirements', 'txt')
+    dependency_files = requirement_files if requirement_files \
+        else dependencies.get_task_dependency_files('environment', 'yml')
+
+    lock_paths = {
+        task: paths['lock']
+        for task, paths in dependency_files.items()
+    }
+    return dependency_files, lock_paths
+
+def build_image(e,
           cfg,
           env_name,
           until,
           entry_point,
-          skip_tests=False,
-          ignore_git=False):
-    """Build a docker image
-
-    Parameters
-    ----------
-    e : Commander
-        Commander instance
-
-    cfg
-        Configuration
-
-    env_name : str
-        Target environment name
-
-    until : str
-        Stop after certain starge
-
-    entry_point : str
-        Entry point to use path/to/pipeline.yaml
-
-    skip_tests : bool, default=False
-        Skip image testing (check dag loading and File.client configuration)
-    """
-
-    if not Path(env_name, 'Dockerfile').is_file():
-        raise MissingDockerfileError(env_name)
-
-    # raise an error if the user didn't change the default value
-    _validate_repository(cfg.repository)
-
-    pkg_name, version = source.find_package_name_and_version()
-
-    dependencies.check_lock_files_exist()
-
-    dependency_files, lock_paths = get_dependencies()
-
-    task_pattern_image_map = {}
-
-    if Path('requirements.lock.txt').exists():
-        e.cp('requirements.lock.txt')
-    elif Path('environment.lock.yml').exists():
-        e.cp('environment.lock.yml')
-
-        # Generate source distribution
-    if Path('setup.py').exists():
-        # .egg-info may cause issues if MANIFEST.in was recently updated
-        e.rm('dist', 'build', Path('src', pkg_name, f'{pkg_name}.egg-info'))
-        e.run('python', '-m', 'build', '--sdist', description='Packaging code')
-
-        # raise error if include is not None? and suggest to use MANIFEST.in
-        # instead
-    else:
-        e.rm('dist')
-        target = Path('dist', pkg_name)
-        e.info('Packaging code')
-        source.copy(cmdr=e,
-                    src='.',
-                    dst=target,
-                    include=cfg.include,
-                    exclude=cfg.exclude,
-                    ignore_git=ignore_git)
-        source.compress_dir(e, target, Path('dist', f'{pkg_name}.tar.gz'))
+          skip_tests,
+          ignore_git,
+          pkg_name,
+          version,
+          task):
 
     e.cp('dist')
 
     e.cd(env_name)
 
-    image_local = f'{pkg_name}:{version}'
+    image_local = f'{pkg_name}:{version}-{modify_wildcard(task)}'
 
     import os
     import shlex
@@ -179,7 +140,7 @@ def build(e,
         image_target = cfg.repository
         # Adding the latest tag if not a remote repo
         if ":" not in image_target:
-            image_target = f'{image_target}:{version}'
+            image_target = f'{image_target}:{version}-{modify_wildcard(task)}'
         e.run('docker',
               'tag',
               image_local,
@@ -192,4 +153,115 @@ def build(e,
     if until == 'push':
         raise CommanderStop('Done. Image pushed to repository.')
 
-    return pkg_name, image_target
+    return image_target
+
+def build(e,
+          cfg,
+          env_name,
+          until,
+          entry_point,
+          skip_tests=False,
+          ignore_git=False):
+    """Build a docker image
+
+    Parameters
+    ----------
+    e : Commander
+        Commander instance
+
+    cfg
+        Configuration
+
+    env_name : str
+        Target environment name
+
+    until : str
+        Stop after certain starge
+
+    entry_point : str
+        Entry point to use path/to/pipeline.yaml
+
+    skip_tests : bool, default=False
+        Skip image testing (check dag loading and File.client configuration)
+    """
+
+    if not Path(env_name, 'Dockerfile').is_file():
+        raise MissingDockerfileError(env_name)
+
+    # raise an error if the user didn't change the default value
+    _validate_repository(cfg.repository)
+
+    pkg_name, version = source.find_package_name_and_version()
+
+    dependencies.check_lock_files_exist()
+
+    dependency_files, lock_paths = get_dependencies()
+
+    task_pattern_image_map = {}
+
+    # Generate source distribution
+    if Path('setup.py').exists():
+        for task_pattern in list(dependency_files.keys()):
+            if task_pattern != 'default':
+                raise NotImplementedError(
+                    "Multiple requirements.*.lock.txt or "
+                    "environment.*.lock.yml files found along "
+                    "with setup.py file. Please have either "
+                    "of the two in the project root.")
+        # .egg-info may cause issues if MANIFEST.in was recently updated
+        if Path('requirements.lock.txt').exists():
+            e.cp('requirements.lock.txt')
+        elif Path('environment.lock.yml').exists():
+            e.cp('environment.lock.yml')
+        e.rm('dist', 'build', Path('src', pkg_name, f'{pkg_name}.egg-info'))
+        e.run('python', '-m', 'build', '--sdist', description='Packaging code')
+        task, image = build_image(e,
+                                  cfg,
+                                  env_name,
+                                  until,
+                                  entry_point,
+                                  skip_tests,
+                                  ignore_git, pkg_name, version, task=dependencies.get_default_image_key())
+        task_pattern_image_map[task] = image
+        # raise error if include is not None? and suggest to use MANIFEST.in
+        # instead
+    else:
+        for task, lock_file in lock_paths.items():
+            if Path(lock_file).exists():
+                e.cp(lock_file)
+            e.rm('dist')
+            target = Path('dist', pkg_name)
+            e.info('Packaging code')
+            other_lock_files = [
+                file for file in list(lock_paths.values()) if file != lock_file
+            ]
+            exclude = cfg.exclude
+            if cfg.exclude and other_lock_files:
+                exclude = cfg.exclude + other_lock_files
+            elif not cfg.exclude and other_lock_files:
+                exclude = other_lock_files
+
+            rename_files = {lock_file: 'requirements.lock.txt'} if 'requirements' in lock_file \
+                else {lock_file: 'environment.lock.yml'}
+            source.copy(cmdr=e,
+                        src='.',
+                        dst=target,
+                        include=cfg.include,
+                        exclude=exclude,
+                        ignore_git=ignore_git,
+                        rename_files=rename_files)
+            source.compress_dir(e, target, Path('dist', f'{pkg_name}.tar.gz'))
+
+            image = build_image(e,
+                  cfg,
+                  env_name,
+                  until,
+                  entry_point,
+                  skip_tests,
+                  ignore_git, pkg_name, version, task)
+            task_pattern_image_map[task] = image
+
+            e.rm('dist')
+            e.cd('..')
+
+    return pkg_name, task_pattern_image_map
