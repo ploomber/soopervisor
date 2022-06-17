@@ -6,7 +6,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9]
 
     steps:
     - uses: actions/checkout@v2
@@ -24,6 +24,8 @@ jobs:
         pip install invoke
         pip install -e tests/assets/my_project
         pip install ".[dev]"
+        # one of airflow's dependencies is downgrading clic, which breaks ploomber
+        pip install click --upgrade
     - name: Test with pytest
       env:
         PLOOMBER_STATS_ENABLED: false

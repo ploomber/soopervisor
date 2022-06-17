@@ -72,6 +72,12 @@ def add(env_name, backend, preset):
                           'env_name': env_name
                       })
 
+    click.echo('Environment added, to export it:\n'
+               f'\t $ soopervisor export {env_name}\n'
+               'To force execution of all tasks:\n'
+               f'\t $ soopervisor export {env_name} '
+               '--mode force\n')
+
 
 @cli.command()
 @click.argument('env_name')
@@ -91,7 +97,8 @@ def add(env_name, backend, preset):
               '-i',
               is_flag=True,
               help='Ignore git tracked files (include everything)')
-def export(env_name, until_build, mode, skip_tests, ignore_git):
+@click.option('--lazy', '-l', is_flag=True, help='Lazily load pipeline')
+def export(env_name, until_build, mode, skip_tests, ignore_git, lazy):
     """
     Export a target platform for execution/deployment
     """
@@ -124,11 +131,12 @@ def export(env_name, until_build, mode, skip_tests, ignore_git):
     Exporter = exporter.for_backend(backend)
 
     try:
-        Exporter.load('soopervisor.yaml',
-                      env_name=env_name).export(mode=mode,
-                                                until=until,
-                                                skip_tests=skip_tests,
-                                                ignore_git=ignore_git)
+        Exporter.load('soopervisor.yaml', env_name=env_name,
+                      lazy_import=lazy).export(mode=mode,
+                                               until=until,
+                                               skip_tests=skip_tests,
+                                               ignore_git=ignore_git,
+                                               lazy_import=lazy)
 
     except Exception as e:
         telemetry.log_api("soopervisor_export_error",

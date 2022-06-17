@@ -1,5 +1,18 @@
+from typing import Mapping
+
+from pydantic import BaseModel
+
 from soopervisor.abc import AbstractConfig, AbstractDockerConfig
 from soopervisor.enum import Backend
+
+
+class TaskResource(BaseModel):
+    vcpus: int = None
+    memory: int = None
+    gpu: int = None
+
+    class Config:
+        extra = 'forbid'
 
 
 class AWSBatchConfig(AbstractDockerConfig):
@@ -9,6 +22,8 @@ class AWSBatchConfig(AbstractDockerConfig):
     container_properties: dict
     job_queue: str
     region_name: str
+
+    task_resources: Mapping[str, TaskResource] = None
 
     @classmethod
     def get_backend_value(cls):
@@ -25,8 +40,13 @@ class AWSBatchConfig(AbstractDockerConfig):
                     ))
 
 
-class AWSLambdaConfig(AbstractConfig):
+class CloudConfig(AWSBatchConfig):
+    @classmethod
+    def get_backend_value(cls):
+        return Backend.cloud.value
 
+
+class AWSLambdaConfig(AbstractConfig):
     @classmethod
     def get_backend_value(cls):
         return Backend.aws_lambda.value

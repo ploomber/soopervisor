@@ -8,6 +8,7 @@ from soopervisor.kubeflow.export import KubeflowExporter, commons
 
 
 # Test the task output is same as it's product
+@pytest.mark.skip(reason="incompatibility with kfp version")
 @pytest.mark.parametrize('mode, args', [
     ['incremental', ''],
     ['regular', ''],

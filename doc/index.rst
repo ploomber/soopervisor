@@ -177,6 +177,7 @@ configuration details will change, but the API remains the same:
    api/cli
    api/kubernetes
    api/slurm
+   api/aws-batch
 
 
 .. toctree::

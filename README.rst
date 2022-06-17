@@ -25,7 +25,7 @@ inference.
 
 Check out the `documentation <https://soopervisor.readthedocs.io/>`_ to learn more.
 
-*Compatible with Python 3.6 and higher.*
+*Compatible with Python 3.7 and higher.*
 
 Supported platforms
 ===================

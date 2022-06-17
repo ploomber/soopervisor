@@ -1,0 +1,1 @@
+Pipeline to check lazy loading.

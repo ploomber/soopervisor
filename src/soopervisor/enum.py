@@ -19,6 +19,7 @@ class Backend(Enum, metaclass=CustomEnum):
     airflow = 'airflow'
     kubeflow = 'kubeflow'
     slurm = 'slurm'
+    cloud = 'cloud'
 
     @classmethod
     def get_values(cls):

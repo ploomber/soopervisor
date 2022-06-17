@@ -42,7 +42,8 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
             e.success('Done')
 
     @staticmethod
-    def _export(cfg, env_name, mode, until, skip_tests, ignore_git):
+    def _export(cfg, env_name, mode, until, skip_tests, ignore_git,
+                lazy_import):
         """
         Build and upload Docker image. Export Argo YAML spec.
         """
@@ -51,7 +52,8 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
 
             tasks, args = commons.load_tasks(cmdr=cmdr,
                                              name=env_name,
-                                             mode=mode)
+                                             mode=mode,
+                                             lazy_import=lazy_import)
 
             if not tasks:
                 raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
@@ -86,7 +88,6 @@ class _literal_str(str):
 
 
 def _change_style(style, representer):
-
     def new_representer(dumper, data):
         scalar = representer(dumper, data)
         scalar.style = style

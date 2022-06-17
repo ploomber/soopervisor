@@ -1,8 +1,16 @@
 CHANGELOG
 =========
 
-0.7.3dev
+0.8.1dev
 --------
+
+0.8 (2022-06-09)
+----------------
+* Dropping support for Python 3.6
+* Adds ``task_resources`` to AWS Batch
+* AWS Batch exporter now generates a unique job definition name on each submission
+* Adds ``--lazy`` option to ``soopervisor export``
+* Pass custom arguments to ``docker build`` with environment variable ``DOCKER_ARGS``
 
 0.7.2 (2022-02-14)
 ------------------

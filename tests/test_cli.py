@@ -22,13 +22,35 @@ def monkeypatch_external(monkeypatch):
     monkeypatch.setattr(argo_export, 'Commander', CustomCommander)
     monkeypatch.setattr(airflow_export, 'Commander', CustomCommander)
     monkeypatch.setattr(batch, 'Commander', CustomCommander)
-    monkeypatch.setattr(batch, 'submit_dag', Mock())
+    monkeypatch.setattr(batch, '_submit_dag', Mock())
     mock_copy = Mock(wraps=docker.source.copy)
     monkeypatch.setattr(docker.source, 'copy', mock_copy)
     return mock_copy
 
 
 # TODO Add test with lambda
+
+
+@pytest.mark.parametrize('args, backend', [
+    [['add', 'serve', '--backend', 'argo-workflows'], Backend.argo_workflows],
+    [['add', 'serve', '--backend', 'airflow'], Backend.airflow],
+    [['add', 'serve', '--backend', 'kubeflow'], Backend.kubeflow],
+    [['add', 'serve', '--backend', 'aws-batch'], Backend.aws_batch],
+    [['add', 'serve', '--backend', 'slurm'], Backend.slurm],
+],
+                         ids=[
+                             'argo',
+                             'airflow',
+                             'kubeflow',
+                             'batch',
+                             'slurm',
+                         ])
+def test_suggestion_after_add(args, backend, tmp_sample_project):
+    runner = CliRunner()
+    result = runner.invoke(cli, args, catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert "Environment added, to export it" in result.output
 
 
 def test_add_unknown_backend():
@@ -183,11 +205,13 @@ def test_sample_project_no_args(args, backend, tmp_sample_project,
     # check calls to the python API
     for_backend.assert_called_once_with(backend)
     exporter_.load.assert_called_once_with('soopervisor.yaml',
-                                           env_name='serve')
+                                           env_name='serve',
+                                           lazy_import=False)
     exporter_.load().export.assert_called_once_with(mode='incremental',
                                                     until=None,
                                                     skip_tests=False,
-                                                    ignore_git=False)
+                                                    ignore_git=False,
+                                                    lazy_import=False)
 
 
 @pytest.mark.parametrize('args, backend', [
@@ -227,11 +251,13 @@ def test_sample_project(args, args_export, mode, backend, tmp_sample_project,
     # check calls to the python API
     for_backend.assert_called_once_with(backend)
     exporter_.load.assert_called_once_with('soopervisor.yaml',
-                                           env_name='serve')
+                                           env_name='serve',
+                                           lazy_import=False)
     exporter_.load().export.assert_called_once_with(mode=mode,
                                                     until=None,
                                                     skip_tests=False,
-                                                    ignore_git=False)
+                                                    ignore_git=False,
+                                                    lazy_import=False)
 
 
 @pytest.mark.parametrize('args', [
@@ -286,11 +312,13 @@ def test_skip_tests(args, backend, tmp_sample_project, monkeypatch):
     # check calls to the python API
     for_backend.assert_called_once_with(backend)
     exporter_.load.assert_called_once_with('soopervisor.yaml',
-                                           env_name='serve')
+                                           env_name='serve',
+                                           lazy_import=False)
     exporter_.load().export.assert_called_once_with(mode='incremental',
                                                     until=None,
                                                     skip_tests=True,
-                                                    ignore_git=False)
+                                                    ignore_git=False,
+                                                    lazy_import=False)
 
 
 @pytest.mark.parametrize('args, backend', [

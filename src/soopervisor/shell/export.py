@@ -2,7 +2,7 @@ import shutil
 import fnmatch
 import os
 from pathlib import Path
-import subprocess
+from subprocess import run
 
 from ploomber.io._commander import Commander, CommanderStop, CommanderException
 from jinja2 import Template, meta
@@ -81,7 +81,8 @@ class SlurmExporter(abc.AbstractExporter):
         pass
 
     @staticmethod
-    def _export(cfg, env_name, mode, until, skip_tests, ignore_git):
+    def _export(cfg, env_name, mode, until, skip_tests, ignore_git,
+                lazy_import):
         """
         Export and submit jbs
         """
@@ -99,7 +100,8 @@ class SlurmExporter(abc.AbstractExporter):
 
             tasks, args = commons.load_tasks(cmdr=cmdr,
                                              name=env_name,
-                                             mode=mode)
+                                             mode=mode,
+                                             lazy_import=lazy_import)
 
             if not tasks:
                 raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
@@ -168,7 +170,7 @@ def _submit_to_slurm(tasks, args, workspace):
         click.echo(f'_job.sh content:\n{script}')
 
         # submit job
-        res = subprocess.run(cmd, capture_output=True, check=True)
+        res = run(cmd, capture_output=True, check=True)
 
         # retrieve the job id, we'll use this to register --dependency
         name2id[name] = res.stdout.decode().strip()

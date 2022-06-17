@@ -6,6 +6,7 @@ from pathlib import Path, PurePosixPath
 from itertools import chain
 from glob import iglob
 import subprocess
+import click
 
 from ploomber.util import default
 from click.exceptions import ClickException
@@ -87,11 +88,11 @@ def to_posix_str(path):
     return str(PurePosixPath(*Path(path).parts))
 
 
-def size_too_big(path):
-    """Returns true is file is too large (5MB)
+def size_too_big(path, mb):
+    """Returns true is file is too large
     """
-    five_mb = 5242880
-    return os.path.getsize(path) > five_mb
+    total_mb = mb * 1048576
+    return os.path.getsize(path) > total_mb
 
 
 def copy(cmdr, src, dst, include=None, exclude=None, ignore_git=False, rename_files = {}):
@@ -126,6 +127,8 @@ def copy(cmdr, src, dst, include=None, exclude=None, ignore_git=False, rename_fi
     include_dirs = set(p for p in include if Path(p).is_dir())
 
     overlap = set(include) & set(exclude)
+
+    big_files = []
 
     if overlap:
         raise ClickException('include and exclude must not have '
@@ -168,13 +171,31 @@ def copy(cmdr, src, dst, include=None, exclude=None, ignore_git=False, rename_fi
             shutil.copy(f, dst=target)
             print(f'Copying {f} -> {target}')
 
+            # checking file size
+            if size_too_big(f, 10):
+                big_files.append(f)
+
+    if len(big_files) > 0:
+        click.secho('\nThe following files are too big. '
+                    'this will increase the docker image size '
+                    'so ensure this is required to run the pipeline: \n',
+                    fg='yellow')
+
+        for file in big_files:
+            # size in MB
+            size = "{:.2f}".format(os.path.getsize(f) / 1048576)
+            click.secho(f'Filename: {file} Size:{size} MB',
+                        fg='yellow')
+
+        click.secho('\n')
+
 
 def compress_dir(cmdr, src, dst):
     print("Compressing directory , src : {}, dst : {}".format(src, dst))
     with tarfile.open(dst, "w:gz") as tar:
         tar.add(src, arcname=os.path.basename(src))
 
-    if size_too_big(dst):
+    if size_too_big(dst, 5):
         cmdr.warn_on_exit(f"The project's source code {str(dst)!r} is "
                           "larger than 5MB, there may be some unnecessary "
                           "files (e.g., data files)")
