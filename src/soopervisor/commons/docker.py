@@ -215,14 +215,15 @@ def build(e,
             e.cp('environment.lock.yml')
         e.rm('dist', 'build', Path('src', pkg_name, f'{pkg_name}.egg-info'))
         e.run('python', '-m', 'build', '--sdist', description='Packaging code')
-        task, image = build_image(e,
+        image = build_image(e,
                                   cfg,
                                   env_name,
                                   until,
                                   entry_point,
                                   skip_tests,
                                   ignore_git, pkg_name, version, task=dependencies.get_default_image_key())
-        task_pattern_image_map[task] = image
+
+        task_pattern_image_map[dependencies.get_default_image_key()] = image
         # raise error if include is not None? and suggest to use MANIFEST.in
         # instead
     else:

@@ -5,6 +5,7 @@ from collections import defaultdict
 
 DEFAULT_IMAGE_NAME = 'default'
 
+
 def _no_missing_dependencies(prefix, suffix):
     tasks = get_task_dependency_files(prefix, suffix)
     # Every requirements.*.txt file should have a corresponding

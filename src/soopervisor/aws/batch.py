@@ -1,6 +1,7 @@
 """
 Running pipelines on AWS Batch
 """
+import re
 from uuid import uuid4
 import os
 import json
@@ -16,6 +17,7 @@ from soopervisor.aws.util import TaskResources
 from soopervisor.commons import docker
 from soopervisor import commons
 from soopervisor import abc
+from soopervisor.commons.dependencies import get_default_image_key
 
 try:
     import boto3
@@ -100,7 +102,7 @@ def _submit_dag(
     tasks,
     args,
     job_def,
-    remote_name,
+    task_pattern_image_map,
     job_queue,
     container_properties,
     region_name,
@@ -108,8 +110,16 @@ def _submit_dag(
     is_cloud,
     cfg,
 ):
+    default_image_key = get_default_image_key()
+    remote_name = task_pattern_image_map[default_image_key]
+
     client = boto3.client('batch', region_name=region_name)
     container_properties['image'] = remote_name
+
+    print("task_pattern_image_map : {}".format(task_pattern_image_map))
+    print("Job_def : {}".format(job_def))
+
+    task_pattern_jd_map = {}
 
     task_resources = _process_task_resources(cfg.task_resources, tasks)
 
@@ -132,8 +142,28 @@ def _submit_dag(
         jobDefinitionName=job_def,
         type='container',
         containerProperties=container_properties)
+    task_pattern_jd_map['default'] = jd
+
+    # Register job definitions for task specific images
+    for pattern, image in task_pattern_image_map.items():
+        if pattern != default_image_key:
+            container_properties['image'] = image
+            task_job_def = f"{job_def}-{docker.modify_wildcard(pattern)}"
+            cmdr.info(f'Registering {task_job_def!r} job definition...')
+
+            jd = client.register_job_definition(
+                jobDefinitionName=task_job_def,
+                type='container',
+                containerProperties=container_properties)
+            task_pattern_jd_map[pattern] = jd
 
     for name, upstream in tasks.items():
+
+        task_pattern = _find_task_pattern(list(task_pattern_image_map.keys()), name)
+        task_pattern = task_pattern if task_pattern else default_image_key
+        print('Task pattern for : {} , {}, {}'.format(list(task_pattern_image_map.keys()), name, task_pattern))
+        task_jd = task_pattern_jd_map[task_pattern]
+        print('Job desc : {}'.format(task_jd))
 
         if is_cloud:
             ploomber_task = [
@@ -232,7 +262,7 @@ class AWSBatchExporter(abc.AbstractExporter):
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
 
-            pkg_name, remote_name = docker.build(cmdr,
+            pkg_name, task_pattern_image_map = docker.build(cmdr,
                                                  cfg,
                                                  env_name,
                                                  until=until,
@@ -247,7 +277,7 @@ class AWSBatchExporter(abc.AbstractExporter):
             cls._submit_dag(tasks=tasks,
                             args=cli_args,
                             job_def=f'{pkg_name}-{suffix}',
-                            remote_name=remote_name,
+                            task_pattern_image_map=task_pattern_image_map,
                             job_queue=cfg.job_queue,
                             container_properties=cfg.container_properties,
                             region_name=cfg.region_name,
@@ -255,6 +285,12 @@ class AWSBatchExporter(abc.AbstractExporter):
                             cfg=cfg)
 
             cmdr.success('Done. Submitted to AWS Batch')
+
+
+def _find_task_pattern(task_patterns, current_task):
+    for p in [re.compile(t) for t in task_patterns]:
+        if p.match(current_task):
+            return p.pattern
 
 
 # TODO: add tests

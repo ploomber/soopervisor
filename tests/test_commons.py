@@ -618,6 +618,7 @@ def test_docker_build(tmp_sample_project):
 
     assert existing == expected
 
+
 def test_docker_build_multiple_requirement(
         tmp_sample_project_multiple_requirement):
     Path('some-env').mkdir()
@@ -676,6 +677,7 @@ def test_docker_build_multiple_requirement_with_setup(
     expected = ('Multiple requirements.*.lock.txt or environment.*.lock.yml '
                 'files found along with setup.py file.')
     assert expected in str(excinfo.value)
+
 
 def test_docker_build_big_file_warns(tmp_sample_project, monkeypatch, capsys):
     monkeypatch.setattr(source.os.path, 'getsize',
