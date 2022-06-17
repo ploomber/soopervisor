@@ -3,6 +3,7 @@ import click
 from pathlib import Path
 from collections import defaultdict
 
+DEFAULT_IMAGE_NAME = 'default'
 
 def _no_missing_dependencies(prefix, suffix):
     tasks = get_task_dependency_files(prefix, suffix)
@@ -43,12 +44,16 @@ def get_task_dependency_files(prefix, suffix, lock='lock'):
         task_name = [
             s for s in filename.split(".") if s not in (prefix, lock, suffix)
         ]
-        task_name = 'default' if not task_name else task_name[0]
+        task_name = DEFAULT_IMAGE_NAME if not task_name else task_name[0]
         if lock in filename:
             task_files[task_name]['lock'] = filename
         else:
             task_files[task_name]['dependency'] = filename
     return task_files
+
+
+def get_default_image_key():
+    return DEFAULT_IMAGE_NAME
 
 
 def check_lock_files_exist():

@@ -11,6 +11,7 @@ from soopervisor.aws.config import AWSBatchConfig
 from soopervisor.commons import docker
 from soopervisor import commons
 from soopervisor import abc
+from soopervisor.commons.dependencies import get_default_image_key
 
 try:
     import boto3
@@ -77,21 +78,19 @@ class AWSBatchExporter(abc.AbstractExporter):
                                     'submit all tasks regardless of status')
 
             print('Exporting AWS Batch')
-            pkg_name, remote_images, task_pattern_image_map = docker.build(cmdr,
+            pkg_name, task_pattern_image_map = docker.build(cmdr,
                                                      cfg,
                                                      env_name,
                                                      until=until,
                                                      entry_point=cli_args[1],
                                                      skip_tests=skip_tests,
                                                      ignore_git=ignore_git)
-            remote_name = task_pattern_image_map['default']
 
             cmdr.info('Submitting jobs to AWS Batch')
 
             submit_dag(tasks=tasks,
                        args=cli_args,
                        job_def=pkg_name,
-                       remote_name=remote_name,
                        task_pattern_image_map=task_pattern_image_map,
                        job_queue=cfg.job_queue,
                        container_properties=cfg.container_properties,
@@ -111,13 +110,16 @@ def submit_dag(
     tasks,
     args,
     job_def,
-    remote_name,
+    #remote_name,
     task_pattern_image_map,
     job_queue,
     container_properties,
     region_name,
     cmdr,
 ):
+    default_image_key = get_default_image_key()
+    remote_name = task_pattern_image_map[default_image_key]
+
     client = boto3.client('batch', region_name=region_name)
     container_properties['image'] = remote_name
     print("task_pattern_image_map : {}".format(task_pattern_image_map))
@@ -134,10 +136,9 @@ def submit_dag(
 
     # Register job definitions for task specific images
     for pattern, image in task_pattern_image_map.items():
-        if pattern != 'default':
-            # TODO: common method in docker.py for replacing *
+        if pattern != default_image_key:
             container_properties['image'] = image
-            job_def = f"{job_def}-{pattern.replace('*', 'ploomber')}"
+            job_def = f"{job_def}-{docker.modify_wildcard(pattern)}"
         cmdr.info(f'Registering {job_def!r} job definition...')
 
         jd = client.register_job_definition(
@@ -153,7 +154,7 @@ def submit_dag(
     for name, upstream in tasks.items():
 
         task_pattern = _find_task_pattern(list(task_pattern_image_map.keys()), name)
-        task_pattern = task_pattern if task_pattern else 'default'
+        task_pattern = task_pattern if task_pattern else default_image_key
         print('Task pattern for : {} , {}, {}'.format(list(task_pattern_image_map.keys()), name, task_pattern))
         task_jd = task_pattern_jd_map[task_pattern]
         print('Job desc : {}'.format(task_jd))

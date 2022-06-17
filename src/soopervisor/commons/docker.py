@@ -48,6 +48,9 @@ def cp_ploomber_home(pkg_name):
         archive.close()
 
 
+def modify_wildcard(entity):
+    return entity.replace("*", "ploomber")
+
 def build(e,
           cfg,
           env_name,
@@ -197,7 +200,7 @@ def build(e,
             image_target = cfg.repository
             # Adding the latest tag if not a remote repo
             if ":" not in image_target:
-                image_target = f'{image_target}:{version}-{task.replace("*","ploomber")}'
+                image_target = f'{image_target}:{version}-{modify_wildcard(task)}'
 
             e.run('docker',
                   'tag',
@@ -210,7 +213,7 @@ def build(e,
 
         if until == 'push':
             raise CommanderStop('Done. Image pushed to repository.')
-        #image_target_list.append(image_target)
+
         task_pattern_image_map[task] = image_target
         e.rm('dist')
         e.cd('..')
