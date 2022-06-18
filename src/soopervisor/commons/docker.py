@@ -227,7 +227,7 @@ def build(e,
                                   ignore_git, pkg_name, version,
                                 )
 
-        task_pattern_image_map[dependencies.get_default_image_key()] = image
+        task_pattern_image_map = image
         # raise error if include is not None? and suggest to use MANIFEST.in
         # instead
     else:

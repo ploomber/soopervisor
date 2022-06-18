@@ -91,7 +91,6 @@ class AirflowExporter(abc.AbstractExporter):
                     entry_point=args[1],
                     skip_tests=skip_tests,
                     ignore_git=ignore_git)
-
                 dag_dict = generate_airflow_spec(tasks, args, target_image)
 
                 path_dag_dict_out = Path(pkg_name + '.json')
