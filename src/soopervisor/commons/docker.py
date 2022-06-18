@@ -79,13 +79,16 @@ def build_image(e,
           ignore_git,
           pkg_name,
           version,
-          task):
+          task=None):
 
     e.cp('dist')
 
     e.cd(env_name)
 
-    image_local = f'{pkg_name}:{version}-{modify_wildcard(task)}'
+    if task:
+        image_local = f'{pkg_name}:{version}-{modify_wildcard(task)}'
+    else:
+        image_local = f'{pkg_name}:{version}'
 
     import os
     import shlex
@@ -221,7 +224,8 @@ def build(e,
                                   until,
                                   entry_point,
                                   skip_tests,
-                                  ignore_git, pkg_name, version, task=dependencies.get_default_image_key())
+                                  ignore_git, pkg_name, version,
+                                )
 
         task_pattern_image_map[dependencies.get_default_image_key()] = image
         # raise error if include is not None? and suggest to use MANIFEST.in
