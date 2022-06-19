@@ -70,16 +70,9 @@ def get_dependencies():
     }
     return dependency_files, lock_paths
 
-def build_image(e,
-          cfg,
-          env_name,
-          until,
-          entry_point,
-          skip_tests,
-          ignore_git,
-          pkg_name,
-          version,
-          task):
+
+def build_image(e, cfg, env_name, until, entry_point, skip_tests, ignore_git,
+                pkg_name, version, task):
 
     e.cp('dist')
 
@@ -113,7 +106,7 @@ def build_image(e,
               description='Testing image',
               error_message='Error while testing your docker image with',
               hint=f'Use "docker run -it {image_local} /bin/bash" to '
-                   'start an interactive session to debug your image')
+              'start an interactive session to debug your image')
 
         # check that the pipeline in the image has a configured File.client
         test_cmd = ('from ploomber.spec import DAGSpec; '
@@ -129,7 +122,7 @@ def build_image(e,
               description='Testing File client',
               error_message='Missing File client',
               hint=f'Run "docker run -it {image_local} /bin/bash" to '
-                   'to debug your image. Ensure a File client is configured',
+              'to debug your image. Ensure a File client is configured',
               capture_output=True,
               expected_output='True\n',
               show_cmd=False)
@@ -155,6 +148,7 @@ def build_image(e,
         raise CommanderStop('Done. Image pushed to repository.')
 
     return image_target
+
 
 def build(e,
           cfg,
@@ -198,7 +192,7 @@ def build(e,
 
     dependency_files, lock_paths = get_dependencies()
 
-    task_pattern_image_map = {}
+    image_map = {}
 
     # Generate source distribution
     if Path('setup.py').exists():
@@ -217,16 +211,17 @@ def build(e,
         e.rm('dist', 'build', Path('src', pkg_name, f'{pkg_name}.egg-info'))
         e.run('python', '-m', 'build', '--sdist', description='Packaging code')
         image = build_image(e,
-                                  cfg,
-                                  env_name,
-                                  until,
-                                  entry_point,
-                                  skip_tests,
-                                  ignore_git, pkg_name, version,
-                                  task=dependencies.get_default_image_key()
-                                )
+                            cfg,
+                            env_name,
+                            until,
+                            entry_point,
+                            skip_tests,
+                            ignore_git,
+                            pkg_name,
+                            version,
+                            task=dependencies.get_default_image_key())
 
-        task_pattern_image_map[dependencies.get_default_image_key()] = image
+        image_map[dependencies.get_default_image_key()] = image
         # raise error if include is not None? and suggest to use MANIFEST.in
         # instead
     else:
@@ -256,17 +251,13 @@ def build(e,
                         rename_files=rename_files)
             source.compress_dir(e, target, Path('dist', f'{pkg_name}.tar.gz'))
 
-            image = build_image(e,
-                  cfg,
-                  env_name,
-                  until,
-                  entry_point,
-                  skip_tests,
-                  ignore_git, pkg_name, version, task)
+            image = build_image(e, cfg, env_name, until, entry_point,
+                                skip_tests, ignore_git, pkg_name, version,
+                                task)
 
-            task_pattern_image_map[task] = image
+            image_map[task] = image
 
             e.rm('dist')
             e.cd('..')
 
-    return pkg_name, task_pattern_image_map
+    return pkg_name, image_map
