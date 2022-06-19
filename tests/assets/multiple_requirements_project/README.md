@@ -1,4 +1,4 @@
-# sample_project
+# multiple_requirements_project
 
 ## File layout
 
@@ -6,7 +6,7 @@
 
 * `environment.yml` - Project dependencies
 
-* `raw.py`, `clean.py`, `plot.py` - Pipeline tasks
+* `raw.py`, `clean_one.py`, `clean_two.py`, `plot.py` - Pipeline tasks
 * `output/` - Executed notebooks generate from pipeline tasks and other generated files
 
 

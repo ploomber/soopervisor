@@ -164,6 +164,7 @@ def test_export(mock_batch, mock_docker_my_project_serve, monkeypatch,
         'fit': ['ploomber', 'task', 'fit'] + entry + args
     }
 
+
 @pytest.mark.parametrize(
     'mode, args',
     [
@@ -173,9 +174,9 @@ def test_export(mock_batch, mock_docker_my_project_serve, monkeypatch,
     ],
 )
 def test_export_multiple_images(mock_batch, monkeypatch,
-                tmp_sample_project_multiple_requirement,
-                monkeypatch_docker_client, mode, args,
-                skip_repo_validation):
+                                tmp_sample_project_multiple_requirement,
+                                monkeypatch_docker_client, mode, args,
+                                skip_repo_validation):
     monkeypatch.setattr(batch, 'uuid4', lambda: 'uuid4')
     p_home_mock = Mock()
     monkeypatch.setattr(commons.docker, 'cp_ploomber_home', p_home_mock)
@@ -201,9 +202,9 @@ def test_export_multiple_images(mock_batch, monkeypatch,
     jobs_info = mock_batch.describe_jobs(jobs=[job['jobId']
                                                for job in jobs])['jobs']
 
-    job_defs = mock_batch.describe_job_definitions(jobDefinitions=[job['jobDefinition']
-                                               for job in jobs_info])['jobDefinitions']
-
+    job_defs = mock_batch.describe_job_definitions(
+        jobDefinitions=[job['jobDefinition']
+                        for job in jobs_info])['jobDefinitions']
 
     load_tasks_mock.assert_called_once_with(cmdr=commander_mock.__enter__(),
                                             name='some-env',
@@ -219,8 +220,7 @@ def test_export_multiple_images(mock_batch, monkeypatch,
 
     # check all tasks submitted
     assert {j['jobName']
-            for j in jobs_info
-            } == {'raw', 'clean-1', 'plot', 'clean-2'}
+            for j in jobs_info} == {'raw', 'clean-1', 'plot', 'clean-2'}
 
     # check submitted to the right queue
     assert all(['your-job-queue' in j['jobQueue'] for j in jobs_info])
@@ -228,24 +228,31 @@ def test_export_multiple_images(mock_batch, monkeypatch,
     # check created a job definition with the right name
     job_definitions = {j['jobName']: j['jobDefinition'] for j in jobs_info}
     assert job_definitions == {
-        'raw': 'arn:aws:batch:us-east-1:123456789012:job-definition/'
-               'multiple_requirements_project-uuid4:1',
-        'clean-1': 'arn:aws:batch:us-east-1:123456789012:job-definition/'
-                   'multiple_requirements_project-uuid4-clean-ploomber:1',
-        'clean-2': 'arn:aws:batch:us-east-1:123456789012:job-definition/'
-                   'multiple_requirements_project-uuid4-clean-ploomber:1',
-        'plot': 'arn:aws:batch:us-east-1:123456789012:job-definition/'
-                'multiple_requirements_project-uuid4:1'
+        'raw':
+        'arn:aws:batch:us-east-1:123456789012:job-definition/'
+        'multiple_requirements_project-uuid4:1',
+        'clean-1':
+        'arn:aws:batch:us-east-1:123456789012:job-definition/'
+        'multiple_requirements_project-uuid4-clean-ploomber:1',
+        'clean-2':
+        'arn:aws:batch:us-east-1:123456789012:job-definition/'
+        'multiple_requirements_project-uuid4-clean-ploomber:1',
+        'plot':
+        'arn:aws:batch:us-east-1:123456789012:job-definition/'
+        'multiple_requirements_project-uuid4:1'
     }
 
-    job_images = {j['jobDefinitionArn'] : j['containerProperties']['image'] for j in job_defs}
+    job_images = {
+        j['jobDefinitionArn']: j['containerProperties']['image']
+        for j in job_defs
+    }
     assert job_images == {
         'arn:aws:batch:us-east-1:123456789012:job-definition/'
-        'multiple_requirements_project-uuid4:1': 'your-repository/name:latest-default',
-
+        'multiple_requirements_project-uuid4:1':
+        'your-repository/name:latest-default',
         'arn:aws:batch:us-east-1:123456789012:job-definition/'
-        'multiple_requirements_project-uuid4-clean-ploomber:1': 'your-repository/name:latest-clean-ploomber',
-
+        'multiple_requirements_project-uuid4-clean-ploomber:1':
+        'your-repository/name:latest-clean-ploomber',
     }
 
     assert dependencies == {
@@ -264,7 +271,6 @@ def test_export_multiple_images(mock_batch, monkeypatch,
     }
 
 
-
 # TODO: check with non-packaged project
 def test_checks_the_right_spec(mock_batch, mock_docker_my_project_serve,
                                monkeypatch, monkeypatch_docker_client,
@@ -280,8 +286,8 @@ def test_checks_the_right_spec(mock_batch, mock_docker_my_project_serve,
     exporter.add()
     exporter.export(mode='incremental')
 
-    expected = ('docker', 'run', 'my_project:0.1dev-default', 'ploomber', 'status',
-                '--entry-point',
+    expected = ('docker', 'run', 'my_project:0.1dev-default', 'ploomber',
+                'status', '--entry-point',
                 str(Path('src', 'my_project', 'pipeline.serve.yaml')))
     assert mock_docker_my_project_serve.calls[2] == expected
 

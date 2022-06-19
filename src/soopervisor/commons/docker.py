@@ -1,5 +1,4 @@
 import tarfile
-import os
 from pathlib import Path
 
 from ploomber.io._commander import CommanderStop
@@ -14,26 +13,6 @@ def _validate_repository(repository):
         raise ConfigurationError(
             f'Invalid repository {repository!r} '
             'in soopervisor.yaml, please add a valid value.')
-
-
-def get_dependencies():
-    """
-    Fetch all dependency files and corresponding lock files
-    mapped to corresponding task patterns, e.g., requirements.fit-*.txt
-    and requirements.fit-*.lock.txt mapped to pattern fit-*.
-    """
-
-    requirement_files = dependencies.get_task_dependency_files(
-        'requirements', 'txt')
-    dependency_files = requirement_files if requirement_files \
-        else dependencies.get_task_dependency_files('environment', 'yml')
-
-    lock_paths = {
-        task: paths['lock']
-        for task, paths in dependency_files.items()
-    }
-
-    return dependency_files, lock_paths
 
 
 def cp_ploomber_home(pkg_name):
@@ -241,7 +220,8 @@ def build(e,
             elif not cfg.exclude and other_lock_files:
                 exclude = other_lock_files
 
-            rename_files = {lock_file: 'requirements.lock.txt'} if 'requirements' in lock_file \
+            rename_files = {lock_file: 'requirements.lock.txt'} \
+                if 'requirements' in lock_file \
                 else {lock_file: 'environment.lock.yml'}
             source.copy(cmdr=e,
                         src='.',

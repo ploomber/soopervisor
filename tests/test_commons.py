@@ -83,6 +83,7 @@ def test_copy(cmdr, tmp_empty):
 
     assert set(Path(p) for p in source.glob_all('dist')) == expected
 
+
 def test_copy_with_rename(cmdr, tmp_empty):
     Path('file').touch()
     Path('dir').mkdir()
@@ -99,6 +100,7 @@ def test_copy_with_rename(cmdr, tmp_empty):
         ))
 
     assert set(Path(p) for p in source.glob_all('dist')) == expected
+
 
 def test_copy_with_gitignore(cmdr, tmp_empty):
     Path('file').touch()
@@ -304,11 +306,12 @@ def test_copy_warn_if_file_too_big(cmdr, tmp_empty, monkeypatch, capsys):
 
     source.copy(cmdr, '.', 'dist')
 
-    expected = set(Path(p) for p in (
-        'dist/file',
-        'dist/dir/another',
-        'dist/dir/others',
-    ))
+    expected = set(
+        Path(p) for p in (
+            'dist/file',
+            'dist/dir/another',
+            'dist/dir/others',
+        ))
 
     captured = capsys.readouterr()
 
@@ -587,6 +590,7 @@ def test_get_dependencies():
     assert dependency_files == expected_dependency_files
     assert lock_paths == expected_lock_paths
 
+
 def test_docker_build(tmp_sample_project):
     Path('some-env').mkdir()
     Path('some-env', 'Dockerfile').touch()
@@ -627,10 +631,10 @@ def test_docker_build_multiple_requirement(
     with CustomCommander(workspace='some-env') as cmdr:
         pkg_name, task_pattern_image_map = \
             commons.docker.build(cmdr,
-                             ConcreteDockerConfig(),
-                             'some-env',
-                             until=None,
-                             entry_point='pipeline.yaml')
+                                 ConcreteDockerConfig(),
+                                 'some-env',
+                                 until=None,
+                                 entry_point='pipeline.yaml')
     assert pkg_name == 'multiple_requirements_project'
     assert task_pattern_image_map == \
            {'default': 'multiple_requirements_project:latest-default',

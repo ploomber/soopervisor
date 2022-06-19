@@ -95,7 +95,13 @@ def size_too_big(path, mb):
     return os.path.getsize(path) > total_mb
 
 
-def copy(cmdr, src, dst, include=None, exclude=None, ignore_git=False, rename_files = {}):
+def copy(cmdr,
+         src,
+         dst,
+         include=None,
+         exclude=None,
+         ignore_git=False,
+         rename_files={}):
     """Copy files
 
     Parameters
@@ -176,16 +182,16 @@ def copy(cmdr, src, dst, include=None, exclude=None, ignore_git=False, rename_fi
                 big_files.append(f)
 
     if len(big_files) > 0:
-        click.secho('\nThe following files are too big. '
-                    'this will increase the docker image size '
-                    'so ensure this is required to run the pipeline: \n',
-                    fg='yellow')
+        click.secho(
+            '\nThe following files are too big. '
+            'this will increase the docker image size '
+            'so ensure this is required to run the pipeline: \n',
+            fg='yellow')
 
         for file in big_files:
             # size in MB
             size = "{:.2f}".format(os.path.getsize(f) / 1048576)
-            click.secho(f'Filename: {file} Size:{size} MB',
-                        fg='yellow')
+            click.secho(f'Filename: {file} Size:{size} MB', fg='yellow')
 
         click.secho('\n')
 

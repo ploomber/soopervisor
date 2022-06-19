@@ -26,6 +26,7 @@ class CustomCommander(_commander.Commander):
     A subclass of Commander that ignores calls to
     CustomCommander.run('docker', ...)
     """
+
     def run(self, *args, **kwargs):
         if args[0] == 'docker':
             print(f'ignoring: {args} {kwargs}')
@@ -58,7 +59,8 @@ def _mock_commander_calls(monkeypatch, cmd, proj, tag, task='default'):
             ('python', '-m', 'build', '--sdist'),
         ],
         return_value={
-            ('docker', 'run', f'{proj}:{tag}-{task}', 'python', '-c', cmd): b'True\n'
+            ('docker', 'run', f'{proj}:{tag}-{task}', 'python', '-c', cmd):
+            b'True\n'
         })
 
     subprocess_mock = Mock()
@@ -126,6 +128,7 @@ def tmp_sample_project(tmp_path):
     yield tmp
 
     os.chdir(old)
+
 
 @pytest.fixture
 def tmp_sample_project_multiple_requirement(tmp_path):

@@ -158,9 +158,7 @@ def _submit_dag(
 
         task_pattern = _find_task_pattern(list(image_map.keys()), name)
         task_pattern = task_pattern if task_pattern else default_image_key
-        print('Task pattern for : {} , {}, {}'.format(list(image_map.keys()), name, task_pattern))
         task_jd = jd_map[task_pattern]
-        print('Job desc : {}'.format(task_jd))
 
         if is_cloud:
             ploomber_task = [
@@ -260,12 +258,12 @@ class AWSBatchExporter(abc.AbstractExporter):
                                     'submit all tasks regardless of status')
 
             pkg_name, image_map = docker.build(cmdr,
-                                                 cfg,
-                                                 env_name,
-                                                 until=until,
-                                                 entry_point=cli_args[1],
-                                                 skip_tests=skip_tests,
-                                                 ignore_git=ignore_git)
+                                               cfg,
+                                               env_name,
+                                               until=until,
+                                               entry_point=cli_args[1],
+                                               skip_tests=skip_tests,
+                                               ignore_git=ignore_git)
 
             cmdr.info('Submitting jobs to AWS Batch')
 
