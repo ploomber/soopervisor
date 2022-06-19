@@ -43,7 +43,7 @@ def git_init():
     subprocess.check_call(['git', 'commit', '-m', 'commit'])
 
 
-def _mock_commander_calls(monkeypatch, cmd, proj, tag):
+def _mock_commander_calls(monkeypatch, cmd, proj, tag, task='default'):
     """
     Mock subprocess calls made by ploomber.io._commander.Commander (which
     is used interally by the soopervisor.commons.docker module).
@@ -58,7 +58,7 @@ def _mock_commander_calls(monkeypatch, cmd, proj, tag):
             ('python', '-m', 'build', '--sdist'),
         ],
         return_value={
-            ('docker', 'run', f'{proj}:{tag}', 'python', '-c', cmd): b'True\n'
+            ('docker', 'run', f'{proj}:{tag}-{task}', 'python', '-c', cmd): b'True\n'
         })
 
     subprocess_mock = Mock()
