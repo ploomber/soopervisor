@@ -91,6 +91,7 @@ class AirflowExporter(abc.AbstractExporter):
                     entry_point=args[1],
                     skip_tests=skip_tests,
                     ignore_git=ignore_git)
+                target_image = target_image['default']
                 dag_dict = generate_airflow_spec(tasks, args, target_image)
 
                 path_dag_dict_out = Path(pkg_name + '.json')
@@ -99,7 +100,6 @@ class AirflowExporter(abc.AbstractExporter):
             else:
                 (pkg_name, target_image
                  ) = commons.source.find_package_name_and_version()
-
                 dag_dict = generate_airflow_spec(tasks, args, target_image)
                 path_dag_dict_out = Path(env_name, pkg_name + '.json')
                 path_dag_dict_out.write_text(json.dumps(dag_dict))

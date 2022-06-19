@@ -69,7 +69,7 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
                                                   skip_tests=skip_tests,
                                                   ignore_git=ignore_git)
 
-            #target_image = task_pattern_image_map[get_default_image_key()]
+            target_image = target_image[get_default_image_key()]
 
             cmdr.info('Generating Argo Workflows YAML spec')
             _make_argo_spec(tasks=tasks,
