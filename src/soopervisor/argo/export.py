@@ -19,7 +19,7 @@ from soopervisor import abc
 from soopervisor.commons import docker
 from soopervisor import commons
 from soopervisor.argo.config import ArgoConfig
-from ..commons.dependencies import get_default_image_key
+from soopervisor.commons.dependencies import get_default_image_key
 
 
 class ArgoWorkflowsExporter(abc.AbstractExporter):

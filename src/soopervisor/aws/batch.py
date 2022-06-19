@@ -102,7 +102,7 @@ def _submit_dag(
     tasks,
     args,
     job_def,
-    task_pattern_image_map,
+    image_map,
     job_queue,
     container_properties,
     region_name,
@@ -111,15 +111,12 @@ def _submit_dag(
     cfg,
 ):
     default_image_key = get_default_image_key()
-    remote_name = task_pattern_image_map[default_image_key]
+    remote_name = image_map[default_image_key]
 
     client = boto3.client('batch', region_name=region_name)
     container_properties['image'] = remote_name
 
-    print("task_pattern_image_map : {}".format(task_pattern_image_map))
-    print("Job_def : {}".format(job_def))
-
-    task_pattern_jd_map = {}
+    jd_map = {}
 
     task_resources = _process_task_resources(cfg.task_resources, tasks)
 
@@ -142,10 +139,10 @@ def _submit_dag(
         jobDefinitionName=job_def,
         type='container',
         containerProperties=container_properties)
-    task_pattern_jd_map[default_image_key] = jd
+    jd_map[default_image_key] = jd
 
     # Register job definitions for task specific images
-    for pattern, image in task_pattern_image_map.items():
+    for pattern, image in image_map.items():
         if pattern != default_image_key:
             container_properties['image'] = image
             task_job_def = f"{job_def}-{docker.modify_wildcard(pattern)}"
@@ -155,14 +152,14 @@ def _submit_dag(
                 jobDefinitionName=task_job_def,
                 type='container',
                 containerProperties=container_properties)
-            task_pattern_jd_map[pattern] = jd
+            jd_map[pattern] = jd
 
     for name, upstream in tasks.items():
 
-        task_pattern = _find_task_pattern(list(task_pattern_image_map.keys()), name)
+        task_pattern = _find_task_pattern(list(image_map.keys()), name)
         task_pattern = task_pattern if task_pattern else default_image_key
-        print('Task pattern for : {} , {}, {}'.format(list(task_pattern_image_map.keys()), name, task_pattern))
-        task_jd = task_pattern_jd_map[task_pattern]
+        print('Task pattern for : {} , {}, {}'.format(list(image_map.keys()), name, task_pattern))
+        task_jd = jd_map[task_pattern]
         print('Job desc : {}'.format(task_jd))
 
         if is_cloud:
@@ -262,7 +259,7 @@ class AWSBatchExporter(abc.AbstractExporter):
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
 
-            pkg_name, task_pattern_image_map = docker.build(cmdr,
+            pkg_name, image_map = docker.build(cmdr,
                                                  cfg,
                                                  env_name,
                                                  until=until,
@@ -277,7 +274,7 @@ class AWSBatchExporter(abc.AbstractExporter):
             cls._submit_dag(tasks=tasks,
                             args=cli_args,
                             job_def=f'{pkg_name}-{suffix}',
-                            task_pattern_image_map=task_pattern_image_map,
+                            image_map=image_map,
                             job_queue=cfg.job_queue,
                             container_properties=cfg.container_properties,
                             region_name=cfg.region_name,
