@@ -165,6 +165,14 @@ We finished configuring; let's now submit the workflow:
 
 **Congratulations! You just ran Ploomber on Kubernetes! 🎉**
 
+
+.. note::
+
+    You may fail to submit pipeline with a different example (e.g. ``ml-basic``). That is because we used the ``ml-intermediate`` pipeline as the example, which already has parametrized products. Therefore, we need to add the ``env.yaml`` and parameterize the pipeline to run it successfully.
+
+    However, the ``ml-basic`` pipeline was not parametrized. Thus we need to parameterize it first. Please refer to `this documentation <https://docs.ploomber.io/en/latest/user-guide/parametrized.html>`_ for more information on parametrized pipelines.
+
+
 .. note::
 
     ``k3d image import`` is only required if creating the cluster with ``k3d``.
