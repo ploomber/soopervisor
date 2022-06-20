@@ -359,4 +359,4 @@ def test_ignore_git(args, backend, tmp_sample_project, monkeypatch_external):
         include=None,
         exclude=None,
         ignore_git=True,
-        rename_files={'environment.lock.yml': 'environment.lock.yml'})
+        rename_files={})

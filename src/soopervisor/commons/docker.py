@@ -220,9 +220,12 @@ def build(e,
             elif not cfg.exclude and other_lock_files:
                 exclude = other_lock_files
 
-            rename_files = {lock_file: 'requirements.lock.txt'} \
-                if 'requirements' in lock_file \
-                else {lock_file: 'environment.lock.yml'}
+            rename_files = {}
+            if lock_file not in ('requirements.lock.txt',
+                                 'environment.lock.yml'):
+                rename_files = {lock_file: 'requirements.lock.txt'} \
+                    if 'requirements' in lock_file \
+                    else {lock_file: 'environment.lock.yml'}
             source.copy(cmdr=e,
                         src='.',
                         dst=target,
