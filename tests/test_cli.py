@@ -352,10 +352,11 @@ def test_ignore_git(args, backend, tmp_sample_project, monkeypatch_external):
                            catch_exceptions=False)
     assert result.exit_code == 0
 
-    monkeypatch_external.assert_called_once_with(cmdr=ANY,
-                                                 src='.',
-                                                 dst=Path(
-                                                     'dist', 'sample_project'),
-                                                 include=None,
-                                                 exclude=None,
-                                                 ignore_git=True)
+    monkeypatch_external.assert_called_once_with(
+        cmdr=ANY,
+        src='.',
+        dst=Path('dist', 'sample_project'),
+        include=None,
+        exclude=None,
+        ignore_git=True,
+        rename_files={'environment.lock.yml': 'environment.lock.yml'})
