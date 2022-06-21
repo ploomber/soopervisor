@@ -168,13 +168,14 @@ def build(e,
     pkg_name, version = source.find_package_name_and_version()
 
     dependencies.check_lock_files_exist()
-
     dependency_files, lock_paths = get_dependencies()
 
     image_map = {}
 
+    setup_flow = Path('setup.py').exists()
+
     # Generate source distribution
-    if Path('setup.py').exists():
+    if setup_flow:
         for task_pattern in list(dependency_files.keys()):
             if task_pattern != 'default':
                 raise NotImplementedError(
@@ -243,5 +244,9 @@ def build(e,
 
             e.rm('dist')
             e.cd('..')
+
+    if not setup_flow:
+        # We need to go back to the env folder before return
+        e.cd(env_name)
 
     return pkg_name, image_map
