@@ -508,7 +508,7 @@ def test_check_lock_files_exist_multiple_dependency(tmp_empty):
 
     Path('requirements.txt').touch()
     Path('requirements.lock.txt').touch()
-    Path('requirements.fit-*.txt').touch()
+    Path('requirements.fit-__.txt').touch()
 
     with pytest.raises(ClickException) as excinfo:
         dependencies.check_lock_files_exist()
@@ -558,34 +558,34 @@ def test_cp_ploomber_home(tmp_empty, monkeypatch):
     assert after == {'ploomber/stats', 'ploomber/stats/another', 'file'}
 
 
-def test_get_dependencies():
+def test_get_dependencies(tmp_empty):
     Path('requirements.txt').touch()
     Path('requirements.lock.txt').touch()
-    Path('requirements.clean-*.txt').touch()
-    Path('requirements.clean-*.lock.txt').touch()
-    Path('requirements.load-*.txt').touch()
-    Path('requirements.load-*.lock.txt').touch()
+    Path('requirements.clean-__.txt').touch()
+    Path('requirements.clean-__.lock.txt').touch()
+    Path('requirements.load-__.txt').touch()
+    Path('requirements.load-__.lock.txt').touch()
 
     dependency_files, lock_paths = commons.docker.get_dependencies()
 
     expected_dependency_files = {
         'load-*': {
-            'dependency': 'requirements.load-*.txt',
-            'lock': 'requirements.load-*.lock.txt'
+            'dependency': 'requirements.load-__.txt',
+            'lock': 'requirements.load-__.lock.txt'
         },
         'default': {
             'dependency': 'requirements.txt',
             'lock': 'requirements.lock.txt'
         },
         'clean-*': {
-            'lock': 'requirements.clean-*.lock.txt',
-            'dependency': 'requirements.clean-*.txt'
+            'lock': 'requirements.clean-__.lock.txt',
+            'dependency': 'requirements.clean-__.txt'
         }
     }
     expected_lock_paths = {
-        'load-*': 'requirements.load-*.lock.txt',
+        'load-*': 'requirements.load-__.lock.txt',
         'default': 'requirements.lock.txt',
-        'clean-*': 'requirements.clean-*.lock.txt'
+        'clean-*': 'requirements.clean-__.lock.txt'
     }
     assert dependency_files == expected_dependency_files
     assert lock_paths == expected_lock_paths
@@ -629,14 +629,14 @@ def test_docker_build_multiple_requirement(
     Path('some-env', 'Dockerfile').touch()
 
     with CustomCommander(workspace='some-env') as cmdr:
-        pkg_name, task_pattern_image_map = \
+        pkg_name, image_map = \
             commons.docker.build(cmdr,
                                  ConcreteDockerConfig(),
                                  'some-env',
                                  until=None,
                                  entry_point='pipeline.yaml')
     assert pkg_name == 'multiple_requirements_project'
-    assert task_pattern_image_map == \
+    assert image_map == \
            {'default': 'multiple_requirements_project:latest-default',
             'clean-*': 'multiple_requirements_project:latest-clean-ploomber'}
 
@@ -657,9 +657,9 @@ def test_docker_build_multiple_requirement(
         'multiple_requirements_project/pipeline.yaml',
         'multiple_requirements_project/requirements.txt',
         'multiple_requirements_project/requirements.lock.txt',
-        'multiple_requirements_project/requirements.clean-*.txt',
+        'multiple_requirements_project/requirements.clean-__.txt',
         'multiple_requirements_project/some-env/requirements.lock.txt',
-        'multiple_requirements_project/some-env/requirements.clean-*.lock.txt'
+        'multiple_requirements_project/some-env/requirements.clean-__.lock.txt'
     }
 
     assert existing == expected

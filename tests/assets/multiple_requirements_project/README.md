@@ -4,7 +4,7 @@
 
 * `pipeline.yaml` - Contains the pipeline's configuration and list of tasks
 
-* `environment.yml` - Project dependencies
+* `requirements.*.txt` - Project dependencies
 
 * `raw.py`, `clean_one.py`, `clean_two.py`, `plot.py` - Pipeline tasks
 * `output/` - Executed notebooks generate from pipeline tasks and other generated files
@@ -17,12 +17,12 @@
 To create your environment with the following command:
 
 ```sh
-conda env create --file environment.yml
+conda create --name multiple-req-project
 ```
 Then activate it:
 
 ```sh
-  conda activate my-project
+  conda activate multiple-req-project
 ```
 
 

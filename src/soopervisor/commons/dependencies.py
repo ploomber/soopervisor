@@ -10,9 +10,9 @@ def _no_missing_dependencies(prefix, suffix):
     tasks = get_task_dependency_files(prefix, suffix)
     if len(tasks) > 1:
         # If multiple dependency file present, every
-        # requirements.*.txt/ environment.*.yml file
-        # should have a corresponding requirements.*.lock.txt/
-        # environment.*.lock.yml file
+        # requirements.task-__.txt/ environment.task-__.yml file
+        # should have a corresponding requirements.task-__.lock.txt/
+        # environment.-__.lock.yml file
         for task_pattern, paths in tasks.items():
             if 'dependency' not in paths or 'lock' not in paths:
                 return False
@@ -48,7 +48,8 @@ def get_task_dependency_files(prefix, suffix, lock='lock'):
         task_name = [
             s for s in filename.split(".") if s not in (prefix, lock, suffix)
         ]
-        task_name = DEFAULT_IMAGE_NAME if not task_name else task_name[0]
+        task_name = DEFAULT_IMAGE_NAME if not task_name else task_name[
+            0].replace('__', '*')
         if lock in filename:
             task_files[task_name]['lock'] = filename
         else:

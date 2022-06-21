@@ -34,8 +34,8 @@ def modify_wildcard(entity):
 def get_dependencies():
     """
     Fetch all dependency files and corresponding lock files
-    mapped to corresponding task patterns, e.g., requirements.fit-*.txt
-    and requirements.fit-*.lock.txt mapped to pattern fit-*.
+    mapped to corresponding task patterns, e.g., requirements.fit-__.txt
+    and requirements.fit-__.lock.txt mapped to pattern fit-*.
     """
 
     requirement_files = dependencies.get_task_dependency_files(
