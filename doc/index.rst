@@ -53,6 +53,14 @@ OR
 
 .. tip:: You can generate it with ``conda env export --no-build --file environment.lock.yml``
 
+If the list of packages required for your project is a long one and can possibly cause
+dependency conflicts, you may also split the required packages across different dependency files.
+
+Example: If you have tasks get, fit-0, fit-1, plot then you may declare two dependency files :
+``requirements.lock.txt`` / ``environment.lock.yml`` (which would be specific to tasks get and plot),
+and ``requirements.fit-__.lock.txt`` / ``environment.fit-__.lock.yml``(which will be specific for
+tasks fit-0 and fit-1).
+
 Pipeline declaration
 ********************
 
