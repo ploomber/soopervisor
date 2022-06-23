@@ -173,17 +173,46 @@ def test_export(mock_batch, mock_docker_my_project_serve, monkeypatch,
         ['force', ['--force']],
     ],
 )
-def test_export_multiple_images(mock_batch, monkeypatch,
-                                tmp_sample_project_multiple_requirement,
-                                monkeypatch_docker_client, mode, args,
-                                skip_repo_validation):
+def test_export_multiple_images_load_tasks(
+        mock_batch, monkeypatch, tmp_sample_project_multiple_requirement,
+        monkeypatch_docker_client, mode, args, skip_repo_validation,
+        boto3_mock, monkeypatch_docker_commons, load_tasks_mock):
     monkeypatch.setattr(batch, 'uuid4', lambda: 'uuid4')
-    p_home_mock = Mock()
-    monkeypatch.setattr(commons.docker, 'cp_ploomber_home', p_home_mock)
-    boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
     monkeypatch.setattr(batch.boto3, 'client',
                         lambda name, region_name: boto3_mock)
-    load_tasks_mock = Mock(wraps=commons.load_tasks)
+    monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
+
+    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'some-env')
+    exporter.add()
+
+    # mock commander
+    commander_mock = MagicMock()
+    monkeypatch.setattr(batch, 'Commander',
+                        lambda workspace, templates_path: commander_mock)
+
+    exporter.export(mode=mode)
+
+    load_tasks_mock.assert_called_once_with(cmdr=commander_mock.__enter__(),
+                                            name='some-env',
+                                            mode=mode,
+                                            lazy_import=False)
+
+
+@pytest.mark.parametrize(
+    'mode, args',
+    [
+        ['incremental', []],
+        ['regular', []],
+        ['force', ['--force']],
+    ],
+)
+def test_export_multiple_images_job_details(
+        mock_batch, monkeypatch, tmp_sample_project_multiple_requirement,
+        monkeypatch_docker_client, mode, args, skip_repo_validation,
+        boto3_mock, monkeypatch_docker_commons, load_tasks_mock):
+    monkeypatch.setattr(batch, 'uuid4', lambda: 'uuid4')
+    monkeypatch.setattr(batch.boto3, 'client',
+                        lambda name, region_name: boto3_mock)
     monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
 
     exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'some-env')
@@ -205,18 +234,6 @@ def test_export_multiple_images(mock_batch, monkeypatch,
     job_defs = mock_batch.describe_job_definitions(
         jobDefinitions=[job['jobDefinition']
                         for job in jobs_info])['jobDefinitions']
-
-    load_tasks_mock.assert_called_once_with(cmdr=commander_mock.__enter__(),
-                                            name='some-env',
-                                            mode=mode,
-                                            lazy_import=False)
-
-    submitted = index_submit_job_by_task_name(
-        boto3_mock.submit_job.call_args_list)
-    id2name = index_job_name_by_id(jobs_info)
-
-    dependencies = index_dependencies_by_name(submitted, id2name)
-    commands = index_commands_by_name(submitted)
 
     # check all tasks submitted
     assert {j['jobName']
@@ -254,6 +271,47 @@ def test_export_multiple_images(mock_batch, monkeypatch,
         'multiple_requirements_project-uuid4-clean-ploomber:1':
         'your-repository/name:latest-clean-ploomber',
     }
+
+
+@pytest.mark.parametrize(
+    'mode, args',
+    [
+        ['incremental', []],
+        ['regular', []],
+        ['force', ['--force']],
+    ],
+)
+def test_export_multiple_images_dependencies_commands(
+        mock_batch, monkeypatch, tmp_sample_project_multiple_requirement,
+        monkeypatch_docker_client, mode, args, skip_repo_validation,
+        boto3_mock, monkeypatch_docker_commons, load_tasks_mock):
+    monkeypatch.setattr(batch, 'uuid4', lambda: 'uuid4')
+    monkeypatch.setattr(batch.boto3, 'client',
+                        lambda name, region_name: boto3_mock)
+    monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
+
+    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'some-env')
+    exporter.add()
+
+    # mock commander
+    commander_mock = MagicMock()
+    monkeypatch.setattr(batch, 'Commander',
+                        lambda workspace, templates_path: commander_mock)
+
+    exporter.export(mode=mode)
+
+    jobs = mock_batch.list_jobs(jobQueue='your-job-queue')['jobSummaryList']
+
+    # get jobs information
+    jobs_info = mock_batch.describe_jobs(jobs=[job['jobId']
+                                               for job in jobs])['jobs']
+
+    submitted = index_submit_job_by_task_name(
+        boto3_mock.submit_job.call_args_list)
+    id2name = index_job_name_by_id(jobs_info)
+
+    dependencies = index_dependencies_by_name(submitted, id2name)
+    commands = index_commands_by_name(submitted)
 
     assert dependencies == {
         'raw': set(),

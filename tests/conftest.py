@@ -106,6 +106,21 @@ def faker():
 
 
 @pytest.fixture
+def boto3_mock():
+    return Mock(wraps=boto3.client('batch', region_name='us-east-1'))
+
+
+@pytest.fixture
+def load_tasks_mock():
+    return Mock(wraps=commons.load_tasks)
+
+
+@pytest.fixture
+def monkeypatch_docker_commons(monkeypatch):
+    monkeypatch.setattr(commons.docker, 'cp_ploomber_home', Mock())
+
+
+@pytest.fixture
 def tmp_empty(tmp_path):
     """Creates a temporary empty folder and moves to it
     """
@@ -135,8 +150,8 @@ def tmp_sample_project_multiple_requirement(tmp_path):
     relative_path_project = "assets/multiple_requirements_project"
     old = os.getcwd()
     tmp = Path(tmp_path, relative_path_project)
-    sample_project = _path_to_tests() / relative_path_project
-    shutil.copytree(str(sample_project), str(tmp))
+    sample_project_multiple_req = _path_to_tests() / relative_path_project
+    shutil.copytree(str(sample_project_multiple_req), str(tmp))
 
     os.chdir(str(tmp))
 
