@@ -72,7 +72,7 @@ pip: pip freeze > requirements.lock.txt
 conda: conda env export --no-build --file environment.lock.yml
 """)
 
-    if not (_no_missing_dependencies('requirements', 'txt') \
+    if not (_no_missing_dependencies('requirements', 'txt')
             or _no_missing_dependencies('environment', 'yml')):
         raise click.ClickException("""
         Expected requirements.<task-name>.lock.txt file for \
