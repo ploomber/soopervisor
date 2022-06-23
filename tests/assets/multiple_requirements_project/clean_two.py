@@ -4,7 +4,7 @@ Clean raw data
 import pandas as pd
 
 # + tags=["parameters"]
-upstream = ['raw']
+upstream = ['clean-1']
 product = None
 # -
 
