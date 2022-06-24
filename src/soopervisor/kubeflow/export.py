@@ -28,6 +28,7 @@ class KubeflowExporter(abc.AbstractExporter):
                        templates_path=('soopervisor', 'assets')) as e:
             e.copy_template('kubeflow/Dockerfile',
                             conda=Path('environment.lock.yml').exists(),
+                            lib=Path('lib').exists(),
                             setup_py=Path('setup.py').exists())
 
     @staticmethod

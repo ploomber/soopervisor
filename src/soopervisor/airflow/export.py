@@ -45,6 +45,7 @@ class AirflowExporter(abc.AbstractExporter):
                 e.copy_template('docker/Dockerfile',
                                 conda=Path('environment.lock.yml').exists(),
                                 setup_py=Path('setup.py').exists(),
+                                lib=Path('lib').exists(),
                                 env_name=env_name)
 
             click.echo(

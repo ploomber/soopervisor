@@ -1,10 +1,12 @@
 import shutil
+import sys
 from unittest.mock import Mock
 import os
 from pathlib import Path
 
 import pytest
 import boto3
+import docker
 
 from conftest import git_init
 from soopervisor.airflow.export import (AirflowExporter, commons as
@@ -210,3 +212,44 @@ def test_validates_repository(mock_docker_sample_project, tmp_sample_project,
     assert str(
         excinfo.value) == ("Invalid repository 'your-repository/name' "
                            "in soopervisor.yaml, please add a valid value.")
+
+
+@pytest.mark.xfail(sys.platform == "darwin", reason="Docker not supported")
+@pytest.mark.xfail(sys.platform == "win32", reason="Docker not supported")
+@pytest.mark.parametrize('CLASS_', [
+    ArgoWorkflowsExporter,
+],
+                         ids=[
+                             'argo-workflows',
+                         ])
+def test_docker_local_lib_import(
+    tmp_sample_project,
+    no_sys_modules_cache,
+    skip_repo_validation,
+    CLASS_,
+):
+
+    text = "serve: {backend: argo-workflows, repository: null}"
+
+    exporter = CLASS_.new(path_to_config='soopervisor.yaml', env_name='serve')
+
+    Path('soopervisor.yaml').write_text(text)
+
+    exporter.add()
+
+    # reload exporter so it picks up the edited soopervisor.yaml
+    exporter = CLASS_.load(path_to_config='soopervisor.yaml', env_name='serve')
+    exporter.export(mode='incremental', skip_tests=True)
+
+    client = docker.from_env()
+    import_suc = client.containers.run(
+        "sample_project:latest", "python -c 'from lib import package_a; "
+        "package_a.print_hello()'")
+
+    assert import_suc == b'hello\n'
+
+    try:
+        client.containers.run("sample_project:latest",
+                              "python -c 'from lib import package_b;'")
+    except docker.errors.ContainerError as e:
+        assert e.exit_status == 1
