@@ -661,7 +661,8 @@ def test_docker_build_multiple_requirement(
         'multiple_requirements_project/requirements.clean-__.txt',
         'multiple_requirements_project/requirements.plot-__.txt',
         'multiple_requirements_project/some-env/requirements.lock.txt',
-        'multiple_requirements_project/some-env/requirements.clean-__.lock.txt',
+        'multiple_requirements_project/some-env/requirements.clean-__.'
+        'lock.txt',
         'multiple_requirements_project/some-env/requirements.plot-__.lock.txt'
     }
 
