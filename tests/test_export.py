@@ -48,7 +48,7 @@ def test_dockerfile_when_no_setup_py(CLASS_, tmp_sample_project,
     ],
     [
         AWSBatchExporter,
-        {'Dockerfile_aws_batch'},
+        {'Dockerfile'},
     ],
     [
         KubeflowExporter,
