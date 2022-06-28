@@ -1,5 +1,3 @@
 pandas
 seaborn
 ploomber
-botocore
-boto3
