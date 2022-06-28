@@ -228,7 +228,7 @@ class AWSBatchExporter(abc.AbstractExporter):
     def _add(cfg, env_name):
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
-            e.copy_template('docker/Dockerfile',
+            e.copy_template('aws-batch/Dockerfile',
                             conda=Path('environment.lock.yml').exists(),
                             setup_py=Path('setup.py').exists(),
                             env_name=env_name)
