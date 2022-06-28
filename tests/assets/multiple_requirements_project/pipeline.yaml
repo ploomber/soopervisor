@@ -16,4 +16,4 @@ tasks:
 
   - source: plot.py
     name: plot
-    product: {'nb': '{{path.products}}/plot.ipynb'}
+    product: {'nb': '{{path.products}}/plot.html'}

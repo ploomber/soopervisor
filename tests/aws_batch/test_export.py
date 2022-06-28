@@ -256,7 +256,7 @@ def test_export_multiple_images_job_details(
         'multiple_requirements_project-uuid4-clean-ploomber:1',
         'plot':
         'arn:aws:batch:us-east-1:123456789012:job-definition/'
-        'multiple_requirements_project-uuid4:1'
+        'multiple_requirements_project-uuid4-plot-ploomber:1'
     }
 
     job_images = {
@@ -270,6 +270,9 @@ def test_export_multiple_images_job_details(
         'arn:aws:batch:us-east-1:123456789012:job-definition/'
         'multiple_requirements_project-uuid4-clean-ploomber:1':
         'your-repository/name:latest-clean-ploomber',
+        'arn:aws:batch:us-east-1:123456789012:job-definition/'
+        'multiple_requirements_project-uuid4-plot-ploomber:1':
+        'your-repository/name:latest-plot-ploomber',
     }
 
 

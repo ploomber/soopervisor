@@ -2,6 +2,7 @@
 Generate plot
 """
 import pandas as pd
+import seaborn as sns
 
 # + tags=["parameters"]
 upstream = ['clean-2']
@@ -16,5 +17,5 @@ grouped.head()
 # -
 
 # +
-# some plotting code...
+sns.distplot(df.age)
 # -

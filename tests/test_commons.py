@@ -638,7 +638,8 @@ def test_docker_build_multiple_requirement(
     assert pkg_name == 'multiple_requirements_project'
     assert image_map == \
            {'default': 'multiple_requirements_project:latest-default',
-            'clean-*': 'multiple_requirements_project:latest-clean-ploomber'}
+            'clean-*': 'multiple_requirements_project:latest-clean-ploomber',
+            'plot-*': 'multiple_requirements_project:latest-plot-ploomber'}
 
     existing = _list_files(Path('dist',
                                 'multiple_requirements_project.tar.gz'))
@@ -658,8 +659,10 @@ def test_docker_build_multiple_requirement(
         'multiple_requirements_project/requirements.txt',
         'multiple_requirements_project/requirements.lock.txt',
         'multiple_requirements_project/requirements.clean-__.txt',
+        'multiple_requirements_project/requirements.plot-__.txt',
         'multiple_requirements_project/some-env/requirements.lock.txt',
-        'multiple_requirements_project/some-env/requirements.clean-__.lock.txt'
+        'multiple_requirements_project/some-env/requirements.clean-__.lock.txt',
+        'multiple_requirements_project/some-env/requirements.plot-__.lock.txt'
     }
 
     assert existing == expected
