@@ -50,7 +50,7 @@ COPY argo-pns.yaml argo-pns.yaml
 COPY soopervisor-workflow.yaml soopervisor-workflow.yaml
 
 # get sample notebook
-RUN wget https://raw.githubusercontent.com/ploomber/soorgeon/main/_kaggle/titanic-logistic-regression-with-python/nb.py
+RUN wget https://raw.githubusercontent.com/ploomber/ci-notebooks/master/titanic-logistic-regression-with-python/nb.py
 RUN jupytext nb.py --to ipynb
 RUN rm -f nb.py
 
