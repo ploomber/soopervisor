@@ -43,7 +43,7 @@ class AWSLambdaExporter(abc.AbstractExporter):
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
             e.copy_template('aws-lambda/README.md')
-            e.copy_template('aws-lambda/Dockerfile')
+            e.copy_template('aws-lambda/Dockerfile', lib=Path('lib').exists())
 
             e.copy_template('aws-lambda/test_aws_lambda.py',
                             package_name=pkg_name)

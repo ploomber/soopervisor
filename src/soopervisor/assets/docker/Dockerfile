@@ -1,5 +1,14 @@
 FROM condaforge/mambaforge:4.10.1-0
 
+# find custom lib and included in PYTHONPATH
+{%- set pypath = 'lib/' if lib else 'null' %}
+
+{% if lib %}
+
+ENV PYTHONPATH {{pypath}}
+
+{% endif %}
+
 {%- set name = 'environment.lock.yml' if conda else 'requirements.lock.txt' %}
 
 COPY {{name}} project/{{name}}

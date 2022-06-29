@@ -552,6 +552,9 @@ def test_docker_build(tmp_sample_project):
         'sample_project/some-env/environment.lock.yml',
         'sample_project/raw.py',
         'sample_project/pipeline.yaml',
+        'sample_project/lib/__init__.py',
+        'sample_project/lib',
+        'sample_project/lib/package_a.py',
     }
 
     assert existing == expected
@@ -587,6 +590,9 @@ def test_docker_build_big_file_warns(tmp_sample_project, monkeypatch, capsys):
         'sample_project/some-env/environment.lock.yml',
         'sample_project/raw.py',
         'sample_project/pipeline.yaml',
+        'sample_project/lib/__init__.py',
+        'sample_project/lib',
+        'sample_project/lib/package_a.py',
     }
 
     captured = capsys.readouterr()

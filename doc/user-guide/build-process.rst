@@ -72,6 +72,27 @@ You can generate such files with the following commands:
     If you use ``ploomber install``, ``lock`` files are automatically
     generated.
 
+
+Installing custom local packages
+-----------------------
+
+If you have custom packages download from github. Please do not put the link
+in requirements.txt since it might require authentication and not work in
+certain cases. To solve this, please put the desired package under a lib/ 
+directory in the project folder. Here is what your project folder should look like:
+
+.. myproject:: ->
+        lib -> 
+            __init__.py
+            my_custom_package.py
+
+        fit.py
+        requirements.lock.txt
+        environment.yaml
+
+To test a package is successfully installed, run the image with import like this:
+``"from lib.my_custom_package import; "``
+
 Included files
 --------------
 
