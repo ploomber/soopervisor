@@ -95,7 +95,13 @@ def size_too_big(path, mb):
     return os.path.getsize(path) > total_mb
 
 
-def copy(cmdr, src, dst, include=None, exclude=None, ignore_git=False):
+def copy(cmdr,
+         src,
+         dst,
+         include=None,
+         exclude=None,
+         ignore_git=False,
+         rename_files={}):
     """Copy files
 
     Parameters
@@ -161,10 +167,12 @@ def copy(cmdr, src, dst, include=None, exclude=None, ignore_git=False):
         included = f in include or is_relative_to_any(f, include_dirs)
         # never include .git or .gitignore
         never_include = Path(f).name.startswith('.git') or '__pycache__' in f
-
         if ((tracked_by_git or included) and not excluded
                 and not never_include):
-            target = Path(dst, f)
+            if f in rename_files:
+                target = Path(dst, rename_files[f])
+            else:
+                target = Path(dst, f)
             target.parent.mkdir(exist_ok=True, parents=True)
             shutil.copy(f, dst=target)
             print(f'Copying {f} -> {target}')
@@ -174,21 +182,22 @@ def copy(cmdr, src, dst, include=None, exclude=None, ignore_git=False):
                 big_files.append(f)
 
     if len(big_files) > 0:
-        click.secho('\nThe following files are too big. '
-                    'this will increase the docker image size '
-                    'so ensure this is required to run the pipeline: \n',
-                    fg='yellow')
+        click.secho(
+            '\nThe following files are too big. '
+            'this will increase the docker image size '
+            'so ensure this is required to run the pipeline: \n',
+            fg='yellow')
 
         for file in big_files:
             # size in MB
             size = "{:.2f}".format(os.path.getsize(f) / 1048576)
-            click.secho(f'Filename: {file} Size:{size} MB',
-                        fg='yellow')
+            click.secho(f'Filename: {file} Size:{size} MB', fg='yellow')
 
         click.secho('\n')
 
 
 def compress_dir(cmdr, src, dst):
+    print("Compressing directory , src : {}, dst : {}".format(src, dst))
     with tarfile.open(dst, "w:gz") as tar:
         tar.add(src, arcname=os.path.basename(src))
 

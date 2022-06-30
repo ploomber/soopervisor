@@ -26,6 +26,7 @@ class CustomCommander(_commander.Commander):
     A subclass of Commander that ignores calls to
     CustomCommander.run('docker', ...)
     """
+
     def run(self, *args, **kwargs):
         if args[0] == 'docker':
             print(f'ignoring: {args} {kwargs}')
@@ -43,7 +44,7 @@ def git_init():
     subprocess.check_call(['git', 'commit', '-m', 'commit'])
 
 
-def _mock_commander_calls(monkeypatch, cmd, proj, tag):
+def _mock_commander_calls(monkeypatch, cmd, proj, tag, task='default'):
     """
     Mock subprocess calls made by ploomber.io._commander.Commander (which
     is used interally by the soopervisor.commons.docker module).
@@ -58,7 +59,8 @@ def _mock_commander_calls(monkeypatch, cmd, proj, tag):
             ('python', '-m', 'build', '--sdist'),
         ],
         return_value={
-            ('docker', 'run', f'{proj}:{tag}', 'python', '-c', cmd): b'True\n'
+            ('docker', 'run', f'{proj}:{tag}-{task}', 'python', '-c', cmd):
+            b'True\n'
         })
 
     subprocess_mock = Mock()
@@ -104,6 +106,21 @@ def faker():
 
 
 @pytest.fixture
+def boto3_mock():
+    return Mock(wraps=boto3.client('batch', region_name='us-east-1'))
+
+
+@pytest.fixture
+def load_tasks_mock():
+    return Mock(wraps=commons.load_tasks)
+
+
+@pytest.fixture
+def monkeypatch_docker_commons(monkeypatch):
+    monkeypatch.setattr(commons.docker, 'cp_ploomber_home', Mock())
+
+
+@pytest.fixture
 def tmp_empty(tmp_path):
     """Creates a temporary empty folder and moves to it
     """
@@ -120,6 +137,21 @@ def tmp_sample_project(tmp_path):
     tmp = Path(tmp_path, relative_path_project)
     sample_project = _path_to_tests() / relative_path_project
     shutil.copytree(str(sample_project), str(tmp))
+
+    os.chdir(str(tmp))
+
+    yield tmp
+
+    os.chdir(old)
+
+
+@pytest.fixture
+def tmp_sample_project_multiple_requirement(tmp_path):
+    relative_path_project = "assets/multiple_requirements_project"
+    old = os.getcwd()
+    tmp = Path(tmp_path, relative_path_project)
+    sample_project_multiple_req = _path_to_tests() / relative_path_project
+    shutil.copytree(str(sample_project_multiple_req), str(tmp))
 
     os.chdir(str(tmp))
 

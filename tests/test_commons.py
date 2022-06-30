@@ -84,6 +84,24 @@ def test_copy(cmdr, tmp_empty):
     assert set(Path(p) for p in source.glob_all('dist')) == expected
 
 
+def test_copy_with_rename(cmdr, tmp_empty):
+    Path('file').touch()
+    Path('dir').mkdir()
+    Path('dir', 'another').touch()
+    rename_files = {'file': 'file_another'}
+    git_init()
+
+    source.copy(cmdr, '.', 'dist', rename_files=rename_files)
+
+    expected = set(
+        Path(p) for p in (
+            'dist/file_another',
+            'dist/dir/another',
+        ))
+
+    assert set(Path(p) for p in source.glob_all('dist')) == expected
+
+
 def test_copy_with_gitignore(cmdr, tmp_empty):
     Path('file').touch()
     Path('ignoreme').touch()
@@ -288,11 +306,12 @@ def test_copy_warn_if_file_too_big(cmdr, tmp_empty, monkeypatch, capsys):
 
     source.copy(cmdr, '.', 'dist')
 
-    expected = set(Path(p) for p in (
-        'dist/file',
-        'dist/dir/another',
-        'dist/dir/others',
-    ))
+    expected = set(
+        Path(p) for p in (
+            'dist/file',
+            'dist/dir/another',
+            'dist/dir/others',
+        ))
 
     captured = capsys.readouterr()
 
@@ -485,6 +504,20 @@ def test_check_lock_files_exist(tmp_empty):
     assert expected in str(excinfo.value)
 
 
+def test_check_lock_files_exist_multiple_dependency(tmp_empty):
+
+    Path('requirements.txt').touch()
+    Path('requirements.lock.txt').touch()
+    Path('requirements.fit-__.txt').touch()
+
+    with pytest.raises(ClickException) as excinfo:
+        dependencies.check_lock_files_exist()
+
+    expected = ('Expected requirements.<task-name>.lock.txt file for \
+        each requirements.<task-name>.txt file ')
+    assert expected in str(excinfo.value)
+
+
 def test_error_if_missing_dockerfile(tmp_empty):
     with pytest.raises(MissingDockerfileError) as excinfo:
         commons.docker.build(e=Mock(),
@@ -525,6 +558,39 @@ def test_cp_ploomber_home(tmp_empty, monkeypatch):
     assert after == {'ploomber/stats', 'ploomber/stats/another', 'file'}
 
 
+def test_get_dependencies(tmp_empty):
+    Path('requirements.txt').touch()
+    Path('requirements.lock.txt').touch()
+    Path('requirements.clean-__.txt').touch()
+    Path('requirements.clean-__.lock.txt').touch()
+    Path('requirements.load-__.txt').touch()
+    Path('requirements.load-__.lock.txt').touch()
+
+    dependency_files, lock_paths = commons.docker.get_dependencies()
+
+    expected_dependency_files = {
+        'load-*': {
+            'dependency': 'requirements.load-__.txt',
+            'lock': 'requirements.load-__.lock.txt'
+        },
+        'default': {
+            'dependency': 'requirements.txt',
+            'lock': 'requirements.lock.txt'
+        },
+        'clean-*': {
+            'lock': 'requirements.clean-__.lock.txt',
+            'dependency': 'requirements.clean-__.txt'
+        }
+    }
+    expected_lock_paths = {
+        'load-*': 'requirements.load-__.lock.txt',
+        'default': 'requirements.lock.txt',
+        'clean-*': 'requirements.clean-__.lock.txt'
+    }
+    assert dependency_files == expected_dependency_files
+    assert lock_paths == expected_lock_paths
+
+
 def test_docker_build(tmp_sample_project):
     Path('some-env').mkdir()
     Path('some-env', 'Dockerfile').touch()
@@ -558,6 +624,70 @@ def test_docker_build(tmp_sample_project):
     }
 
     assert existing == expected
+
+
+def test_docker_build_multiple_requirement(
+        tmp_sample_project_multiple_requirement):
+    Path('some-env').mkdir()
+    Path('some-env', 'Dockerfile').touch()
+
+    with CustomCommander(workspace='some-env') as cmdr:
+        pkg_name, image_map = \
+            commons.docker.build(cmdr,
+                                 ConcreteDockerConfig(),
+                                 'some-env',
+                                 until=None,
+                                 entry_point='pipeline.yaml')
+    assert pkg_name == 'multiple_requirements_project'
+    assert image_map == \
+           {'default': 'multiple_requirements_project:latest-default',
+            'clean-*': 'multiple_requirements_project:latest-clean-ploomber',
+            'plot-*': 'multiple_requirements_project:latest-plot-ploomber'}
+
+    existing = _list_files(Path('dist',
+                                'multiple_requirements_project.tar.gz'))
+
+    expected = {
+        'multiple_requirements_project/env.serve.yaml',
+        'multiple_requirements_project',
+        'multiple_requirements_project/some-env/Dockerfile',
+        'multiple_requirements_project/clean_one.py',
+        'multiple_requirements_project/clean_two.py',
+        'multiple_requirements_project/plot.py',
+        'multiple_requirements_project/env.yaml',
+        'multiple_requirements_project/README.md',
+        'multiple_requirements_project/some-env',
+        'multiple_requirements_project/raw.py',
+        'multiple_requirements_project/pipeline.yaml',
+        'multiple_requirements_project/requirements.txt',
+        'multiple_requirements_project/requirements.lock.txt',
+        'multiple_requirements_project/requirements.clean-__.txt',
+        'multiple_requirements_project/requirements.plot-__.txt',
+        'multiple_requirements_project/some-env/requirements.lock.txt',
+        'multiple_requirements_project/some-env/requirements.clean-__.'
+        'lock.txt',
+        'multiple_requirements_project/some-env/requirements.plot-__.lock.txt'
+    }
+
+    assert existing == expected
+
+
+def test_docker_build_multiple_requirement_with_setup(
+        tmp_sample_project_multiple_requirement):
+    Path('some-env').mkdir()
+    Path('some-env', 'Dockerfile').touch()
+    Path('setup.py').touch()
+
+    with pytest.raises(NotImplementedError) as excinfo:
+        commons.docker.build(CustomCommander(workspace='some-env'),
+                             ConcreteDockerConfig(),
+                             'some-env',
+                             until=None,
+                             entry_point='pipeline.yaml')
+
+    expected = ('Multiple requirements.*.lock.txt or environment.*.lock.yml '
+                'files found along with setup.py file.')
+    assert expected in str(excinfo.value)
 
 
 def test_docker_build_big_file_warns(tmp_sample_project, monkeypatch, capsys):

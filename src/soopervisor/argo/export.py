@@ -15,6 +15,7 @@ from soopervisor import abc
 from soopervisor.commons import docker
 from soopervisor import commons
 from soopervisor.argo.config import ArgoConfig
+from soopervisor.commons.dependencies import get_default_image_key
 
 
 class ArgoWorkflowsExporter(abc.AbstractExporter):
@@ -65,6 +66,8 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
                                                   skip_tests=skip_tests,
                                                   ignore_git=ignore_git)
 
+            target_image = target_image[get_default_image_key()]
+
             cmdr.info('Generating Argo Workflows YAML spec')
             _make_argo_spec(tasks=tasks,
                             args=args,
@@ -85,6 +88,7 @@ class _literal_str(str):
 
 
 def _change_style(style, representer):
+
     def new_representer(dumper, data):
         scalar = representer(dumper, data)
         scalar.style = style

@@ -164,8 +164,8 @@ def test_checks_the_right_spec(monkeypatch, mock_docker_sample_project_serve,
     exporter.add()
     exporter.export(mode='incremental')
 
-    expected = ('docker', 'run', 'sample_project:latest', 'ploomber', 'status',
-                '--entry-point', 'pipeline.serve.yaml')
+    expected = ('docker', 'run', 'sample_project:latest-default', 'ploomber',
+                'status', '--entry-point', 'pipeline.serve.yaml')
     assert mock_docker_sample_project_serve.calls[1] == expected
 
 
@@ -188,8 +188,8 @@ def test_checks_the_right_spec_pkg(mock_docker_my_project_serve,
     exporter.add()
     exporter.export(mode='incremental')
 
-    expected = ('docker', 'run', 'my_project:0.1dev', 'ploomber', 'status',
-                '--entry-point',
+    expected = ('docker', 'run', 'my_project:0.1dev-default', 'ploomber',
+                'status', '--entry-point',
                 str(Path('src', 'my_project', 'pipeline.serve.yaml')))
     assert mock_docker_my_project_serve.calls[2] == expected
 
