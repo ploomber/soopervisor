@@ -8,11 +8,7 @@ from ploomber.io._commander import Commander, CommanderStop
 import yaml
 from yaml.representer import SafeRepresenter
 
-try:
-    import importlib.resources as pkg_resources
-except ImportError:
-    # if python<3.7
-    import importlib_resources as pkg_resources
+import importlib.resources as pkg_resources
 
 from soopervisor.assets import argo as assets_argo
 from soopervisor import abc
