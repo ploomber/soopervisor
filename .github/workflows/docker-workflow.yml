@@ -1,0 +1,33 @@
+name: Docker Image CI (Workflow)
+
+on:
+  push:
+    branches: '*'
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: |
+        cd tutorials/workflow
+        docker build --tag ploomber-workflow .
+    - name: Start a Docker container
+      run: |
+        export SHARED_DIR=$HOME/ploomber-workflow
+        rm -rf $SHARED_DIR
+        mkdir -p $SHARED_DIR
+        docker run \
+            --privileged=true -v /var/run/docker.sock:/var/run/docker.sock \
+            --volume $SHARED_DIR:/mnt/project \
+            --env SHARED_DIR \
+            --env PLOOMBER_STATS_ENABLED=false \
+            -p 2746:2746 \
+            -p 8888:8888 \
+            ploomber-workflow
