@@ -28,6 +28,5 @@ jobs:
             --volume $SHARED_DIR:/mnt/shared-folder \
             --env SHARED_DIR \
             --env PLOOMBER_STATS_ENABLED=false \
-            -p 2746:2746 \
-            -p 8888:8888 \
+            --network host \
             ploomber-workflow
