@@ -25,7 +25,7 @@ jobs:
         mkdir -p $SHARED_DIR
         docker run \
             --privileged=true -v /var/run/docker.sock:/var/run/docker.sock \
-            --volume $SHARED_DIR:/mnt/project \
+            --volume $SHARED_DIR:/mnt/shared-folder \
             --env SHARED_DIR \
             --env PLOOMBER_STATS_ENABLED=false \
             -p 2746:2746 \
