@@ -2,8 +2,6 @@ set -e
 set -x
 
 # copy sample notebook
-ls
-ls /mnt/shared-folder/
 cp /nb.ipynb /mnt/shared-folder/nb.ipynb
 cp /requirements.lock.txt /mnt/shared-folder/requirements.lock.txt
 
