@@ -43,11 +43,10 @@ We provide a Docker image so you can quickly run this example:
     # start (takes ~1 minute to be ready)
     docker run -i -t \
         --privileged=true -v /var/run/docker.sock:/var/run/docker.sock \
-        --volume $SHARED_DIR:/mnt/project \
+        --volume $SHARED_DIR:/mnt/shared-folder \
         --env SHARED_DIR \
         --env PLOOMBER_STATS_ENABLED=false \
-        -p 2746:2746 \
-        -p 8888:8888 \
+        --network host \
         ploomber-workflow
 
 
