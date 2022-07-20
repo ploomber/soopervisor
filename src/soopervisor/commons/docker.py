@@ -2,7 +2,7 @@ import tarfile
 from pathlib import Path
 
 from ploomber.io._commander import CommanderStop
-from ploomber.telemetry import telemetry
+from ploomber_core.telemetry import telemetry
 
 from soopervisor.commons import source, dependencies
 from soopervisor.exceptions import ConfigurationError, MissingDockerfileError

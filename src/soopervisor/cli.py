@@ -6,7 +6,7 @@ from soopervisor import __version__
 from soopervisor import config
 from soopervisor import exporter
 from soopervisor.enum import Backend, Mode
-from ploomber.telemetry import telemetry
+from ploomber_core.telemetry import telemetry
 
 
 @click.group()
@@ -56,6 +56,8 @@ def add(env_name, backend, preset):
                 f'{env_name!r} already exists. Select a different name.')
     except Exception as e:
         telemetry.log_api("soopervisor_add_error",
+                          "soopervisor",
+                          __version__,
                           metadata={
                               'type': backend.value,
                               'env_name': env_name,
@@ -67,6 +69,8 @@ def add(env_name, backend, preset):
     Exporter.new('soopervisor.yaml', env_name=env_name, preset=preset).add()
 
     telemetry.log_api("soopervisor_add_success",
+                      "soopervisor",
+                      __version__,
                       metadata={
                           'type': backend.value,
                           'env_name': env_name
@@ -113,6 +117,8 @@ def export(env_name, until_build, mode, skip_tests, ignore_git, lazy):
     backend = Backend(config.get_backend(env_name))
 
     telemetry.log_api("soopervisor_export_started",
+                      "soopervisor",
+                      __version__,
                       metadata={
                           'type': backend.value,
                           'input_args': input_args
@@ -140,6 +146,8 @@ def export(env_name, until_build, mode, skip_tests, ignore_git, lazy):
 
     except Exception as e:
         telemetry.log_api("soopervisor_export_error",
+                          "soopervisor",
+                          __version__,
                           metadata={
                               'type': backend.value,
                               'input_args': input_args,
