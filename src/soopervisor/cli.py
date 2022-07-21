@@ -3,6 +3,7 @@ import yaml
 import click
 
 from soopervisor import __version__
+from soopervisor import POSTHOG_API_KEY as api_key
 from soopervisor import config
 from soopervisor import exporter
 from soopervisor.enum import Backend, Mode
@@ -58,6 +59,7 @@ def add(env_name, backend, preset):
         telemetry.log_api("soopervisor_add_error",
                           "soopervisor",
                           __version__,
+                          api_key,
                           metadata={
                               'type': backend.value,
                               'env_name': env_name,
@@ -71,6 +73,7 @@ def add(env_name, backend, preset):
     telemetry.log_api("soopervisor_add_success",
                       "soopervisor",
                       __version__,
+                      api_key,
                       metadata={
                           'type': backend.value,
                           'env_name': env_name
@@ -119,6 +122,7 @@ def export(env_name, until_build, mode, skip_tests, ignore_git, lazy):
     telemetry.log_api("soopervisor_export_started",
                       "soopervisor",
                       __version__,
+                      api_key,
                       metadata={
                           'type': backend.value,
                           'input_args': input_args
@@ -148,6 +152,7 @@ def export(env_name, until_build, mode, skip_tests, ignore_git, lazy):
         telemetry.log_api("soopervisor_export_error",
                           "soopervisor",
                           __version__,
+                          api_key,
                           metadata={
                               'type': backend.value,
                               'input_args': input_args,
@@ -158,6 +163,7 @@ def export(env_name, until_build, mode, skip_tests, ignore_git, lazy):
     telemetry.log_api("soopervisor_export_success",
                       "soopervisor",
                       __version__,
+                      api_key,
                       metadata={
                           'type': backend.value,
                           'input_args': input_args
