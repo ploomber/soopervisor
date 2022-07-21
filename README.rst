@@ -14,6 +14,7 @@ Soopervisor
    :alt: CI Windows badge
 
 
+
 Soopervisor runs `Ploomber <https://github.com/ploomber/ploomber>`_ pipelines
 for batch processing (large-scale training or batch serving) or online
 inference.
