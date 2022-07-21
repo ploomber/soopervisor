@@ -156,6 +156,8 @@ def export(env_name, until_build, mode, skip_tests, ignore_git, lazy):
         raise
 
     telemetry.log_api("soopervisor_export_success",
+                      "soopervisor",
+                      __version__,
                       metadata={
                           'type': backend.value,
                           'input_args': input_args
