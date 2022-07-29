@@ -64,6 +64,14 @@ If we want to understand how to use or change one of the tasks for invoke, we ca
 invoke doc-auto --help
 ```
 
+
+## Branch name requirement
+
+To prevent double execution of the same CI pipelines, we have chosen to set a limitation to github push event. Only pushes to certain branches will trigger the pipelines. That means if you have turned on github action and want to run workflows in your forked repo, you will need to either make pushes directly to your master branch or branches name strictly following this convention: `dev/{your-branch-name}`.
+
+On the other hand, if you choose not to turn on github action in your own repo and simply run tests locally, you can disregard this information since your pull request from your forked repo to ploomber/ploomber repo will always trigger the pipelines. 
+
+
 ## Submitting code
 
 [Refer to Ploomber's CONTRIBUTING.md Submitting Code section.](https://github.com/ploomber/ploomber/blob/master/CONTRIBUTING.md#submitting-code)
