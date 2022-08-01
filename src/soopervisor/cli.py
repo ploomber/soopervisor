@@ -2,16 +2,19 @@ from pathlib import Path
 import yaml
 import click
 
-from soopervisor import __version__
+from soopervisor import __version__ as ver
 from soopervisor import POSTHOG_API_KEY as api_key
 from soopervisor import config
 from soopervisor import exporter
 from soopervisor.enum import Backend, Mode
-from ploomber_core.telemetry import telemetry
+from ploomber_core.telemetry.telemetry import Telemetry
+
+
+telemetry = Telemetry(api_key, ver, 'soopervisor')
 
 
 @click.group()
-@click.version_option(version=__version__)
+@click.version_option(version=ver)
 def cli():
     """
     Soopervisor exports Ploomber projects.
@@ -57,9 +60,6 @@ def add(env_name, backend, preset):
                 f'{env_name!r} already exists. Select a different name.')
     except Exception as e:
         telemetry.log_api("soopervisor_add_error",
-                          "soopervisor",
-                          __version__,
-                          api_key,
                           metadata={
                               'type': backend.value,
                               'env_name': env_name,
@@ -71,9 +71,6 @@ def add(env_name, backend, preset):
     Exporter.new('soopervisor.yaml', env_name=env_name, preset=preset).add()
 
     telemetry.log_api("soopervisor_add_success",
-                      "soopervisor",
-                      __version__,
-                      api_key,
                       metadata={
                           'type': backend.value,
                           'env_name': env_name
@@ -120,9 +117,6 @@ def export(env_name, until_build, mode, skip_tests, ignore_git, lazy):
     backend = Backend(config.get_backend(env_name))
 
     telemetry.log_api("soopervisor_export_started",
-                      "soopervisor",
-                      __version__,
-                      api_key,
                       metadata={
                           'type': backend.value,
                           'input_args': input_args
@@ -150,9 +144,6 @@ def export(env_name, until_build, mode, skip_tests, ignore_git, lazy):
 
     except Exception as e:
         telemetry.log_api("soopervisor_export_error",
-                          "soopervisor",
-                          __version__,
-                          api_key,
                           metadata={
                               'type': backend.value,
                               'input_args': input_args,
@@ -161,9 +152,6 @@ def export(env_name, until_build, mode, skip_tests, ignore_git, lazy):
         raise
 
     telemetry.log_api("soopervisor_export_success",
-                      "soopervisor",
-                      __version__,
-                      api_key,
                       metadata={
                           'type': backend.value,
                           'input_args': input_args
