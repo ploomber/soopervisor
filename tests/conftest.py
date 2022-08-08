@@ -38,6 +38,7 @@ def git_init():
     """Creates an empty git repository and commits
     """
     subprocess.check_call(['git', 'init'])
+    subprocess.check_call(['git', 'config', 'commit.gpgsign', 'false'])
     subprocess.check_call(['git', 'config', 'user.email', 'ci@ploomberio'])
     subprocess.check_call(['git', 'config', 'user.name', 'Ploomber'])
     subprocess.check_call(['git', 'add', '--all'])

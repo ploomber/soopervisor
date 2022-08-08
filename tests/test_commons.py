@@ -39,6 +39,7 @@ def git_init():
                          'Did you forget the tmp_empty fixture?')
 
     subprocess.check_call(['git', 'init'])
+    subprocess.check_call(['git', 'config', 'commit.gpgsign', 'false'])
     subprocess.check_call(['git', 'config', 'user.email', 'ci@ploomberio'])
     subprocess.check_call(['git', 'config', 'user.name', 'Ploomber'])
     subprocess.check_call(['git', 'add', '--all'])

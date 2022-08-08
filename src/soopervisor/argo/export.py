@@ -45,6 +45,7 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
         """
         Build and upload Docker image. Export Argo YAML spec.
         """
+
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as cmdr:
 
