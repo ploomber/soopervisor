@@ -38,10 +38,29 @@ def git_init():
     """Creates an empty git repository and commits
     """
     subprocess.check_call(['git', 'init'])
+    subprocess.check_call(['git', 'config', 'commit.gpgsign', 'false'])
     subprocess.check_call(['git', 'config', 'user.email', 'ci@ploomberio'])
     subprocess.check_call(['git', 'config', 'user.name', 'Ploomber'])
     subprocess.check_call(['git', 'add', '--all'])
     subprocess.check_call(['git', 'commit', '-m', 'commit'])
+
+
+# mocks subprocess.run()
+def subprocess_run_mock(tester):
+    def ret(cmd, capture_output):
+        result = tester(cmd)
+
+        mock_subprocess_run_result = Mock()
+        mock_subprocess_run_result.check_returncode.return_value = 0
+        if capture_output:
+            mock_subprocess_run_result.stdout.decode.return_value = \
+                result.decode(sys.stdout.encoding)
+        else:
+            mock_subprocess_run_result.stdout = None
+
+        return mock_subprocess_run_result
+
+    return ret
 
 
 def _mock_commander_calls(monkeypatch, cmd, proj, tag, task='default'):
@@ -66,6 +85,7 @@ def _mock_commander_calls(monkeypatch, cmd, proj, tag, task='default'):
     subprocess_mock = Mock()
     subprocess_mock.check_call.side_effect = tester
     subprocess_mock.check_output.side_effect = tester
+    subprocess_mock.run.side_effect = subprocess_run_mock(tester)
     monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
 
     return tester

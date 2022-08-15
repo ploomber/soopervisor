@@ -242,14 +242,19 @@ def test_docker_local_lib_import(
     exporter.export(mode='incremental', skip_tests=True)
 
     client = docker.from_env()
+
+    # sleep 1 seems to fix this test on my machine
+    # may be related to this?:
+    # https://github.com/docker/docker-py/issues/2087
     import_suc = client.containers.run(
-        "sample_project:latest", "python -c 'from lib import package_a; "
-        "package_a.print_hello()'")
+        "sample_project:latest-default", "/bin/bash -c \"sleep 1 "
+        "&& python -c 'from lib import package_a; "
+        "package_a.print_hello()'\"")
 
     assert import_suc == b'hello\n'
 
     try:
-        client.containers.run("sample_project:latest",
+        client.containers.run("sample_project:latest-default",
                               "python -c 'from lib import package_b;'")
     except docker.errors.ContainerError as e:
         assert e.exit_status == 1
