@@ -72,6 +72,29 @@ To prevent double execution of the same CI pipelines, we have chosen to set a li
 On the other hand, if you choose not to turn on github action in your own repo and simply run tests locally, you can disregard this information since your pull request from your forked repo to ploomber/ploomber repo will always trigger the pipelines. 
 
 
+## Locally running GitHub actions
+
+Debugging GitHub actions by commiting, pushing, and then waiting for GitHub to 
+run them can be inconvenient because of the clunky workflow and inability to
+use debugging tools other than printing to the console
+
+We can use the tool [`act`](https://github.com/nektos/act) to run github 
+actions locally in docker containers
+
+Install then run `act` in the root directory. On the first invocation it will
+ask for a size. Select medium. `act` will then run actions from the 
+`.github/workflows` directory
+
+#### Working with containers
+
+If the tests fail, act will leave the docker images after the action finishes.
+These can be inspected by running `docker container list` then running
+`docker exec -it CONTAINER_ID bash` where `CONTAINER_ID` is a container id
+from `docker container list`
+
+To install packages in the container, first run `apt-get update`. Packages
+can be installed normally with apt after
+
 ## Submitting code
 
 [Refer to Ploomber's CONTRIBUTING.md Submitting Code section.](https://github.com/ploomber/ploomber/blob/master/CONTRIBUTING.md#submitting-code)
