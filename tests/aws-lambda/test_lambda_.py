@@ -8,6 +8,7 @@ import pytest
 import yaml
 from click import ClickException
 
+from conftest import subprocess_run_mock
 from soopervisor.aws.lambda_ import AWSLambdaExporter
 from ploomber.io import _commander, _commander_tester
 
@@ -67,6 +68,7 @@ def mock_sam_calls(monkeypatch):
     subprocess_mock = Mock()
     subprocess_mock.check_call.side_effect = tester
     subprocess_mock.check_output.side_effect = tester
+    subprocess_mock.run.side_effect = subprocess_run_mock(tester)
     monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
     return tester
 
