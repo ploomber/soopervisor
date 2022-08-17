@@ -30,6 +30,7 @@ REQUIRES = [
     'Jinja2',
     'pyyaml',
     'ploomber>=0.14.6',
+    'ploomber-core',
     # sdist is generated using python -m build, so adding this here.
     # I can remoe it if I change all references to use python setup.py sdist
     # instead

@@ -6,7 +6,7 @@ from soopervisor import __version__
 from soopervisor import config
 from soopervisor import exporter
 from soopervisor.enum import Backend, Mode
-from ploomber.telemetry import telemetry
+from soopervisor.telemetry import telemetry
 
 
 @click.group()
