@@ -2,19 +2,15 @@ from pathlib import Path
 import yaml
 import click
 
-from soopervisor import __version__ as ver
-from soopervisor import POSTHOG_API_KEY as api_key
+from soopervisor import __version__
 from soopervisor import config
 from soopervisor import exporter
 from soopervisor.enum import Backend, Mode
-from ploomber_core.telemetry.telemetry import Telemetry
-
-
-telemetry = Telemetry(api_key, ver, 'soopervisor')
+from soopervisor.telemetry import telemtry
 
 
 @click.group()
-@click.version_option(version=ver)
+@click.version_option(version=__version__)
 def cli():
     """
     Soopervisor exports Ploomber projects.
