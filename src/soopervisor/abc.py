@@ -1,6 +1,7 @@
 """
 Abstract classes that define the protocol for all exporters
 """
+import click
 import abc
 from pathlib import Path
 from collections.abc import Mapping
@@ -329,6 +330,7 @@ class AbstractExporter(abc.ABC):
                mode,
                until=None,
                skip_tests=False,
+               skip_docker=False,
                ignore_git=False,
                lazy_import=False):
         """
@@ -337,11 +339,15 @@ class AbstractExporter(abc.ABC):
         """
         # TODO: detect inconsistencies. e.g., environment exists but directory
         # doesnt
+        if skip_docker is True:
+            click.echo('Skipping docker build')
+
         return self._export(cfg=self._cfg,
                             env_name=self._env_name,
                             mode=mode,
                             until=until,
                             skip_tests=skip_tests,
+                            skip_docker=skip_docker,
                             ignore_git=ignore_git,
                             lazy_import=lazy_import)
 

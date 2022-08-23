@@ -10,6 +10,8 @@ from ploomber.io._commander import Commander, CommanderStop
 from soopervisor.kubeflow.config import KubeflowConfig
 from soopervisor import commons
 from soopervisor import abc
+from soopervisor.commons.dependencies import get_default_image_key
+from soopervisor.commons import source
 
 
 class KubeflowExporter(abc.AbstractExporter):
@@ -40,8 +42,8 @@ class KubeflowExporter(abc.AbstractExporter):
         pass
 
     @staticmethod
-    def _export(cfg, env_name, mode, until, skip_tests, ignore_git,
-                lazy_import):
+    def _export(cfg, env_name, mode, until, skip_tests, skip_docker,
+                ignore_git, lazy_import):
         """
         Copies the current source code to the target environment folder.
         The code along with the DAG declaration file can be copied to
@@ -73,15 +75,23 @@ class KubeflowExporter(abc.AbstractExporter):
                 raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
-
-            pkg_name, target_image = commons.docker.build(
-                e,
-                cfg,
-                env_name,
-                until=until,
-                entry_point=args[1],
-                skip_tests=skip_tests,
-                ignore_git=ignore_git)
+            if skip_docker is True:
+                click.secho('Skipping docker build')
+                pkg_name, version = source.find_package_name_and_version()
+                default_image_key = get_default_image_key()
+                if default_image_key:
+                    image_local = f'{pkg_name}:{version}-'
+                    f'{commons.docker.modify_wildcard(default_image_key)}'
+                target_image = image_local
+            else:
+                pkg_name, target_image = commons.docker.build(
+                    e,
+                    cfg,
+                    env_name,
+                    until=until,
+                    entry_point=args[1],
+                    skip_tests=skip_tests,
+                    ignore_git=ignore_git)
 
             print("Generating kubeflow script")
             generate_kubeflow_script(tasks, args, products_list, target_image,

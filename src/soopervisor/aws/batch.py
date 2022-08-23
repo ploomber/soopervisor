@@ -14,7 +14,7 @@ from ploomber.cloud import api
 
 from soopervisor.aws.config import AWSBatchConfig, CloudConfig
 from soopervisor.aws.util import TaskResources
-from soopervisor.commons import docker
+from soopervisor.commons import docker, source
 from soopervisor import commons
 from soopervisor import abc
 from soopervisor.commons.dependencies import get_default_image_key
@@ -243,8 +243,8 @@ class AWSBatchExporter(abc.AbstractExporter):
 
     @classmethod
     @requires(['boto3'], name='AWSBatchExporter')
-    def _export(cls, cfg, env_name, mode, until, skip_tests, ignore_git,
-                lazy_import):
+    def _export(cls, cfg, env_name, mode, until, skip_tests, skip_docker,
+                ignore_git, lazy_import):
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as cmdr:
             tasks, cli_args = commons.load_tasks(cmdr=cmdr,
@@ -257,14 +257,22 @@ class AWSBatchExporter(abc.AbstractExporter):
                 raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
-
-            pkg_name, image_map = docker.build(cmdr,
-                                               cfg,
-                                               env_name,
-                                               until=until,
-                                               entry_point=cli_args[1],
-                                               skip_tests=skip_tests,
-                                               ignore_git=ignore_git)
+            if skip_docker is True:
+                pkg_name, version = source.find_package_name_and_version()
+                default_image_key = get_default_image_key()
+                if default_image_key:
+                    image_local = f'{pkg_name}:{version}-'
+                    f'{docker.modify_wildcard(default_image_key)}'
+                image_map = {}
+                image_map[default_image_key] = image_local
+            else:
+                pkg_name, image_map = docker.build(cmdr,
+                                                   cfg,
+                                                   env_name,
+                                                   until=until,
+                                                   entry_point=cli_args[1],
+                                                   skip_tests=skip_tests,
+                                                   ignore_git=ignore_git)
 
             cmdr.info('Submitting jobs to AWS Batch')
 

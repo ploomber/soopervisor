@@ -258,3 +258,51 @@ def test_docker_local_lib_import(
                               "python -c 'from lib import package_b;'")
     except docker.errors.ContainerError as e:
         assert e.exit_status == 1
+
+
+@pytest.mark.parametrize('CLASS_', CLASSES)
+def test_skip_docker(
+    mock_docker_and_batch,
+    tmp_sample_project,
+    no_sys_modules_cache,
+    skip_repo_validation,
+    capsys,
+    CLASS_,
+):
+    modes = ['incremental', 'regular', 'force']
+    asserts = []
+    for mode in modes:
+        exporter = CLASS_.new(path_to_config='soopervisor.yaml',
+                              env_name=f'serve_{mode}')
+        exporter.add()
+        exporter.export(mode=mode, skip_docker=True)
+        out, err = capsys.readouterr()
+        assert_ = ('Skipping docker build' in out
+                   and 'Building image' not in out)
+        asserts.append(assert_)
+
+    assert all(asserts)
+
+
+@pytest.mark.parametrize('CLASS_', CLASSES)
+def test_skip_docker_false(
+    mock_docker_and_batch,
+    tmp_sample_project,
+    no_sys_modules_cache,
+    skip_repo_validation,
+    capsys,
+    CLASS_,
+):
+    modes = ['incremental', 'regular', 'force']
+    asserts = []
+    for mode in modes:
+        exporter = CLASS_.new(path_to_config='soopervisor.yaml',
+                              env_name=f'serve_{mode}')
+        exporter.add()
+        exporter.export(mode=mode, skip_docker=False)
+        out, err = capsys.readouterr()
+        assert_ = ('Skipping docker build' not in out
+                   and 'Building image' in out)
+        asserts.append(assert_)
+
+    assert all(asserts)
