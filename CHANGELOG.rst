@@ -3,7 +3,7 @@ CHANGELOG
 
 0.8.1dev
 --------
-* Add `--skip-docker` to `soopervisor export` to skip docker build ([#103](https://github.com/ploomber/soopervisor/issues/103))
+* Adding `--skip-docker` argument in `soopervisor export` to skip docker build ([#103](https://github.com/ploomber/soopervisor/issues/103))
 
 0.8 (2022-06-09)
 ----------------
