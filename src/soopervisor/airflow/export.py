@@ -83,7 +83,7 @@ class AirflowExporter(abc.AbstractExporter):
 
             # TODO: throw a warning if non-docker preset but there is a
             # Dockerfile
-            if cfg.preset != 'bash' and skip_docker is not True:
+            if cfg.preset != 'bash' and not skip_docker:
                 pkg_name, target_image = commons.docker.build(
                     e,
                     cfg,

@@ -339,7 +339,7 @@ class AbstractExporter(abc.ABC):
         """
         # TODO: detect inconsistencies. e.g., environment exists but directory
         # doesnt
-        if skip_docker is True:
+        if skip_docker:
             click.echo('Skipping docker build')
 
         return self._export(cfg=self._cfg,

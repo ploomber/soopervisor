@@ -75,7 +75,7 @@ class KubeflowExporter(abc.AbstractExporter):
                 raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
-            if skip_docker is True:
+            if skip_docker:
                 click.secho('Skipping docker build')
                 pkg_name, version = source.find_package_name_and_version()
                 default_image_key = get_default_image_key()
