@@ -6,3 +6,4 @@ root: intro
 chapters:
 - file: bash
 - file: argo
+- file: refactor
