@@ -206,9 +206,14 @@ def build(e,
         # raise error if include is not None? and suggest to use MANIFEST.in
         # instead
     else:
+        # FIXME: there's an error here, the requirements file that Dockerfile
+        # uses is the one in {env}/requirements.lock.txt, however, this logic
+        # is modifying the one that gets into the tar.gz file, which isn't
+        # used
         for task, lock_file in lock_paths.items():
             if Path(lock_file).exists():
                 e.cp(lock_file)
+                # renaming should happen here
             e.rm('dist')
             target = Path('dist', pkg_name)
             e.info('Packaging code')
@@ -227,6 +232,8 @@ def build(e,
                 rename_files = {lock_file: 'requirements.lock.txt'} \
                     if 'requirements' in lock_file \
                     else {lock_file: 'environment.lock.yml'}
+            # FIXME: there is no need to rename files in the .tar.gz file,
+            # these requirements files are not used
             source.copy(cmdr=e,
                         src='.',
                         dst=target,

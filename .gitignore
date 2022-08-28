@@ -1,4 +1,6 @@
 tutorials/local-lib/cluster
+tests/assets/multiple_requirements_project/cluster
+tests/assets/multiple_requirements_project/soopervisor.yaml
 
 *.sublime-project
 *.sublime-workspace
