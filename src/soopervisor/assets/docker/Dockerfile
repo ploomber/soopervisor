@@ -1,10 +1,10 @@
 FROM condaforge/mambaforge:4.10.1-0
 
-# find custom lib and included in PYTHONPATH
+
 {%- set pypath = 'lib/' if lib else 'null' %}
 
 {% if lib %}
-
+# find custom lib and included in PYTHONPATH
 ENV PYTHONPATH {{pypath}}
 
 {% endif %}
