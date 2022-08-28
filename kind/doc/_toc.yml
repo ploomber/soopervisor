@@ -4,6 +4,6 @@
 format: jb-book
 root: intro
 chapters:
-- file: bash
 - file: argo
 - file: refactor
+- file: lib

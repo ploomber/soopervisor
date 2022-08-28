@@ -1,3 +1,5 @@
+tutorials/local-lib/cluster
+
 *.sublime-project
 *.sublime-workspace
 *.source

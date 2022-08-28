@@ -1,0 +1,4 @@
+cluster:
+  backend: argo-workflows
+  exclude: [output]
+  repository: null
