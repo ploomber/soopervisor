@@ -336,6 +336,26 @@ class AbstractExporter(abc.ABC):
         """
         Exports to the target environment, calls the private ._export()
         method
+
+        Parameters
+        ----------
+        mode : Mode, default=incremental
+            set execution mode
+
+        until : str, default=None
+            Only build docker image
+
+        skip_tests : bool, default=False
+            Skip docker image tests
+
+        ignore_git : bool, default=False
+            Ignore git tracked files (include everything)
+
+        lazy_import : bool, default=False
+            Lazily load pipeline
+
+        skip_docker : bool, default=None
+            Skip docker build (Added in version 0.8.1dev)
         """
         # TODO: detect inconsistencies. e.g., environment exists but directory
         # doesnt

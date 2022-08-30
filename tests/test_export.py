@@ -263,207 +263,9 @@ def test_docker_local_lib_import(
         assert e.exit_status == 1
 
 
-@pytest.mark.parametrize('CLASS_, params, expected, not_expected',
-                         [
-                             (
-                                 AirflowExporter,
-                                 [('--skip-docker', True),
-                                  ('mode', 'incremental')],
-                                 [expected_skip_docker_message],
-                                 [expected_build_docker_message]
-                             ),
-                             (
-                                 AirflowExporter,
-                                 [('--skip-docker', True),
-                                  ('mode', 'regular')],
-                                 [expected_skip_docker_message],
-                                 [expected_build_docker_message]
-                             ),
-                             (
-                                 AirflowExporter,
-                                 [('--skip-docker', True),
-                                  ('mode', 'force')],
-                                 [expected_skip_docker_message],
-                                 [expected_build_docker_message]
-                             ),
-
-                             (
-                                 ArgoWorkflowsExporter,
-                                 [('--skip-docker', True),
-                                  ('mode', 'incremental')],
-                                 [expected_skip_docker_message],
-                                 [expected_build_docker_message]
-                             ),
-                             (
-                                 ArgoWorkflowsExporter,
-                                 [('--skip-docker', True),
-                                  ('mode', 'regular')],
-                                 [expected_skip_docker_message],
-                                 [expected_build_docker_message]
-                             ),
-                             (
-                                 ArgoWorkflowsExporter,
-                                 [('--skip-docker', True),
-                                  ('mode', 'force')],
-                                 [expected_skip_docker_message],
-                                 [expected_build_docker_message]
-                             ),
-
-                             (
-                                 AWSBatchExporter,
-                                 [('--skip-docker', True),
-                                  ('mode', 'incremental')],
-                                 [expected_skip_docker_message],
-                                 [expected_build_docker_message]
-                             ),
-                             (
-                                 AWSBatchExporter,
-                                 [('--skip-docker', True),
-                                  ('mode', 'regular')],
-                                 [expected_skip_docker_message],
-                                 [expected_build_docker_message]
-                             ),
-                             (
-                                 AWSBatchExporter,
-                                 [('--skip-docker', True),
-                                  ('mode', 'force')],
-                                 [expected_skip_docker_message],
-                                 [expected_build_docker_message]
-                             ),
-                             (
-                                 KubeflowExporter,
-                                 [('--skip-docker', True),
-                                  ('mode', 'incremental')],
-                                 [expected_skip_docker_message],
-                                 [expected_build_docker_message]
-                             ),
-                             (
-                                 KubeflowExporter,
-                                 [('--skip-docker', True),
-                                  ('mode', 'regular')],
-                                 [expected_skip_docker_message],
-                                 [expected_build_docker_message]
-                             ),
-                             (
-                                 KubeflowExporter,
-                                 [('--skip-docker', True),
-                                  ('mode', 'force')],
-                                 [expected_skip_docker_message],
-                                 [expected_build_docker_message]
-                             ),
-
-                             (
-                                 AirflowExporter,
-                                 [('--skip-docker', False),
-                                  ('mode', 'incremental')],
-                                 [expected_build_docker_message],
-                                 [expected_skip_docker_message]
-                             ),
-                             (
-                                 AirflowExporter,
-                                 [('--skip-docker', False),
-                                  ('mode', 'regular')],
-                                 [expected_build_docker_message],
-                                 [expected_skip_docker_message]
-                             ),
-                             (
-                                 AirflowExporter,
-                                 [('--skip-docker', False),
-                                  ('mode', 'force')],
-                                 [expected_build_docker_message],
-                                 [expected_skip_docker_message]
-                             ),
-                             (
-                                 ArgoWorkflowsExporter,
-                                 [('--skip-docker', False),
-                                  ('mode', 'incremental')],
-                                 [expected_build_docker_message],
-                                 [expected_skip_docker_message]
-                             ),
-                             (
-                                 ArgoWorkflowsExporter,
-                                 [('--skip-docker', False),
-                                  ('mode', 'regular')],
-                                 [expected_build_docker_message],
-                                 [expected_skip_docker_message]
-                             ),
-                             (
-                                 ArgoWorkflowsExporter,
-                                 [('--skip-docker', False),
-                                  ('mode', 'force')],
-                                 [expected_build_docker_message],
-                                 [expected_skip_docker_message]
-                             ),
-                             (
-                                 AWSBatchExporter,
-                                 [('--skip-docker', False),
-                                  ('mode', 'incremental')],
-                                 [expected_build_docker_message],
-                                 [expected_skip_docker_message]
-                             ),
-                             (
-                                 AWSBatchExporter,
-                                 [('--skip-docker', False),
-                                  ('mode', 'regular')],
-                                 [expected_build_docker_message],
-                                 [expected_skip_docker_message]
-                             ),
-                             (
-                                 AWSBatchExporter,
-                                 [('--skip-docker', False),
-                                  ('mode', 'force')],
-                                 [expected_build_docker_message],
-                                 [expected_skip_docker_message]
-                             ),
-                             (
-                                 KubeflowExporter,
-                                 [('--skip-docker', False),
-                                  ('mode', 'incremental')],
-                                 [expected_build_docker_message],
-                                 [expected_skip_docker_message]
-                             ),
-                             (
-                                 KubeflowExporter,
-                                 [('--skip-docker', False),
-                                  ('mode', 'regular')],
-                                 [expected_build_docker_message],
-                                 [expected_skip_docker_message]
-                             ),
-                             (
-                                 KubeflowExporter,
-                                 [('--skip-docker', False),
-                                  ('mode', 'force')],
-                                 [expected_build_docker_message],
-                                 [expected_skip_docker_message]
-                             )
-                         ],
-                         ids=[
-                             'airflow-skip-docker_true-incremental',
-                             'airflow-skip-docker_true-regular',
-                             'airflow-skip-docker_true-force',
-                             'argo-skip-docker_true-incremental',
-                             'argo-skip-docker_true-regular',
-                             'argo-skip-docker_true-force',
-                             'batch-skip-docker_true-incremental',
-                             'batch-skip-docker_true-regular',
-                             'batch-skip-docker_true-force',
-                             'kubeflow-skip-docker_true-incremental',
-                             'kubeflow-skip-docker_true-regular',
-                             'kubeflow-skip-docker_true-force',
-                             'airflow-skip-docker_false-incremental',
-                             'airflow-skip-docker_false-regular',
-                             'airflow-skip-docker_false-force',
-                             'argo-skip-docker_false-incremental',
-                             'argo-skip-docker_false-regular',
-                             'argo-skip-docker_false-force',
-                             'batch-skip-docker_false-incremental',
-                             'batch-skip-docker_false-regular',
-                             'batch-skip-docker_false-force',
-                             'kubeflow-skip-docker_false-incremental',
-                             'kubeflow-skip-docker_false-regular',
-                             'kubeflow-skip-docker_false-force'
-                         ]
-                         )
+@pytest.mark.parametrize("CLASS_", CLASSES)
+@pytest.mark.parametrize("mode", ['incremental', 'regular', 'force'])
+@pytest.mark.parametrize("skip_docker", [True, False])
 def test_skip_docker_params(
     mock_docker_and_batch,
     tmp_sample_project,
@@ -471,19 +273,21 @@ def test_skip_docker_params(
     skip_repo_validation,
     capsys,
     CLASS_,
-    params,
-    expected,
-    not_expected
+    mode,
+    skip_docker
 ):
-    skip_docker_tuple, mode_tuple = params
-    mode = mode_tuple[1]
-    skip_docker = skip_docker_tuple[1]
-
     exporter = CLASS_.new(path_to_config='soopervisor.yaml',
                           env_name=f'serve_{mode}')
     exporter.add()
     exporter.export(mode=mode, skip_docker=skip_docker)
     out, err = capsys.readouterr()
+
+    if skip_docker:
+        expected = [expected_skip_docker_message]
+        not_expected = [expected_build_docker_message]
+    else:
+        expected = [expected_build_docker_message]
+        not_expected = [expected_skip_docker_message]
 
     assert_expected = []
     for msg in expected:
