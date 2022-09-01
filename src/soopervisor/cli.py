@@ -89,7 +89,10 @@ def add(env_name, backend, preset):
               '-s',
               is_flag=True,
               help='Skip docker image tests')
-@click.option('--skip-docker', is_flag=True, help='Skip docker build')
+@click.option('--skip-docker',
+              '-S',
+              is_flag=True,
+              help='Skip docker build')
 @click.option('--mode',
               '-m',
               type=click.Choice(Mode.get_values()),
