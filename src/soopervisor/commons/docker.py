@@ -31,6 +31,23 @@ def modify_wildcard(entity):
     return entity.replace("*", "ploomber")
 
 
+def validate_installation(cmdr):
+    """ valdiate if docker is installed.
+
+    Paramemters
+    -----------
+    cmdr : Commander
+           Commander instance
+    """
+
+    cmdr.run(
+        'docker --version | awk \'NR==1{print $1}\'',
+        capture_output=True,
+        expected_output="Docker",
+        error_message="Did you install Docker?",
+    )
+
+
 def get_dependencies():
     """
     Fetch all dependency files and corresponding lock files

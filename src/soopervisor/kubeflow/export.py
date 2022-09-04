@@ -49,6 +49,8 @@ class KubeflowExporter(abc.AbstractExporter):
         """
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
+            commons.docker.validate_installation(e)
+
             tasks, args = commons.load_tasks(cmdr=e, name=env_name, mode=mode)
             dag, relative_path = commons.load_dag(cmdr=e,
                                                   name=env_name,

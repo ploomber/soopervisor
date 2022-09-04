@@ -48,6 +48,7 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
 
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as cmdr:
+            docker.validate_installation(cmdr)
 
             tasks, args = commons.load_tasks(cmdr=cmdr,
                                              name=env_name,

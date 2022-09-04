@@ -247,6 +247,8 @@ class AWSBatchExporter(abc.AbstractExporter):
                 lazy_import):
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as cmdr:
+            docker.validate_installation(cmdr)
+
             tasks, cli_args = commons.load_tasks(cmdr=cmdr,
                                                  name=env_name,
                                                  mode=mode,
