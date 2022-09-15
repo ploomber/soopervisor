@@ -62,8 +62,8 @@ class AirflowExporter(abc.AbstractExporter):
         pass
 
     @staticmethod
-    def _export(cfg, env_name, mode, until, skip_tests, ignore_git,
-                lazy_import):
+    def _export(cfg, env_name, mode, until, skip_tests, skip_docker,
+                ignore_git, lazy_import):
         """
         Copies the current source code to the target environment folder.
         The code along with the DAG declaration file can be copied to
@@ -83,7 +83,7 @@ class AirflowExporter(abc.AbstractExporter):
 
             # TODO: throw a warning if non-docker preset but there is a
             # Dockerfile
-            if cfg.preset != 'bash':
+            if cfg.preset != 'bash' and not skip_docker:
                 pkg_name, target_image = commons.docker.build(
                     e,
                     cfg,

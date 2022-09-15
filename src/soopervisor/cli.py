@@ -89,6 +89,10 @@ def add(env_name, backend, preset):
               '-s',
               is_flag=True,
               help='Skip docker image tests')
+@click.option('--skip-docker',
+              '-S',
+              is_flag=True,
+              help='Skip docker build')
 @click.option('--mode',
               '-m',
               type=click.Choice(Mode.get_values()),
@@ -98,7 +102,8 @@ def add(env_name, backend, preset):
               is_flag=True,
               help='Ignore git tracked files (include everything)')
 @click.option('--lazy', '-l', is_flag=True, help='Lazily load pipeline')
-def export(env_name, until_build, mode, skip_tests, ignore_git, lazy):
+def export(env_name, until_build, mode, skip_tests, skip_docker, ignore_git,
+           lazy):
     """
     Export a target platform for execution/deployment
     """
@@ -107,6 +112,7 @@ def export(env_name, until_build, mode, skip_tests, ignore_git, lazy):
         'until_build': until_build,
         'mode': mode,
         'skip_tests': skip_tests,
+        'skip_docker': skip_docker,
         'ignore_git': ignore_git
     }
 
@@ -135,6 +141,7 @@ def export(env_name, until_build, mode, skip_tests, ignore_git, lazy):
                       lazy_import=lazy).export(mode=mode,
                                                until=until,
                                                skip_tests=skip_tests,
+                                               skip_docker=skip_docker,
                                                ignore_git=ignore_git,
                                                lazy_import=lazy)
 

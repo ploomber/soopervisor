@@ -81,8 +81,8 @@ class SlurmExporter(abc.AbstractExporter):
         pass
 
     @staticmethod
-    def _export(cfg, env_name, mode, until, skip_tests, ignore_git,
-                lazy_import):
+    def _export(cfg, env_name, mode, until, skip_tests, skip_docker,
+                ignore_git, lazy_import):
         """
         Export and submit jbs
         """
@@ -94,6 +94,7 @@ class SlurmExporter(abc.AbstractExporter):
             _warn_on_exit_if_param(cmdr, ignore_git, 'ignore_git')
             _warn_on_exit_if_param(cmdr, until, 'until')
             _warn_on_exit_if_param(cmdr, skip_tests, 'skip_tests')
+            _warn_on_exit_if_param(cmdr, skip_docker, 'skip_docker')
 
             template = Path(env_name, 'template.sh').read_text()
             _validate_template(cmdr._env, template)

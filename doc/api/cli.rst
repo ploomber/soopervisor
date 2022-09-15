@@ -91,3 +91,17 @@ Example:
 
     soopervisor export train-cluster --skip-tests
 
+
+``--skip-docker``
+*************************
+
+.. note:: ``--skip-docker`` has no effect when using SLURM
+
+Soopervisor allows you to build a docker image, use this flag to **skip docker image build step**:
+
+
+Example:
+
+.. code-block:: sh
+
+    soopervisor export train-cluster --skip-docker

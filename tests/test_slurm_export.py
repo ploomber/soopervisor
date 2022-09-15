@@ -43,14 +43,14 @@ def monkeypatch_slurm(monkeypatch):
     ['task-name', ('task-__.sh', ), 'task-__.sh', 'ws'],
     ['model-fit', ('__-fit.sh', 'model-__.sh'), '__-fit.sh', 'ws'],
 ],
-                         ids=[
-                             'exact-match',
-                             'glob-like',
-                             'default',
-                             'exact-match-over-glob-like',
-                             'glob-like-over-default',
-                             'glob-like-order',
-                         ])
+    ids=[
+    'exact-match',
+    'glob-like',
+    'default',
+    'exact-match-over-glob-like',
+    'glob-like-over-default',
+    'glob-like-order',
+])
 def test_script_name_for_task_name(tmp_empty, name, files, match, workspace):
     Path(workspace).mkdir(parents=True, exist_ok=True)
 
@@ -111,8 +111,8 @@ def test_slurm_export_sample_project(monkeypatch_slurm, tmp_sample_project):
             '--kill-on-invalid-dep=yes',
             '_job.sh',
         ],
-             capture_output=True,
-             check=True),
+            capture_output=True,
+            check=True),
         call([
             'sbatch',
             '--dependency=afterok:1',
@@ -120,8 +120,8 @@ def test_slurm_export_sample_project(monkeypatch_slurm, tmp_sample_project):
             '--kill-on-invalid-dep=yes',
             '_job.sh',
         ],
-             capture_output=True,
-             check=True)
+            capture_output=True,
+            check=True)
     ])
 
     script = Path('_job.sh').read_text()
@@ -192,5 +192,56 @@ def test_slurm_export_sample_project_incremental(monkeypatch,
 
     run_mock.assert_not_called()
 
+
+def test_slurm_export_sample_project_with_skip_docker(
+        monkeypatch_slurm,
+        tmp_sample_project,
+        capsys):
+
+    load_tasks_mock, run_mock = monkeypatch_slurm
+
+    exporter = SlurmExporter.new(path_to_config='soopervisor.yaml',
+                                 env_name='serve')
+
+    exporter.add()
+    exporter.export(mode='incremental', skip_docker=True)
+
+    load_tasks_mock.assert_called_once_with(cmdr=ANY,
+                                            name='serve',
+                                            mode='incremental',
+                                            lazy_import=False)
+
+    run_mock.assert_has_calls([
+        call(['sbatch', '--parsable', '_job.sh'],
+             capture_output=True,
+             check=True),
+        call([
+            'sbatch',
+            '--dependency=afterok:0',
+            '--parsable',
+            '--kill-on-invalid-dep=yes',
+            '_job.sh',
+        ],
+            capture_output=True,
+            check=True),
+        call([
+            'sbatch',
+            '--dependency=afterok:1',
+            '--parsable',
+            '--kill-on-invalid-dep=yes',
+            '_job.sh',
+        ],
+            capture_output=True,
+            check=True)
+    ])
+
+    script = Path('_job.sh').read_text()
+
+    out, err = capsys.readouterr()
+
+    assert 'option has no effect when' in out
+    assert '#SBATCH --job-name=plot' in script
+    assert '#SBATCH --job-name=plot' in script
+    assert 'srun ploomber task plot --entry-point pipeline.yaml' in script
 
 # TODO: test task --force

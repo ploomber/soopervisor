@@ -16,6 +16,7 @@ from soopervisor.commons import docker
 from soopervisor import commons
 from soopervisor.argo.config import ArgoConfig
 from soopervisor.commons.dependencies import get_default_image_key
+from soopervisor.commons import source
 
 
 class ArgoWorkflowsExporter(abc.AbstractExporter):
@@ -40,8 +41,8 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
             e.success('Done')
 
     @staticmethod
-    def _export(cfg, env_name, mode, until, skip_tests, ignore_git,
-                lazy_import):
+    def _export(cfg, env_name, mode, until, skip_tests, skip_docker,
+                ignore_git, lazy_import):
         """
         Build and upload Docker image. Export Argo YAML spec.
         """
@@ -58,16 +59,22 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
                 raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
                                     'tasks to submit. Try "--mode force" to '
                                     'submit all tasks regardless of status')
-
-            pkg_name, target_image = docker.build(cmdr,
-                                                  cfg,
-                                                  env_name,
-                                                  until=until,
-                                                  entry_point=args[1],
-                                                  skip_tests=skip_tests,
-                                                  ignore_git=ignore_git)
-
-            target_image = target_image[get_default_image_key()]
+            if skip_docker:
+                pkg_name, version = source.find_package_name_and_version()
+                default_image_key = get_default_image_key()
+                if default_image_key:
+                    image_local = f'{pkg_name}:{version}-'
+                    f'{docker.modify_wildcard(default_image_key)}'
+                target_image = image_local
+            else:
+                pkg_name, target_image = docker.build(cmdr,
+                                                      cfg,
+                                                      env_name,
+                                                      until=until,
+                                                      entry_point=args[1],
+                                                      skip_tests=skip_tests,
+                                                      ignore_git=ignore_git)
+                target_image = target_image[get_default_image_key()]
 
             cmdr.info('Generating Argo Workflows YAML spec')
             _make_argo_spec(tasks=tasks,

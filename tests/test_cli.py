@@ -210,6 +210,7 @@ def test_sample_project_no_args(args, backend, tmp_sample_project,
     exporter_.load().export.assert_called_once_with(mode='incremental',
                                                     until=None,
                                                     skip_tests=False,
+                                                    skip_docker=False,
                                                     ignore_git=False,
                                                     lazy_import=False)
 
@@ -256,6 +257,7 @@ def test_sample_project(args, args_export, mode, backend, tmp_sample_project,
     exporter_.load().export.assert_called_once_with(mode=mode,
                                                     until=None,
                                                     skip_tests=False,
+                                                    skip_docker=False,
                                                     ignore_git=False,
                                                     lazy_import=False)
 
@@ -317,6 +319,7 @@ def test_skip_tests(args, backend, tmp_sample_project, monkeypatch):
     exporter_.load().export.assert_called_once_with(mode='incremental',
                                                     until=None,
                                                     skip_tests=True,
+                                                    skip_docker=False,
                                                     ignore_git=False,
                                                     lazy_import=False)
 

@@ -27,6 +27,9 @@ CLASSES = [
     KubeflowExporter,
 ]
 
+expected_build_docker_message = 'Building image'
+expected_skip_docker_message = 'Skipping docker build'
+
 
 @pytest.mark.parametrize('CLASS_', CLASSES)
 def test_dockerfile_when_no_setup_py(CLASS_, tmp_sample_project,
@@ -96,12 +99,12 @@ def mock_docker_and_batch(
     ArgoWorkflowsExporter,
     KubeflowExporter,
 ],
-                         ids=[
-                             'batch',
-                             'airflow',
-                             'argo',
-                             'kubeflow',
-                         ])
+    ids=[
+    'batch',
+    'airflow',
+    'argo',
+    'kubeflow',
+])
 def test_skip_tests(
     mock_docker_and_batch,
     tmp_sample_project,
@@ -219,9 +222,9 @@ def test_validates_repository(mock_docker_sample_project, tmp_sample_project,
 @pytest.mark.parametrize('CLASS_', [
     ArgoWorkflowsExporter,
 ],
-                         ids=[
-                             'argo-workflows',
-                         ])
+    ids=[
+    'argo-workflows',
+])
 def test_docker_local_lib_import(
     tmp_sample_project,
     no_sys_modules_cache,
@@ -258,3 +261,41 @@ def test_docker_local_lib_import(
                               "python -c 'from lib import package_b;'")
     except docker.errors.ContainerError as e:
         assert e.exit_status == 1
+
+
+@pytest.mark.parametrize("CLASS_", CLASSES)
+@pytest.mark.parametrize("mode", ['incremental', 'regular', 'force'])
+@pytest.mark.parametrize("skip_docker", [True, False])
+def test_skip_docker_params(
+    mock_docker_and_batch,
+    tmp_sample_project,
+    no_sys_modules_cache,
+    skip_repo_validation,
+    capsys,
+    CLASS_,
+    mode,
+    skip_docker
+):
+    exporter = CLASS_.new(path_to_config='soopervisor.yaml',
+                          env_name=f'serve_{mode}')
+    exporter.add()
+    exporter.export(mode=mode, skip_docker=skip_docker)
+    out, err = capsys.readouterr()
+
+    if skip_docker:
+        expected = [expected_skip_docker_message]
+        not_expected = [expected_build_docker_message]
+    else:
+        expected = [expected_build_docker_message]
+        not_expected = [expected_skip_docker_message]
+
+    assert_expected = []
+    for msg in expected:
+        assert_expected.append(msg in out)
+
+    assert_not_expected = []
+    for msg in not_expected:
+        assert_not_expected.append(msg not in out)
+
+    assert all(assert_expected)
+    assert all(assert_not_expected)
