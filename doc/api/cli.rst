@@ -97,6 +97,10 @@ Example:
 
 .. note:: ``--skip-docker`` has no effect when using SLURM
 
+    .. versionadded:: 0.8.1
+
+         Added `--skip-docker` option to `soopervisor export`      
+
 Soopervisor allows you to build a docker image, use this flag to **skip docker image build step**:
 
 
