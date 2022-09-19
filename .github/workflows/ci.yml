@@ -33,6 +33,10 @@ jobs:
     - name: Install dependencies
       run: |
         pip install invoke
+        pip install .
+        # check package is importable
+        python -c "import soopervisor"
+        python -c "import soopervisor.cli"
         pip install -e tests/assets/my_project
         pip install ".[dev]"
         # one of airflow's dependencies is downgrading clic, which breaks ploomber
