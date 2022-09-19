@@ -1,4 +1,4 @@
-include CHANGELOG.rst
+include CHANGELOG.md
 include README.rst
 graft src/soopervisor/assets
 global-exclude __pycache__

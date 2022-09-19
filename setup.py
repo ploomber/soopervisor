@@ -85,7 +85,7 @@ setup(
     long_description='%s\n%s' %
     (re.compile('^.. start-badges.*^.. end-badges', re.M | re.S).sub(
         '', read('README.rst')),
-     re.sub(':[a-z]+:`~?(.*?)`', r'``\1``', read('CHANGELOG.rst'))),
+     re.sub(':[a-z]+:`~?(.*?)`', r'``\1``', read('CHANGELOG.md'))),
     author='',
     author_email='',
     url='https://github.com/ploomber/soopervisor',
