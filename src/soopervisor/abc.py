@@ -332,7 +332,8 @@ class AbstractExporter(abc.ABC):
                skip_tests=False,
                skip_docker=False,
                ignore_git=False,
-               lazy_import=False):
+               lazy_import=False,
+               task_name=None):
         """
         Exports to the target environment, calls the private ._export()
         method
@@ -349,7 +350,8 @@ class AbstractExporter(abc.ABC):
                             skip_tests=skip_tests,
                             skip_docker=skip_docker,
                             ignore_git=ignore_git,
-                            lazy_import=lazy_import)
+                            lazy_import=lazy_import,
+                            task_name=task_name)
 
     @staticmethod
     @abc.abstractmethod

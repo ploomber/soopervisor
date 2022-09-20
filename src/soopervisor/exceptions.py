@@ -64,3 +64,24 @@ class ConfigurationFileTypeError(ClickException):
     def __init__(self, path, data):
         super().__init__(f'Expected {str(path)!r} to contain a dictionary '
                          f'but got an object of type: {type(data).__name__}')
+
+
+class NotATaskError(ClickException):
+    """
+    Raised when a user passes an invalid task name
+    """
+
+    def __init__(self, task_name, dag):
+        names = comma_separated(dag.keys())
+        super().__init__(
+            f'{task_name!r} is not a valit task name. Tasks are: {names}')
+
+
+class UpToDateTaskError(ClickException):
+    """Raised when a user tries to submit a task that is up-to-date
+    """
+
+    def __init__(self, task_name):
+        super().__init__(
+            f'Task {task_name!r} is up-to-date, to force execution, '
+            'pass: --mode force')

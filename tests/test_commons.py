@@ -471,7 +471,7 @@ def test_invalid_mode(cmdr, tmp_fast_pipeline):
     with pytest.raises(ValueError) as excinfo:
         commons.load_tasks(cmdr=cmdr, mode='unknown')
 
-    assert 'mode must be one of' in str(excinfo.value)
+    assert "'mode' must be one of" in str(excinfo.value)
 
 
 def test_loads_pipeline_with_name(cmdr, tmp_fast_pipeline):

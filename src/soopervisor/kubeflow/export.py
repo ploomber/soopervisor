@@ -43,7 +43,7 @@ class KubeflowExporter(abc.AbstractExporter):
 
     @staticmethod
     def _export(cfg, env_name, mode, until, skip_tests, skip_docker,
-                ignore_git, lazy_import):
+                ignore_git, lazy_import, task_name):
         """
         Copies the current source code to the target environment folder.
         The code along with the DAG declaration file can be copied to
@@ -51,7 +51,10 @@ class KubeflowExporter(abc.AbstractExporter):
         """
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
-            tasks, args = commons.load_tasks(cmdr=e, name=env_name, mode=mode)
+            tasks, args = commons.load_tasks(cmdr=e,
+                                             name=env_name,
+                                             mode=mode,
+                                             task_name=task_name)
             dag, relative_path = commons.load_dag(cmdr=e,
                                                   name=env_name,
                                                   mode=mode,

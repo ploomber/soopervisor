@@ -104,7 +104,8 @@ def test_airflow_export_sample_project(
     load_tasks_mock.assert_called_once_with(cmdr=ANY,
                                             name='serve',
                                             mode='incremental',
-                                            lazy_import=False)
+                                            lazy_import=False,
+                                            task_name=None)
     assert isinstance(dag, DAG)
     assert set(dag.task_dict) == {'clean', 'plot', 'raw'}
     assert set(type(t) for t in dag.tasks) == {operator_class}

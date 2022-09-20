@@ -73,12 +73,12 @@ def test_export_missing_soopervisor_yaml(tmp_empty):
 
 
 @pytest.mark.skip(reason='current implementation overwrites .tar.gz contents')
-@pytest.mark.parametrize(
-    'args, backend',
-    [[['add', 'serve', '--backend', 'argo-workflows'], Backend.argo_workflows],
-     [['add', 'serve', '--backend', 'airflow'], Backend.airflow],
-     [['add', 'serve', '--backend', 'aws-batch'], Backend.aws_batch]],
-    ids=['argo', 'airflow', 'aws-batch'])
+@pytest.mark.parametrize('args, backend', [
+    [['add', 'serve', '--backend', 'argo-workflows'], Backend.argo_workflows],
+    [['add', 'serve', '--backend', 'airflow'], Backend.airflow],
+    [['add', 'serve', '--backend', 'aws-batch'], Backend.aws_batch],
+],
+                         ids=['argo', 'airflow', 'aws-batch'])
 def test_p_home_exists_tar(args, backend, tmp_sample_project, monkeypatch,
                            monkeypatch_external):
     monkeypatch.delenv('PLOOMBER_STATS_ENABLED', raising=True)
@@ -212,7 +212,8 @@ def test_sample_project_no_args(args, backend, tmp_sample_project,
                                                     skip_tests=False,
                                                     skip_docker=False,
                                                     ignore_git=False,
-                                                    lazy_import=False)
+                                                    lazy_import=False,
+                                                    task_name=None)
 
 
 @pytest.mark.parametrize('args, backend', [
@@ -229,14 +230,20 @@ def test_sample_project_no_args(args, backend, tmp_sample_project,
                              'batch',
                              'slurm',
                          ])
-@pytest.mark.parametrize('args_export, mode', [
-    [['--mode', 'incremental'], 'incremental'],
-    [['--mode', 'regular'], 'regular'],
-    [['--mode', 'force'], 'force'],
+@pytest.mark.parametrize('args_export, mode, task_name', [
+    [['--mode', 'incremental'], 'incremental', None],
+    [['--mode', 'incremental', '--task', 'fit'], 'incremental', 'fit'],
+    [['--mode', 'regular'], 'regular', None],
+    [['--mode', 'force'], 'force', None],
 ],
-                         ids=['incremental', 'regular', 'force'])
+                         ids=[
+                             'incremental',
+                             'incremental-task',
+                             'regular',
+                             'force',
+                         ])
 def test_sample_project(args, args_export, mode, backend, tmp_sample_project,
-                        monkeypatch):
+                        monkeypatch, task_name):
     runner = CliRunner()
     result = runner.invoke(cli, args, catch_exceptions=False)
     assert result.exit_code == 0
@@ -259,7 +266,8 @@ def test_sample_project(args, args_export, mode, backend, tmp_sample_project,
                                                     skip_tests=False,
                                                     skip_docker=False,
                                                     ignore_git=False,
-                                                    lazy_import=False)
+                                                    lazy_import=False,
+                                                    task_name=task_name)
 
 
 @pytest.mark.parametrize('args', [
@@ -321,7 +329,8 @@ def test_skip_tests(args, backend, tmp_sample_project, monkeypatch):
                                                     skip_tests=True,
                                                     skip_docker=False,
                                                     ignore_git=False,
-                                                    lazy_import=False)
+                                                    lazy_import=False,
+                                                    task_name=None)
 
 
 @pytest.mark.parametrize('args, backend', [
@@ -355,11 +364,11 @@ def test_ignore_git(args, backend, tmp_sample_project, monkeypatch_external):
                            catch_exceptions=False)
     assert result.exit_code == 0
 
-    monkeypatch_external.assert_called_once_with(
-        cmdr=ANY,
-        src='.',
-        dst=Path('dist', 'sample_project'),
-        include=None,
-        exclude=None,
-        ignore_git=True,
-        rename_files={})
+    monkeypatch_external.assert_called_once_with(cmdr=ANY,
+                                                 src='.',
+                                                 dst=Path(
+                                                     'dist', 'sample_project'),
+                                                 include=None,
+                                                 exclude=None,
+                                                 ignore_git=True,
+                                                 rename_files={})
