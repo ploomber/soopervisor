@@ -733,3 +733,49 @@ def test_docker_build_big_file_warns(tmp_sample_project, monkeypatch, capsys):
     assert 'The following files are too big. ' in captured.out
     assert 'README.md' in captured.out
     assert 'raw.py' in captured.out
+
+
+def test_lazily_load_dag(tmp_empty):
+    Path('script.py').write_text("""
+import some_unknown_package
+
+# %% + tags = ["parameters"]
+upstream = None
+
+# %%
+1 + 1
+""")
+
+    Path('tasks.py').write_text("""
+import another_unknown_package
+
+def some_task(product):
+    pass
+""")
+
+    Path('clients.py').write_text("""
+from ploomber.clients import LocalStorageClient
+
+def get_client():
+    return LocalStorageClient(path_to_backup_dir='backup')
+""")
+
+    spec = {
+        'tasks': [
+            {
+                'source': 'script.py',
+                'product': 'report.html'
+            },
+            {
+                'source': 'tasks.some_task',
+                'product': 'out.csv'
+            },
+        ],
+        'clients': {
+            'File': 'clients.get_client'
+        }
+    }
+
+    Path('pipeline.yaml').write_text(yaml.safe_dump(spec))
+
+    commons.load_dag(cmdr=Mock(), name='name', lazy_import=True)

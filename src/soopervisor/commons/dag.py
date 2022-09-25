@@ -8,6 +8,7 @@ from ploomber.spec import DAGSpec
 from ploomber.exceptions import DAGSpecInvalidError
 from ploomber.products import File
 from ploomber.io._commander import Commander
+from ploomber.util.util import add_to_sys_path
 
 from soopervisor import commons
 from soopervisor.enum import Mode
@@ -100,10 +101,12 @@ def load_dag(cmdr, name=None, mode='incremental', lazy_import=False):
     dag = spec.to_dag()
 
     if mode == 'incremental':
+        with add_to_sys_path('.', chdir=False):
+            has_client = dag.clients.get(File) is not None
 
         # what if user has a shared disk but still wants to upload artifacts?
         # maybe add a way to force this
-        if dag.clients.get(File):
+        if has_client:
             dag.render(remote=True)
         else:
             dag.render()
