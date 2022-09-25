@@ -62,7 +62,7 @@ def test_export(mock_docker_my_project, backup_packaged_project, monkeypatch,
     assert run_task_template['script']['workingDir'] is None
 
     assert run_task_template['script'][
-        'image'] == 'your-repository/name:0.1dev-default'
+        'image'] == 'your-repository/name:0.1dev'
     assert run_task_template['name'] == 'run-task'
     assert spec['metadata']['generateName'] == 'my-project-'
     assert all([

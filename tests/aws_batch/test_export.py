@@ -329,13 +329,13 @@ def test_export_multiple_images_job_details(
     assert job_images == {
         'arn:aws:batch:us-east-1:123456789012:job-definition/'
         'multiple_requirements_project-uuid4:1':
-        'your-repository/name:latest-default',
+        'your-repository/name:latest',
         'arn:aws:batch:us-east-1:123456789012:job-definition/'
         'multiple_requirements_project-uuid4-clean-ploomber:1':
-        'your-repository/name:latest-clean-ploomber',
+        'your-repository/name-clean-ploomber:latest',
         'arn:aws:batch:us-east-1:123456789012:job-definition/'
         'multiple_requirements_project-uuid4-plot-ploomber:1':
-        'your-repository/name:latest-plot-ploomber',
+        'your-repository/name-plot-ploomber:latest',
     }
 
 
@@ -410,8 +410,8 @@ def test_checks_the_right_spec(mock_batch, mock_docker_my_project_serve,
     exporter.add()
     exporter.export(mode='incremental')
 
-    expected = ('docker', 'run', 'my_project:0.1dev-default', 'ploomber',
-                'status', '--entry-point',
+    expected = ('docker', 'run', 'my_project:0.1dev', 'ploomber', 'status',
+                '--entry-point',
                 str(Path('src', 'my_project', 'pipeline.serve.yaml')))
     assert mock_docker_my_project_serve.calls[2] == expected
 

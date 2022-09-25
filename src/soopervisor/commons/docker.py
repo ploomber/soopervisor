@@ -1,3 +1,5 @@
+import os
+import shlex
 import tarfile
 from pathlib import Path
 
@@ -50,21 +52,42 @@ def get_dependencies():
     return dependency_files, lock_paths
 
 
-def build_image(e, cfg, env_name, until, entry_point, skip_tests, ignore_git,
-                pkg_name, version, task):
+def build_image(
+    e,
+    cfg,
+    env_name,
+    until,
+    entry_point,
+    skip_tests,
+    ignore_git,
+    pkg_name,
+    version,
+    task,
+):
+    """Build Docker image
+
+    Parameters
+    ----------
+    pkg_name : str
+        Project name, used to tag the Docker image (e.g. {pkg_name}:{version})
+
+    version : str
+        Project version, user to tag the Docker image
+        (e.g. {pkg_name}:{version})
+    """
 
     e.cp('dist')
 
     e.cd(env_name)
 
     if task:
-        image_local = f'{pkg_name}:{version}-{modify_wildcard(task)}'
-
-    import os
-    import shlex
+        suffix = '' if task == 'default' else f'-{modify_wildcard(task)}'
+        image_local = f'{pkg_name}{suffix}:{version}'
 
     args = ['docker', 'build', '.', '--tag', image_local]
 
+    # NOTE: this is used in Ploomber Cloud, but it isn't documented in
+    # soopervisor's docs
     if 'DOCKER_ARGS' in os.environ:
         args = args + shlex.split(os.environ['DOCKER_ARGS'])
 
@@ -111,9 +134,11 @@ def build_image(e, cfg, env_name, until, entry_point, skip_tests, ignore_git,
 
     if cfg.repository:
         image_target = cfg.repository
+
         # Adding the latest tag if not a remote repo
         if ":" not in image_target:
-            image_target = f'{image_target}:{version}-{modify_wildcard(task)}'
+            image_target = f'{image_target}{suffix}:{version}'
+
         e.run('docker',
               'tag',
               image_local,
@@ -176,7 +201,8 @@ def build(e,
 
     # Generate source distribution
     if setup_flow:
-        for task_pattern in list(dependency_files.keys()):
+        for task_pattern in sorted(dependency_files.keys()):
+
             if task_pattern != 'default':
                 raise NotImplementedError(
                     "Multiple requirements.*.lock.txt or "
@@ -188,9 +214,11 @@ def build(e,
             e.cp('requirements.lock.txt')
         elif Path('environment.lock.yml').exists():
             e.cp('environment.lock.yml')
+
         e.rm('dist', 'build', Path('src', pkg_name, f'{pkg_name}.egg-info'))
         e.run('python', '-m', 'build', '--sdist', description='Packaging code')
         default_image_key = dependencies.get_default_image_key()
+
         image = build_image(e,
                             cfg,
                             env_name,
@@ -206,7 +234,10 @@ def build(e,
         # raise error if include is not None? and suggest to use MANIFEST.in
         # instead
     else:
-        for task, lock_file in lock_paths.items():
+        # sort keys so we iterate in deterministic order and can test easily
+        for task in sorted(lock_paths.keys()):
+            lock_file = lock_paths[task]
+
             if Path(lock_file).exists():
                 e.cp(lock_file)
             e.rm('dist')

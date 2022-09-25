@@ -144,14 +144,15 @@ def _submit_dag(
     # Register job definitions for task specific images
     for pattern, image in image_map.items():
         if pattern != default_image_key:
-            container_properties['image'] = image
+            container_props = container_properties.copy()
+            container_props['image'] = image
             task_job_def = f"{job_def}-{docker.modify_wildcard(pattern)}"
             cmdr.info(f'Registering {task_job_def!r} job definition...')
 
             jd = client.register_job_definition(
                 jobDefinitionName=task_job_def,
                 type='container',
-                containerProperties=container_properties)
+                containerProperties=container_props)
             jd_map[pattern] = jd
 
     for name, upstream in tasks.items():
@@ -280,6 +281,7 @@ class AWSBatchExporter(abc.AbstractExporter):
 
             # add a unique suffix to prevent collisions
             suffix = str(uuid4())[:8]
+
             cls._submit_dag(tasks=tasks,
                             args=cli_args,
                             job_def=f'{pkg_name}-{suffix}',

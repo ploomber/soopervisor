@@ -27,9 +27,6 @@ CLASSES = [
     KubeflowExporter,
 ]
 
-expected_build_docker_message = 'Building image'
-expected_skip_docker_message = 'Skipping docker build'
-
 
 @pytest.mark.parametrize('CLASS_', CLASSES)
 def test_dockerfile_when_no_setup_py(CLASS_, tmp_sample_project,
@@ -99,12 +96,12 @@ def mock_docker_and_batch(
     ArgoWorkflowsExporter,
     KubeflowExporter,
 ],
-    ids=[
-    'batch',
-    'airflow',
-    'argo',
-    'kubeflow',
-])
+                         ids=[
+                             'batch',
+                             'airflow',
+                             'argo',
+                             'kubeflow',
+                         ])
 def test_skip_tests(
     mock_docker_and_batch,
     tmp_sample_project,
@@ -167,8 +164,8 @@ def test_checks_the_right_spec(monkeypatch, mock_docker_sample_project_serve,
     exporter.add()
     exporter.export(mode='incremental')
 
-    expected = ('docker', 'run', 'sample_project:latest-default', 'ploomber',
-                'status', '--entry-point', 'pipeline.serve.yaml')
+    expected = ('docker', 'run', 'sample_project:latest', 'ploomber', 'status',
+                '--entry-point', 'pipeline.serve.yaml')
     assert mock_docker_sample_project_serve.calls[1] == expected
 
 
@@ -191,8 +188,8 @@ def test_checks_the_right_spec_pkg(mock_docker_my_project_serve,
     exporter.add()
     exporter.export(mode='incremental')
 
-    expected = ('docker', 'run', 'my_project:0.1dev-default', 'ploomber',
-                'status', '--entry-point',
+    expected = ('docker', 'run', 'my_project:0.1dev', 'ploomber', 'status',
+                '--entry-point',
                 str(Path('src', 'my_project', 'pipeline.serve.yaml')))
     assert mock_docker_my_project_serve.calls[2] == expected
 
@@ -222,9 +219,9 @@ def test_validates_repository(mock_docker_sample_project, tmp_sample_project,
 @pytest.mark.parametrize('CLASS_', [
     ArgoWorkflowsExporter,
 ],
-    ids=[
-    'argo-workflows',
-])
+                         ids=[
+                             'argo-workflows',
+                         ])
 def test_docker_local_lib_import(
     tmp_sample_project,
     no_sys_modules_cache,
@@ -250,14 +247,14 @@ def test_docker_local_lib_import(
     # may be related to this?:
     # https://github.com/docker/docker-py/issues/2087
     import_suc = client.containers.run(
-        "sample_project:latest-default", "/bin/bash -c \"sleep 1 "
+        "sample_project:latest", "/bin/bash -c \"sleep 1 "
         "&& python -c 'from lib import package_a; "
         "package_a.print_hello()'\"")
 
     assert import_suc == b'hello\n'
 
     try:
-        client.containers.run("sample_project:latest-default",
+        client.containers.run("sample_project:latest",
                               "python -c 'from lib import package_b;'")
     except docker.errors.ContainerError as e:
         assert e.exit_status == 1
@@ -266,36 +263,20 @@ def test_docker_local_lib_import(
 @pytest.mark.parametrize("CLASS_", CLASSES)
 @pytest.mark.parametrize("mode", ['incremental', 'regular', 'force'])
 @pytest.mark.parametrize("skip_docker", [True, False])
-def test_skip_docker_params(
-    mock_docker_and_batch,
-    tmp_sample_project,
-    no_sys_modules_cache,
-    skip_repo_validation,
-    capsys,
-    CLASS_,
-    mode,
-    skip_docker
-):
+def test_skip_docker(mock_docker_and_batch, tmp_sample_project,
+                     no_sys_modules_cache, skip_repo_validation, capsys,
+                     CLASS_, mode, skip_docker):
     exporter = CLASS_.new(path_to_config='soopervisor.yaml',
                           env_name=f'serve_{mode}')
     exporter.add()
     exporter.export(mode=mode, skip_docker=skip_docker)
-    out, err = capsys.readouterr()
+    out, _ = capsys.readouterr()
 
-    if skip_docker:
-        expected = [expected_skip_docker_message]
-        not_expected = [expected_build_docker_message]
-    else:
-        expected = [expected_build_docker_message]
-        not_expected = [expected_skip_docker_message]
+    build_message = 'Building image'
+    skip_message = 'Skipping docker build'
 
-    assert_expected = []
-    for msg in expected:
-        assert_expected.append(msg in out)
+    expected = skip_message if skip_docker else build_message
+    not_expected = build_message if skip_docker else skip_message
 
-    assert_not_expected = []
-    for msg in not_expected:
-        assert_not_expected.append(msg not in out)
-
-    assert all(assert_expected)
-    assert all(assert_not_expected)
+    assert expected in out
+    assert not_expected not in out
