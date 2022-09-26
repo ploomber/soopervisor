@@ -3,7 +3,13 @@ CHANGELOG
 
 0.8.1dev
 --------
+* Allos execution of single tasks via `soopervisor export --task {task-name}`
+* Allows using multiple `requirements.txt` files, generating one Docker image for each one (#86)
+* Allowing to bundle custom libraries via `lib/` in docker image (#87)
 * Adding `--skip-docker` argument in `soopervisor export` to skip docker build ([#103](https://github.com/ploomber/soopervisor/issues/103))
+* Fixes DAG loading when passing the `--lazy` argument in pipelines with a `File` client (#105)
+* Display warning if source code contains file over 10MB (#81)
+* Drop support for Python 3.6
 
 0.8 (2022-06-09)
 ----------------
