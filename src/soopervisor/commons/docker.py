@@ -40,16 +40,17 @@ def get_dependencies():
     and requirements.fit-__.lock.txt mapped to pattern fit-*.
     """
 
-    requirement_files = dependencies.get_task_dependency_files(
+    # try with requirements.txt
+    requirements = dependencies.get_task_dependency_files(
         'requirements', 'txt')
-    dependency_files = requirement_files if requirement_files \
-        else dependencies.get_task_dependency_files('environment', 'yml')
 
-    lock_paths = {
-        task: paths['lock']
-        for task, paths in dependency_files.items()
-    }
-    return dependency_files, lock_paths
+    # if not, try with environment.yml
+    requirements = (requirements if requirements else
+                    dependencies.get_task_dependency_files(
+                        'environment', 'yml'))
+
+    lock_paths = {task: paths['lock'] for task, paths in requirements.items()}
+    return requirements, lock_paths
 
 
 def build_image(
@@ -253,11 +254,19 @@ def build(e,
                 exclude = other_lock_files
 
             rename_files = {}
+
             if lock_file not in ('requirements.lock.txt',
                                  'environment.lock.yml'):
-                rename_files = {lock_file: 'requirements.lock.txt'} \
-                    if 'requirements' in lock_file \
-                    else {lock_file: 'environment.lock.yml'}
+
+                # rename task-specific requirements files. e.g.,
+                # requirements.task.lock.txt -> requirements.lock.txt
+                # environment.task.lock.yml -> environment.lock.yml
+                rename_files = ({
+                    lock_file: 'requirements.lock.txt'
+                } if 'requirements' in lock_file else {
+                    lock_file: 'environment.lock.yml'
+                })
+
             source.copy(cmdr=e,
                         src='.',
                         dst=target,

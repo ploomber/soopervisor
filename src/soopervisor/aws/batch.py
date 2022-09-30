@@ -110,6 +110,7 @@ def _submit_dag(
     is_cloud,
     cfg,
 ):
+
     default_image_key = get_default_image_key()
     remote_name = image_map[default_image_key]
 

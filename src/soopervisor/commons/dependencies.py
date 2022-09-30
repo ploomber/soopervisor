@@ -54,7 +54,7 @@ def get_task_dependency_files(prefix, suffix, lock='lock'):
             task_files[task_name]['lock'] = filename
         else:
             task_files[task_name]['dependency'] = filename
-    return task_files
+    return dict(task_files)
 
 
 def get_default_image_key():
