@@ -632,6 +632,66 @@ def test_docker_build(tmp_sample_project):
     assert name == 'build' and tag == 'sample_project:latest'
 
 
+def test_docker_build_with_conda(tmp_sample_project):
+    Path('some-env').mkdir()
+    Path('some-env', 'Dockerfile').touch()
+    Path('requirements.txt').touch()
+    Path('environment.lock.yml').touch()
+    Path('environment.yml').touch()
+
+    with CustomCommander(workspace='some-env') as cmdr:
+        commons.docker.build(cmdr,
+                             ConcreteDockerConfig(),
+                             'some-env',
+                             until=None,
+                             entry_point='pipeline.yaml')
+
+
+@pytest.mark.parametrize('to_create, expected', [
+    [
+        [
+            'requirements.txt',
+            'requirements.lock.txt',
+        ],
+        {
+            'default': {
+                'dependency': 'requirements.txt',
+                'lock': 'requirements.lock.txt'
+            }
+        },
+    ],
+    [
+        [
+            'requirements.txt',
+            'requirements.lock.txt',
+            'requirements.some_task.txt',
+            'requirements.some_task.lock.txt',
+        ],
+        {
+            'default': {
+                'dependency': 'requirements.txt',
+                'lock': 'requirements.lock.txt'
+            },
+            'some_task': {
+                'dependency': 'requirements.some_task.txt',
+                'lock': 'requirements.some_task.lock.txt'
+            }
+        },
+    ],
+],
+                         ids=[
+                             'simple',
+                             'simple-with-one-task-name',
+                         ])
+def test_get_task_dependency_files(tmp_empty, to_create, expected):
+    for path in to_create:
+        Path(path).touch()
+
+    out = commons.dependencies.get_task_dependency_files('requirements', 'txt')
+
+    assert out == expected
+
+
 @pytest.mark.parametrize('repo, expected', [
     ['docker.company.com/something', 'docker.company.com/something:latest'],
     ['docker.company.com/something:v2', 'docker.company.com/something:v2'],
