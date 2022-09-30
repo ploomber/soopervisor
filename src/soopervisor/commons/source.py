@@ -101,7 +101,7 @@ def copy(cmdr,
          include=None,
          exclude=None,
          ignore_git=False,
-         rename_files={}):
+         rename_files=None):
     """Copy files
 
     Parameters
@@ -127,6 +127,7 @@ def copy(cmdr,
         If False, it only copies files tracked by git, otherwise it copies
         everything (but still applies the include/exclude rules)
     """
+    rename_files = rename_files or {}
     include = set() if include is None else set(include)
     exclude = set() if exclude is None else set(exclude)
     exclude_dirs = set(p for p in exclude if Path(p).is_dir())
