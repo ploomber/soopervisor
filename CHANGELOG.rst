@@ -3,10 +3,10 @@ CHANGELOG
 
 0.9.1dev
 --------
+* Allows using multiple ``requirements.txt`` files, generating one Docker image for each one (#86)
 
-
-0.8.1dev
---------
+0.9 (2022-10-03)
+----------------
 * Allows execution of single tasks via ``soopervisor export --task {task-name}``
 * Allowing to bundle custom libraries via ``lib/`` in docker image (#87)
 * Adding ``--skip-docker`` argument in ``soopervisor export`` to skip docker build (#103)
