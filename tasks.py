@@ -33,7 +33,8 @@ def test(c, pty=True):
     """
     # run tests except test_tutorials.py - that one needs extra config,
     # we're not running it as part of the CI
-    c.run('pytest tests --ignore=tests/test_tutorials.py', pty=pty)
+    # c.run('pytest tests --ignore=tests/test_tutorials.py', pty=pty)
+    c.run('pytest tests/test_commons_docker.py', pty=pty)
 
 
 @task
