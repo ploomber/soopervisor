@@ -65,10 +65,10 @@ def test_dockerfile_aws_batch(backup_packaged_project, use_pip):
     if use_pip:
         expected_run = (
             'RUN pip install --requirement '
-            'requirements.lock.txt && rm -rf /root/.cache/pip/')
+            'project/requirements.lock.txt && rm -rf /root/.cache/pip/')
     else:
         expected_run = ('RUN mamba env update --name base '
-                        '--file environment.lock.yml')
+                        '--file project/environment.lock.yml')
 
     assert expected_copy in dockerfile
     assert expected_run in dockerfile
