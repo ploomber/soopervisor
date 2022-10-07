@@ -3,6 +3,7 @@ CHANGELOG
 
 0.9.1dev
 --------
+* Optimizes the generated AWS Batch ``Dockerfile`` so dependencies are only installed when the requirements are modified
 * Allows using multiple ``requirements.txt`` files, generating one Docker image for each one (#86)
 
 0.9 (2022-10-03)
