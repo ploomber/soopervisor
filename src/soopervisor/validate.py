@@ -3,6 +3,12 @@ from pathlib import Path
 from soopervisor.exceptions import MissingConfigurationFileError
 
 
+def value_in(*, name, value, values):
+    if value not in values:
+        raise ValueError(
+            f"{name!r} must be one of {pprint(values)}, got: {value!r}")
+
+
 def pprint(collection):
     return ', '.join(f"'{element}'" for element in sorted(collection))
 

@@ -8,9 +8,12 @@ from ploomber.spec import DAGSpec
 from ploomber.exceptions import DAGSpecInvalidError
 from ploomber.products import File
 from ploomber.io._commander import Commander
+from ploomber.util.util import add_to_sys_path
 
 from soopervisor import commons
 from soopervisor.enum import Mode
+from soopervisor.validate import value_in
+from soopervisor.exceptions import NotATaskError, UpToDateTaskError
 
 
 def _is_relative_path(path):
@@ -64,7 +67,7 @@ def find_spec(cmdr, name, lazy_import=False):
 
 
 def load_dag(cmdr, name=None, mode='incremental', lazy_import=False):
-    """Load tasks names and their upstream dependencies
+    """Load DAG object
 
     Parameters
     ----------
@@ -82,29 +85,28 @@ def load_dag(cmdr, name=None, mode='incremental', lazy_import=False):
         and determine status at runtime) or 'force' (ignore status, submit
         all tasks and force execution regardless of status)
 
-        Returns
-        -------
-        dag : class
-            A DAG class - collection of tasks with dependencies (values)
-        relative_path : str
-            The relative location of the pipeline.yaml file
-        """
 
-    valid = Mode.get_values()
+    Returns
+    -------
+    dag : class
+        A DAG class - collection of tasks with dependencies (values)
+    relative_path : str
+        The relative location of the pipeline.yaml file
+    """
+    value_in(name='mode', value=mode, values=Mode.get_values())
 
     spec, relative_path = find_spec(cmdr=cmdr,
                                     name=name,
                                     lazy_import=lazy_import)
     dag = spec.to_dag()
 
-    if mode not in valid:
-        raise ValueError(f'mode must be one of {valid!r}')
-
     if mode == 'incremental':
+        with add_to_sys_path('.', chdir=False):
+            has_client = dag.clients.get(File) is not None
 
         # what if user has a shared disk but still wants to upload artifacts?
         # maybe add a way to force this
-        if dag.clients.get(File):
+        if has_client:
             dag.render(remote=True)
         else:
             dag.render()
@@ -117,8 +119,12 @@ def load_dag(cmdr, name=None, mode='incremental', lazy_import=False):
     return dag, relative_path
 
 
-def load_tasks(cmdr, name=None, mode='incremental', lazy_import=False):
-    """Load tasks names and their upstream dependencies
+def load_tasks(cmdr,
+               name=None,
+               mode='incremental',
+               lazy_import=False,
+               task_name=None):
+    """Get tasks to execute and their upstream dependencies
 
     Parameters
     ----------
@@ -136,9 +142,12 @@ def load_tasks(cmdr, name=None, mode='incremental', lazy_import=False):
         determine status at runtime) or 'force' (ignore status, submit all
         tasks and force execution regardless of status)
 
+    task_name : str, default=None
+        Task to execute. If None, all tasks in the DAG are considered.
+
     Returns
     -------
-    task : dict
+    out : dict
         A dictionary with tasks (keys) and upstream dependencies (values)
         to submit
 
@@ -148,18 +157,38 @@ def load_tasks(cmdr, name=None, mode='incremental', lazy_import=False):
 
     dag, relative_path = load_dag(cmdr, name, mode, lazy_import=lazy_import)
 
-    if mode == 'incremental':
+    # user selected a single task
+    if task_name:
+        task = dag.get(task_name)
+
+        if task is None:
+            raise NotATaskError(task_name, dag)
+
+        if task.exec_status == TaskStatus.Skipped and mode == 'incremental':
+            # TODO: this will show a "--mode force" message but this only
+            # applies when using soopervisor directly, and does not apply
+            # when using ploomber cloud
+            raise UpToDateTaskError(task_name)
+
+        tasks = [task_name]
+
+    # if incremental, only get the tasks that are outdated
+    elif mode == 'incremental':
         tasks = []
 
         for name, task in dag.items():
             if not mode or task.exec_status != TaskStatus.Skipped:
                 tasks.append(name)
+
+    # otherwise, get all tasks
     else:
         tasks = list(dag.keys())
 
+    # get upstream
     out = {}
 
     for t in tasks:
+        # add a task as upstream dependency if it's a task that we will execute
         out[t] = [name for name in dag[t].upstream.keys() if name in tasks]
 
     args = ['--entry-point', relative_path]

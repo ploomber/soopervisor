@@ -27,9 +27,14 @@ class CustomCommander(_commander.Commander):
     CustomCommander.run('docker', ...)
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.docker_cmds = []
+
     def run(self, *args, **kwargs):
         if args[0] == 'docker':
             print(f'ignoring: {args} {kwargs}')
+            self.docker_cmds.append([args, kwargs])
         else:
             return super().run(*args, **kwargs)
 
@@ -47,6 +52,7 @@ def git_init():
 
 # mocks subprocess.run()
 def subprocess_run_mock(tester):
+
     def ret(cmd, capture_output):
         result = tester(cmd)
 
@@ -63,7 +69,7 @@ def subprocess_run_mock(tester):
     return ret
 
 
-def _mock_commander_calls(monkeypatch, cmd, proj, tag, task='default'):
+def _mock_commander_calls(monkeypatch, cmd, proj, tag, task=None):
     """
     Mock subprocess calls made by ploomber.io._commander.Commander (which
     is used interally by the soopervisor.commons.docker module).
@@ -73,12 +79,14 @@ def _mock_commander_calls(monkeypatch, cmd, proj, tag, task='default'):
     to "python -m build --sdist" to pass. For details, see the CommanderTester
     docstring in the ploomber package.
     """
+    suffix = '' if task is None else f'-{task}'
+
     tester = _commander_tester.CommanderTester(
         run=[
             ('python', '-m', 'build', '--sdist'),
         ],
         return_value={
-            ('docker', 'run', f'{proj}:{tag}-{task}', 'python', '-c', cmd):
+            ('docker', 'run', f'{proj}{suffix}:{tag}', 'python', '-c', cmd):
             b'True\n'
         })
 

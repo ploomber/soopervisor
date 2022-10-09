@@ -471,7 +471,7 @@ def test_invalid_mode(cmdr, tmp_fast_pipeline):
     with pytest.raises(ValueError) as excinfo:
         commons.load_tasks(cmdr=cmdr, mode='unknown')
 
-    assert 'mode must be one of' in str(excinfo.value)
+    assert "'mode' must be one of" in str(excinfo.value)
 
 
 def test_loads_pipeline_with_name(cmdr, tmp_fast_pipeline):
@@ -626,6 +626,47 @@ def test_docker_build(tmp_sample_project):
 
     assert existing == expected
 
+    # check tag name
+    cmd = cmdr.docker_cmds[0][0]
+    name, tag = cmd[1], cmd[-1]
+    assert name == 'build' and tag == 'sample_project:latest'
+
+
+@pytest.mark.parametrize('repo, expected', [
+    ['docker.company.com/something', 'docker.company.com/something:latest'],
+    ['docker.company.com/something:v2', 'docker.company.com/something:v2'],
+])
+def test_docker_build_with_repository(tmp_sample_project, repo, expected):
+    Path('some-env').mkdir()
+    Path('some-env', 'Dockerfile').touch()
+
+    cfg = ConcreteDockerConfig(repository=repo)
+
+    with CustomCommander(workspace='some-env') as cmdr:
+        commons.docker.build(cmdr,
+                             cfg,
+                             'some-env',
+                             until=None,
+                             entry_point='pipeline.yaml')
+    # check tag name
+    cmd = cmdr.docker_cmds[0][0]
+    assert cmd == (
+        'docker',
+        'build',
+        '.',
+        '--tag',
+        'sample_project:latest',
+    )
+
+    # check tag command
+    cmd = cmdr.docker_cmds[-2][0]
+    assert cmd == (
+        'docker',
+        'tag',
+        'sample_project:latest',
+        expected,
+    )
+
 
 def test_docker_build_multiple_requirement(
         tmp_sample_project_multiple_requirement):
@@ -639,11 +680,53 @@ def test_docker_build_multiple_requirement(
                                  'some-env',
                                  until=None,
                                  entry_point='pipeline.yaml')
+
+    # validate docker is called with the right arguments
+    docker_args = [args[0] for args in cmdr.docker_cmds]
+
+    def generate_commands(suffix):
+        image_name = f'multiple_requirements_project{suffix}:latest'
+
+        return [
+            # build image
+            (
+                'docker',
+                'build',
+                '.',
+                '--tag',
+                image_name,
+            ),
+            # check pipeline load
+            (
+                'docker',
+                'run',
+                image_name,
+                'ploomber',
+                'status',
+                '--entry-point',
+                'pipeline.yaml',
+            ),
+            # check pipeline has a client
+            (
+                'docker',
+                'run',
+                image_name,
+                'python',
+                '-c',
+                ('from ploomber.spec import DAGSpec; '
+                 'print("File" in DAGSpec("pipeline.yaml").to_dag().clients)'),
+            )
+        ]
+
+    assert generate_commands('-clean-ploomber') == docker_args[:3]
+    assert generate_commands('') == docker_args[3:6]
+    assert generate_commands('-plot-ploomber') == docker_args[6:]
+
     assert pkg_name == 'multiple_requirements_project'
     assert image_map == \
-           {'default': 'multiple_requirements_project:latest-default',
-            'clean-*': 'multiple_requirements_project:latest-clean-ploomber',
-            'plot-*': 'multiple_requirements_project:latest-plot-ploomber'}
+           {'default': 'multiple_requirements_project:latest',
+            'clean-*': 'multiple_requirements_project-clean-ploomber:latest',
+            'plot-*': 'multiple_requirements_project-plot-ploomber:latest'}
 
     existing = _list_files(Path('dist',
                                 'multiple_requirements_project.tar.gz'))
@@ -733,3 +816,49 @@ def test_docker_build_big_file_warns(tmp_sample_project, monkeypatch, capsys):
     assert 'The following files are too big. ' in captured.out
     assert 'README.md' in captured.out
     assert 'raw.py' in captured.out
+
+
+def test_lazily_load_dag(tmp_empty):
+    Path('script.py').write_text("""
+import some_unknown_package
+
+# %% + tags = ["parameters"]
+upstream = None
+
+# %%
+1 + 1
+""")
+
+    Path('tasks.py').write_text("""
+import another_unknown_package
+
+def some_task(product):
+    pass
+""")
+
+    Path('clients.py').write_text("""
+from ploomber.clients import LocalStorageClient
+
+def get_client():
+    return LocalStorageClient(path_to_backup_dir='backup')
+""")
+
+    spec = {
+        'tasks': [
+            {
+                'source': 'script.py',
+                'product': 'report.html'
+            },
+            {
+                'source': 'tasks.some_task',
+                'product': 'out.csv'
+            },
+        ],
+        'clients': {
+            'File': 'clients.get_client'
+        }
+    }
+
+    Path('pipeline.yaml').write_text(yaml.safe_dump(spec))
+
+    commons.load_dag(cmdr=Mock(), name='name', lazy_import=True)

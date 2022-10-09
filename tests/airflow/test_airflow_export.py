@@ -104,7 +104,8 @@ def test_airflow_export_sample_project(
     load_tasks_mock.assert_called_once_with(cmdr=ANY,
                                             name='serve',
                                             mode='incremental',
-                                            lazy_import=False)
+                                            lazy_import=False,
+                                            task_name=None)
     assert isinstance(dag, DAG)
     assert set(dag.task_dict) == {'clean', 'plot', 'raw'}
     assert set(type(t) for t in dag.tasks) == {operator_class}
@@ -173,6 +174,5 @@ def test_export_airflow_callables(monkeypatch, mock_docker_calls_callables,
     assert td['fit'].arguments == [template.format('fit') + args]
     assert td['join'].arguments == [template.format('join') + args]
 
-    assert {t.image
-            for t in td.values()} == {'your-repository/name:latest-default'}
+    assert {t.image for t in td.values()} == {'your-repository/name:latest'}
     assert {tuple(t.cmds) for t in td.values()} == {('bash', '-cx')}

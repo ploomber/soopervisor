@@ -127,7 +127,8 @@ def test_export(mock_batch, mock_docker_my_project_serve, monkeypatch,
     load_tasks_mock.assert_called_once_with(cmdr=commander_mock.__enter__(),
                                             name='train',
                                             mode=mode,
-                                            lazy_import=False)
+                                            lazy_import=False,
+                                            task_name=None)
 
     submitted = index_submit_job_by_task_name(
         boto3_mock.submit_job.call_args_list)
@@ -165,6 +166,67 @@ def test_export(mock_batch, mock_docker_my_project_serve, monkeypatch,
     }
 
 
+# TODO: check error if wrong task name
+# TODO: check errro when task is up to date
+# TODO: check error if dependencies from submitted task are outdated
+@pytest.mark.parametrize(
+    'mode, args',
+    [
+        ['incremental', []],
+        ['regular', []],
+        ['force', ['--force']],
+    ],
+)
+def test_export_single_task(mock_batch, mock_docker_my_project_serve,
+                            monkeypatch, monkeypatch_docker_client,
+                            backup_packaged_project, mode, args,
+                            skip_repo_validation):
+    monkeypatch.setattr(batch, 'uuid4', lambda: 'uuid4')
+    p_home_mock = Mock()
+    monkeypatch.setattr(commons.docker, 'cp_ploomber_home', p_home_mock)
+    boto3_mock = Mock(wraps=boto3.client('batch', region_name='us-east-1'))
+    monkeypatch.setattr(batch.boto3, 'client',
+                        lambda name, region_name: boto3_mock)
+    load_tasks_mock = Mock(wraps=commons.load_tasks)
+    monkeypatch.setattr(commons, 'load_tasks', load_tasks_mock)
+
+    exporter = batch.AWSBatchExporter.new('soopervisor.yaml', 'train')
+    exporter.add()
+
+    # mock commander
+    commander_mock = MagicMock()
+    monkeypatch.setattr(batch, 'Commander',
+                        lambda workspace, templates_path: commander_mock)
+
+    exporter.export(mode=mode, task_name='fit')
+
+    jobs = mock_batch.list_jobs(jobQueue='your-job-queue')['jobSummaryList']
+
+    # get jobs information
+    jobs_info = mock_batch.describe_jobs(jobs=[job['jobId']
+                                               for job in jobs])['jobs']
+
+    load_tasks_mock.assert_called_once_with(cmdr=commander_mock.__enter__(),
+                                            name='train',
+                                            mode=mode,
+                                            lazy_import=False,
+                                            task_name='fit')
+
+    submitted = index_submit_job_by_task_name(
+        boto3_mock.submit_job.call_args_list)
+    id2name = index_job_name_by_id(jobs_info)
+
+    dependencies = index_dependencies_by_name(submitted, id2name)
+    commands = index_commands_by_name(submitted)
+
+    assert {j['jobName'] for j in jobs_info} == {'fit'}
+    assert all(['your-job-queue' in j['jobQueue'] for j in jobs_info])
+    assert all(['my_project-uuid4:1' in j['jobDefinition'] for j in jobs_info])
+    assert dependencies == {'fit': set()}
+    entry = ['--entry-point', str(Path('src', 'my_project', 'pipeline.yaml'))]
+    assert commands == {'fit': ['ploomber', 'task', 'fit'] + entry + args}
+
+
 @pytest.mark.parametrize(
     'mode, args',
     [
@@ -195,7 +257,8 @@ def test_export_multiple_images_load_tasks(
     load_tasks_mock.assert_called_once_with(cmdr=commander_mock.__enter__(),
                                             name='some-env',
                                             mode=mode,
-                                            lazy_import=False)
+                                            lazy_import=False,
+                                            task_name=None)
 
 
 @pytest.mark.parametrize(
@@ -266,13 +329,13 @@ def test_export_multiple_images_job_details(
     assert job_images == {
         'arn:aws:batch:us-east-1:123456789012:job-definition/'
         'multiple_requirements_project-uuid4:1':
-        'your-repository/name:latest-default',
+        'your-repository/name:latest',
         'arn:aws:batch:us-east-1:123456789012:job-definition/'
         'multiple_requirements_project-uuid4-clean-ploomber:1':
-        'your-repository/name:latest-clean-ploomber',
+        'your-repository/name-clean-ploomber:latest',
         'arn:aws:batch:us-east-1:123456789012:job-definition/'
         'multiple_requirements_project-uuid4-plot-ploomber:1':
-        'your-repository/name:latest-plot-ploomber',
+        'your-repository/name-plot-ploomber:latest',
     }
 
 
@@ -347,8 +410,8 @@ def test_checks_the_right_spec(mock_batch, mock_docker_my_project_serve,
     exporter.add()
     exporter.export(mode='incremental')
 
-    expected = ('docker', 'run', 'my_project:0.1dev-default', 'ploomber',
-                'status', '--entry-point',
+    expected = ('docker', 'run', 'my_project:0.1dev', 'ploomber', 'status',
+                '--entry-point',
                 str(Path('src', 'my_project', 'pipeline.serve.yaml')))
     assert mock_docker_my_project_serve.calls[2] == expected
 

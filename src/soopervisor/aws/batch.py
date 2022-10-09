@@ -144,14 +144,15 @@ def _submit_dag(
     # Register job definitions for task specific images
     for pattern, image in image_map.items():
         if pattern != default_image_key:
-            container_properties['image'] = image
+            container_props = container_properties.copy()
+            container_props['image'] = image
             task_job_def = f"{job_def}-{docker.modify_wildcard(pattern)}"
             cmdr.info(f'Registering {task_job_def!r} job definition...')
 
             jd = client.register_job_definition(
                 jobDefinitionName=task_job_def,
                 type='container',
-                containerProperties=container_properties)
+                containerProperties=container_props)
             jd_map[pattern] = jd
 
     for name, upstream in tasks.items():
@@ -228,7 +229,7 @@ class AWSBatchExporter(abc.AbstractExporter):
     def _add(cfg, env_name):
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as e:
-            e.copy_template('aws-batch/Dockerfile',
+            e.copy_template('docker/Dockerfile',
                             conda=Path('environment.lock.yml').exists(),
                             setup_py=Path('setup.py').exists(),
                             lib=Path('lib').exists(),
@@ -244,13 +245,15 @@ class AWSBatchExporter(abc.AbstractExporter):
     @classmethod
     @requires(['boto3'], name='AWSBatchExporter')
     def _export(cls, cfg, env_name, mode, until, skip_tests, skip_docker,
-                ignore_git, lazy_import):
+                ignore_git, lazy_import, task_name):
         with Commander(workspace=env_name,
                        templates_path=('soopervisor', 'assets')) as cmdr:
+
             tasks, cli_args = commons.load_tasks(cmdr=cmdr,
                                                  name=env_name,
                                                  mode=mode,
-                                                 lazy_import=lazy_import)
+                                                 lazy_import=lazy_import,
+                                                 task_name=task_name)
 
             if not tasks:
                 cls._no_tasks_to_submit()
@@ -278,6 +281,7 @@ class AWSBatchExporter(abc.AbstractExporter):
 
             # add a unique suffix to prevent collisions
             suffix = str(uuid4())[:8]
+
             cls._submit_dag(tasks=tasks,
                             args=cli_args,
                             job_def=f'{pkg_name}-{suffix}',

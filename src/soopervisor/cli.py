@@ -89,10 +89,7 @@ def add(env_name, backend, preset):
               '-s',
               is_flag=True,
               help='Skip docker image tests')
-@click.option('--skip-docker',
-              '-S',
-              is_flag=True,
-              help='Skip docker build')
+@click.option('--skip-docker', '-S', is_flag=True, help='Skip docker build')
 @click.option('--mode',
               '-m',
               type=click.Choice(Mode.get_values()),
@@ -102,8 +99,12 @@ def add(env_name, backend, preset):
               is_flag=True,
               help='Ignore git tracked files (include everything)')
 @click.option('--lazy', '-l', is_flag=True, help='Lazily load pipeline')
+@click.option('--task',
+              '-t',
+              type=str,
+              help='Execute a single task with the given name')
 def export(env_name, until_build, mode, skip_tests, skip_docker, ignore_git,
-           lazy):
+           lazy, task):
     """
     Export a target platform for execution/deployment
     """
@@ -113,7 +114,8 @@ def export(env_name, until_build, mode, skip_tests, skip_docker, ignore_git,
         'mode': mode,
         'skip_tests': skip_tests,
         'skip_docker': skip_docker,
-        'ignore_git': ignore_git
+        'ignore_git': ignore_git,
+        'task': task,
     }
 
     backend = Backend(config.get_backend(env_name))
@@ -143,7 +145,8 @@ def export(env_name, until_build, mode, skip_tests, skip_docker, ignore_git,
                                                skip_tests=skip_tests,
                                                skip_docker=skip_docker,
                                                ignore_git=ignore_git,
-                                               lazy_import=lazy)
+                                               lazy_import=lazy,
+                                               task_name=task)
 
     except Exception as e:
         telemetry.log_api("soopervisor_export_error",

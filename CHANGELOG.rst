@@ -1,9 +1,19 @@
 CHANGELOG
 =========
 
-0.8.1dev
+0.9.1dev
 --------
-* Adding `--skip-docker` argument in `soopervisor export` to skip docker build (#103)
+* Adds `--skip-docker` argument in `soopervisor export` to skip docker build (#103)
+* Optimizes the generated AWS Batch ``Dockerfile`` so dependencies are only installed when the requirements are modified
+* Allows using multiple ``requirements.txt`` files, generating one Docker image for each one (#86)
+
+0.9 (2022-10-03)
+----------------
+* Allows execution of single tasks via ``soopervisor export --task {task-name}``
+* Allowing to bundle custom libraries via ``lib/`` in docker image (#87)
+* Fixes DAG loading when passing the ``--lazy`` argument in pipelines with a ``File`` client (#105)
+* Display warning if source code contains file over 10MB (#81)
+* Drop support for Python 3.6
 
 0.8 (2022-06-09)
 ----------------

@@ -37,7 +37,8 @@ def test_export(mock_docker_my_project, backup_packaged_project, monkeypatch,
     load_tasks_mock.assert_called_once_with(cmdr=ANY,
                                             name='serve',
                                             mode=mode,
-                                            lazy_import=False)
+                                            lazy_import=False,
+                                            task_name=None)
 
     # make sure the "source" key is represented in literal style
     # (https://yaml-multiline.info/) to make the generated script more readable
@@ -61,7 +62,7 @@ def test_export(mock_docker_my_project, backup_packaged_project, monkeypatch,
     assert run_task_template['script']['workingDir'] is None
 
     assert run_task_template['script'][
-        'image'] == 'your-repository/name:0.1dev-default'
+        'image'] == 'your-repository/name:0.1dev'
     assert run_task_template['name'] == 'run-task'
     assert spec['metadata']['generateName'] == 'my-project-'
     assert all([

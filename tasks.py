@@ -46,16 +46,16 @@ def doc(c, open_=True):
             c.run('open _build/html/index.html')
 
 
-@task
-def new(c):
+@task(aliases=['v'])
+def version(c):
     """Release a new version
     """
     from pkgmt import versioneer
     versioneer.version(project_root='.', tag=True)
 
 
-@task
-def upload(c, tag, production=True):
+@task(aliases=['r'])
+def release(c, tag, production=True):
     """Upload to PyPI
     """
     from pkgmt import versioneer
