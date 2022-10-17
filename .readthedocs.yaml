@@ -11,7 +11,3 @@ build:
 
 conda:
   environment: doc/environment.yml
-
-sphinx:
-  builder: html
-  fail_on_warning: true
