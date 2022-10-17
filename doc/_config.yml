@@ -24,7 +24,7 @@ latex:
 repository:
   url: https://github.com/ploomber/soopervisor
   path_to_book: doc
-  branch: master
+  branch: dev-rodo
 
 # Add GitHub buttons to your book
 # See https://jupyterbook.org/customize/config.html#add-a-link-to-your-repository
