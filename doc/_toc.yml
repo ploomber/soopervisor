@@ -1,0 +1,42 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: intro
+parts:
+  - caption: Batch processing
+    chapters:
+    - file: tutorials/airflow
+    - file: tutorials/aws-batch
+    - file: tutorials/kubernetes
+    - file: tutorials/kubeflow
+    - file: tutorials/slurm
+    - file: tutorials/workflow
+  - caption: Online inference
+    chapters:
+    - file: tutorials/aws-lambda
+  - caption: Cookbook
+    chapters:
+    - file: cookbook/airflow
+    - file: cookbook/kubernetes
+    - file: cookbook/slurm
+  - caption: User guide
+    chapters:
+    - file: user-guide/task-comm
+    - file: user-guide/build-process
+    - file: user-guide/packaged-or-not
+  - caption: API
+    chapters:
+    - file: api/cli
+    - file: api/kubernetes
+    - file: api/slurm
+    - file: api/aws-batch
+  - caption: External links
+    chapters:
+    - url: https://github.com/ploomber/soopervisor
+      title: GitHub 
+    - url: https://github.com/ploomber/ploomber
+      title: Ploomber
+    - url: https://ploomber.io/blog
+      title: Blog
+
