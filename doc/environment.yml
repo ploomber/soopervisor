@@ -1,9 +1,12 @@
-name: soopervisor-docs
+name: soopervisor-doc
+
+channels:
+  - conda-forge
 
 
 dependencies:
-  - python=3.8
-  # install soopervisor
+  - python=3.10
   - pip
   - pip:
-    - -e "..[dev]"
+    - jupyter-book
+    - ..
