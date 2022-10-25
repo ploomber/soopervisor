@@ -10,7 +10,6 @@ import fnmatch
 
 from ploomber.io._commander import Commander, CommanderStop
 from ploomber.util.util import requires
-from ploomber.cloud import api
 
 from soopervisor.aws.config import AWSBatchConfig, CloudConfig
 from soopervisor.aws.util import TaskResources
@@ -131,7 +130,8 @@ def _submit_dag(
         params = json.loads(Path('../.ploomber-cloud').read_text())
 
         # note: this will trigger an error if the user has no quota left
-        out = api.runs_update(params['runid'], tasks)
+        from ploomber.cloud.api import PloomberCloudAPI
+        out = PloomberCloudAPI().runs_update(params['runid'], tasks)
     else:
         out, params = None, None
 
@@ -207,7 +207,8 @@ def _submit_dag(
         cmdr.print(f'Submitted task {name!r}...')
 
     if is_cloud:
-        api.runs_register_ids(params['runid'], job_ids)
+        from ploomber.cloud.api import PloomberCloudAPI
+        PloomberCloudAPI().runs_register_ids(params['runid'], job_ids)
 
 
 class AWSBatchExporter(abc.AbstractExporter):
@@ -307,8 +308,9 @@ class CloudExporter(AWSBatchExporter):
 
     @classmethod
     def _no_tasks_to_submit(cls):
+        from ploomber.cloud.api import PloomberCloudAPI
         params = json.loads(Path('.ploomber-cloud').read_text())
-        api.run_finished(params['runid'])
+        PloomberCloudAPI().run_finished(params['runid'])
 
     @classmethod
     def _submit_dag(cls, *args, **kwargs):
