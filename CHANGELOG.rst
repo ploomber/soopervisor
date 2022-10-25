@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.9.1dev
---------
+0.9.1 (2022-10-24)
+------------------
 * Adds `--skip-docker` argument in `soopervisor export` to skip docker build (#103)
 * Optimizes the generated AWS Batch ``Dockerfile`` so dependencies are only installed when the requirements are modified
 * Allows using multiple ``requirements.txt`` files, generating one Docker image for each one (#86)
