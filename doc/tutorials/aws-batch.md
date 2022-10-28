@@ -15,7 +15,11 @@ Batch.
 If you encounter any issues with this
 tutorial, [let us know](https://github.com/ploomber/soopervisor/issues/new?title=AWS%20Batch%20tutorial%20problem).
 
-[Click here to see a recorded demo](https://youtu.be/XCgX1AszVF4).
+- Blog series to configure the infrastructure from scratch:
+  - [Part I](https://ploomber.io/blog/ds-platform-part-i/)
+  - [Part II](https://ploomber.io/blog/ds-platform-part-ii/)
+  - [Part III](https://ploomber.io/blog/ds-platform-part-iii/)
+- [Recorded demo](https://youtu.be/XCgX1AszVF4)
 
 ## Pre-requisites
 
