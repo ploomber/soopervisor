@@ -180,7 +180,8 @@ def test_docker_build_caches_pkg_installation(EXPORTER, config,
                          capture_output=True)
 
     ls = out.stdout.decode()
-    expected = ('environment.yml\nfast-pipeline.tar.gz\n'
+
+    expected = ('env.yaml\nenvironment.yml\nfast-pipeline.tar.gz\n'
                 'fast_pipeline.py\nmy-env\npipeline.yaml\n'
                 'requirements.lock.txt\nsoopervisor.yaml\n')
     assert ls == expected

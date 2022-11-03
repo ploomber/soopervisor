@@ -2,12 +2,18 @@ import os
 import shlex
 import tarfile
 from pathlib import Path
+from typing import Mapping
+
+import yaml
+from ploomber.env.envdict import EnvDict
+
+from ploomber.util.default import path_to_env_from_spec
 
 from ploomber.io._commander import CommanderStop
 from ploomber_core.telemetry import telemetry
 
 from soopervisor.commons import source, dependencies
-from soopervisor.exceptions import ConfigurationError, MissingDockerfileError
+from soopervisor.exceptions import ConfigurationError, MissingDockerfileError, ConfigurationFileTypeError
 
 
 def _validate_repository(repository):
@@ -50,6 +56,35 @@ def get_dependencies():
         for task, paths in dependency_files.items()
     }
     return dependency_files, lock_paths
+
+
+def prepare_env_file(entry_point: str):
+    """
+    Given an entrypoint pipeline.yaml file determine the env.yaml in use
+    and populate it with the default placeholders or ignore them if they already exist.
+    The env file will be created in the root of the pipeline file if one doesn't exist.
+    """
+    env_path = path_to_env_from_spec(entry_point)
+    env_default = EnvDict({})
+    if env_path is not None:
+        env_data = yaml.safe_load(Path(env_path).read_text())
+        if not isinstance(env_data, Mapping):
+            raise ConfigurationFileTypeError(env_path, env_data)
+        env_data = dict(env_data)
+        if "git" in env_default:
+            env_data.setdefault("git", env_default["git"])
+        if "git_hash" in env_default:
+            env_data.setdefault("git_hash", env_default["git_hash"])
+    else:
+        env_path = Path(entry_point).parents[0] / "env.yaml"
+        env_data = {}
+        if "git" in env_default:
+            env_data.setdefault("git", env_default["git"])
+        if "git_hash" in env_default:
+            env_data.setdefault("git_hash", env_default["git_hash"])
+        env_path.write_text(yaml.safe_dump(env_data))
+
+    return env_path
 
 
 def build_image(
@@ -194,6 +229,8 @@ def build(e,
 
     dependencies.check_lock_files_exist()
     dependency_files, lock_paths = get_dependencies()
+
+    env_file_path = prepare_env_file(entry_point)
 
     image_map = {}
 
