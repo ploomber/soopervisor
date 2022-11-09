@@ -13,7 +13,8 @@ from ploomber.io._commander import CommanderStop
 from ploomber_core.telemetry import telemetry
 
 from soopervisor.commons import source, dependencies
-from soopervisor.exceptions import ConfigurationError, MissingDockerfileError, ConfigurationFileTypeError
+from soopervisor.exceptions import ConfigurationError, \
+    MissingDockerfileError, ConfigurationFileTypeError
 
 
 def _validate_repository(repository):
@@ -61,8 +62,9 @@ def get_dependencies():
 def prepare_env_file(entry_point: str):
     """
     Given an entrypoint pipeline.yaml file determine the env.yaml in use
-    and populate it with the default placeholders or ignore them if they already exist.
-    The env file will be created in the root of the pipeline file if one doesn't exist.
+    and populate it with the default placeholders or ignore them if
+    they already exist. The env file will be created in the root of
+    the pipeline file if one doesn't exist.
     """
     env_path = path_to_env_from_spec(entry_point)
     env_default = EnvDict({})
@@ -231,7 +233,7 @@ def build(e,
     dependency_files, lock_paths = get_dependencies()
 
     env_file_path = prepare_env_file(entry_point)
-
+    e.info("using .env file from: "+env_file_path)
     image_map = {}
 
     setup_flow = Path('setup.py').exists()
