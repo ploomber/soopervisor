@@ -77,6 +77,8 @@ def prepare_env_file(entry_point: str):
             env_data.setdefault("git", env_default["git"])
         if "git_hash" in env_default:
             env_data.setdefault("git_hash", env_default["git_hash"])
+        if "build_time" in env_default:
+            env_data.setdefault("build_time", env_default["build_time"])
     else:
         env_path = Path(entry_point).parents[0] / "env.yaml"
         env_data = {}
@@ -84,7 +86,10 @@ def prepare_env_file(entry_point: str):
             env_data.setdefault("git", env_default["git"])
         if "git_hash" in env_default:
             env_data.setdefault("git_hash", env_default["git_hash"])
-        env_path.write_text(yaml.safe_dump(env_data))
+        if "build_time" in env_default:
+            env_data.setdefault("build_time", env_default["build_time"])
+
+    env_path.write_text(yaml.safe_dump(env_data))
 
     return env_path
 
@@ -233,7 +238,7 @@ def build(e,
     dependency_files, lock_paths = get_dependencies()
 
     env_file_path = prepare_env_file(entry_point)
-    e.info("using .env file from: "+env_file_path)
+    e.info("using .env file from: "+str(env_file_path))
     image_map = {}
 
     setup_flow = Path('setup.py').exists()

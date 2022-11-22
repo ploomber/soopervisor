@@ -12,6 +12,7 @@ from os import environ
 from soopervisor.aws.batch import AWSBatchExporter
 from soopervisor.argo.export import ArgoWorkflowsExporter
 from soopervisor.airflow.export import AirflowExporter
+from test_commons import git_init
 
 
 def _process_docker_output(output):
@@ -121,6 +122,7 @@ my-env:
 def test_docker_build_caches_pkg_installation(EXPORTER, config,
                                               tmp_fast_pipeline, capfd):
     Path('requirements.lock.txt').write_text('pkgmt==0.0.1')
+    git_init()
 
     with capfd.disabled():
         EXPORTER.new('soopervisor.yaml', env_name='my-env').add()
@@ -184,4 +186,12 @@ def test_docker_build_caches_pkg_installation(EXPORTER, config,
     expected = ('env.yaml\nenvironment.yml\nfast-pipeline.tar.gz\n'
                 'fast_pipeline.py\nmy-env\npipeline.yaml\n'
                 'requirements.lock.txt\nsoopervisor.yaml\n')
+
     assert ls == expected
+
+    out = subprocess.run(['docker', 'run', 'fast-pipeline', 'cat', 'env.yaml'],
+                         check=True,
+                         capture_output=True)
+
+    env_contents = out.stdout.decode()
+    assert env_contents == ""
