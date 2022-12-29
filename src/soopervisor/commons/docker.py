@@ -3,6 +3,8 @@ import shlex
 import tarfile
 from pathlib import Path
 from typing import Mapping
+from contextlib import contextmanager
+import shutil
 
 import yaml
 from ploomber.env.envdict import EnvDict
@@ -62,6 +64,7 @@ def get_dependencies():
     return dependency_files, lock_paths
 
 
+@contextmanager
 def prepare_env_file(entry_point: str):
     """
     Given an entrypoint pipeline.yaml file determine the env.yaml in use
@@ -69,14 +72,15 @@ def prepare_env_file(entry_point: str):
     they already exist. The env file will be created in the root of
     the pipeline file if one doesn't exist.
     """
-    env_path = path_to_env_from_spec(entry_point)
+    path_to_env = path_to_env_from_spec(entry_point)
+    user_provided_env = path_to_env is not None
 
-    if env_path is not None:
-        env_default = EnvDict({}, path_to_here=Path(env_path).parent)
+    if user_provided_env:
+        env_default = EnvDict({}, path_to_here=Path(path_to_env).parent)
 
-        env_data = yaml.safe_load(Path(env_path).read_text())
+        env_data = yaml.safe_load(Path(path_to_env).read_text())
         if not isinstance(env_data, Mapping):
-            raise ConfigurationFileTypeError(env_path, env_data)
+            raise ConfigurationFileTypeError(path_to_env, env_data)
         env_data = dict(env_data)
         if "git" in env_default:
             env_data.setdefault("git", env_default["git"])
@@ -85,20 +89,30 @@ def prepare_env_file(entry_point: str):
         if "build_time" in env_default:
             env_data.setdefault("build_time", env_default["build_time"])
     else:
-        env_path = Path(entry_point).parents[0] / "env.yaml"
-        env_default = EnvDict({}, path_to_here=Path(env_path).parent)
+        path_to_env = Path(entry_point).parents[0] / "env.yaml"
+        env_default = EnvDict({}, path_to_here=Path(path_to_env).parent)
         env_data = {}
 
         if "git" in env_default:
             env_data.setdefault("git", env_default["git"])
         if "git_hash" in env_default:
             env_data.setdefault("git_hash", env_default["git_hash"])
-        if "build_time" in env_default:
-            env_data.setdefault("build_time", env_default["build_time"])
 
-    Path(env_path).write_text(yaml.safe_dump(env_data))
+    path_to_env = Path(path_to_env).resolve()
+    path_to_backup = Path("env.backup.yaml").resolve()
 
-    return env_path
+    if user_provided_env:
+        shutil.copy(path_to_env, path_to_backup)
+
+    try:
+        path_to_env.write_text(yaml.safe_dump(env_data))
+        yield
+    finally:
+        if user_provided_env:
+            shutil.copy(path_to_backup, path_to_env)
+            path_to_backup.unlink()
+        else:
+            path_to_env.unlink()
 
 
 def build_image(
@@ -240,85 +254,31 @@ def build(e, cfg, env_name, until, entry_point, skip_tests=False, ignore_git=Fal
     dependencies.check_lock_files_exist()
     dependency_files, lock_paths = get_dependencies()
 
-    env_file_path = prepare_env_file(entry_point)
-    e.info("using env file from: " + str(env_file_path))
-    image_map = {}
+    with prepare_env_file(entry_point):
+        image_map = {}
 
-    setup_flow = Path("setup.py").exists()
+        setup_flow = Path("setup.py").exists()
 
-    # Generate source distribution
-    if setup_flow:
-        for task_pattern in sorted(dependency_files.keys()):
+        # Generate source distribution
+        if setup_flow:
+            for task_pattern in sorted(dependency_files.keys()):
 
-            if task_pattern != "default":
-                raise NotImplementedError(
-                    "Multiple requirements.*.lock.txt or "
-                    "environment.*.lock.yml files found along "
-                    "with setup.py file. Please have either "
-                    "of the two in the project root."
-                )
-        # .egg-info may cause issues if MANIFEST.in was recently updated
-        if Path("requirements.lock.txt").exists():
-            e.cp("requirements.lock.txt")
-        elif Path("environment.lock.yml").exists():
-            e.cp("environment.lock.yml")
+                if task_pattern != "default":
+                    raise NotImplementedError(
+                        "Multiple requirements.*.lock.txt or "
+                        "environment.*.lock.yml files found along "
+                        "with setup.py file. Please have either "
+                        "of the two in the project root."
+                    )
+            # .egg-info may cause issues if MANIFEST.in was recently updated
+            if Path("requirements.lock.txt").exists():
+                e.cp("requirements.lock.txt")
+            elif Path("environment.lock.yml").exists():
+                e.cp("environment.lock.yml")
 
-        e.rm("dist", "build", Path("src", pkg_name, f"{pkg_name}.egg-info"))
-        e.run("python", "-m", "build", "--sdist", description="Packaging code")
-        default_image_key = dependencies.get_default_image_key()
-
-        image = build_image(
-            e,
-            cfg,
-            env_name,
-            until,
-            entry_point,
-            skip_tests,
-            ignore_git,
-            pkg_name,
-            version,
-            task=default_image_key,
-        )
-
-        image_map[default_image_key] = image
-        # raise error if include is not None? and suggest to use MANIFEST.in
-        # instead
-    else:
-        # sort keys so we iterate in deterministic order and can test easily
-        for task in sorted(lock_paths.keys()):
-            lock_file = lock_paths[task]
-
-            if Path(lock_file).exists():
-                e.cp(lock_file)
-            e.rm("dist")
-            target = Path("dist", pkg_name)
-            e.info("Packaging code")
-            other_lock_files = [
-                file for file in list(lock_paths.values()) if file != lock_file
-            ]
-            exclude = cfg.exclude
-            if cfg.exclude and other_lock_files:
-                exclude = cfg.exclude + other_lock_files
-            elif not cfg.exclude and other_lock_files:
-                exclude = other_lock_files
-
-            rename_files = {}
-            if lock_file not in ("requirements.lock.txt", "environment.lock.yml"):
-                rename_files = (
-                    {lock_file: "requirements.lock.txt"}
-                    if "requirements" in lock_file
-                    else {lock_file: "environment.lock.yml"}
-                )
-            source.copy(
-                cmdr=e,
-                src=".",
-                dst=target,
-                include=cfg.include,
-                exclude=exclude,
-                ignore_git=ignore_git,
-                rename_files=rename_files,
-            )
-            source.compress_dir(e, target, Path("dist", f"{pkg_name}.tar.gz"))
+            e.rm("dist", "build", Path("src", pkg_name, f"{pkg_name}.egg-info"))
+            e.run("python", "-m", "build", "--sdist", description="Packaging code")
+            default_image_key = dependencies.get_default_image_key()
 
             image = build_image(
                 e,
@@ -330,13 +290,66 @@ def build(e, cfg, env_name, until, entry_point, skip_tests=False, ignore_git=Fal
                 ignore_git,
                 pkg_name,
                 version,
-                task,
+                task=default_image_key,
             )
 
-            image_map[task] = image
+            image_map[default_image_key] = image
+            # raise error if include is not None? and suggest to use MANIFEST.in
+            # instead
+        else:
+            # sort keys so we iterate in deterministic order and can test easily
+            for task in sorted(lock_paths.keys()):
+                lock_file = lock_paths[task]
 
-            e.rm("dist")
-            e.cd("..")
+                if Path(lock_file).exists():
+                    e.cp(lock_file)
+                e.rm("dist")
+                target = Path("dist", pkg_name)
+                e.info("Packaging code")
+                other_lock_files = [
+                    file for file in list(lock_paths.values()) if file != lock_file
+                ]
+                exclude = cfg.exclude
+                if cfg.exclude and other_lock_files:
+                    exclude = cfg.exclude + other_lock_files
+                elif not cfg.exclude and other_lock_files:
+                    exclude = other_lock_files
+
+                rename_files = {}
+                if lock_file not in ("requirements.lock.txt", "environment.lock.yml"):
+                    rename_files = (
+                        {lock_file: "requirements.lock.txt"}
+                        if "requirements" in lock_file
+                        else {lock_file: "environment.lock.yml"}
+                    )
+                source.copy(
+                    cmdr=e,
+                    src=".",
+                    dst=target,
+                    include=cfg.include,
+                    exclude=exclude,
+                    ignore_git=ignore_git,
+                    rename_files=rename_files,
+                )
+                source.compress_dir(e, target, Path("dist", f"{pkg_name}.tar.gz"))
+
+                image = build_image(
+                    e,
+                    cfg,
+                    env_name,
+                    until,
+                    entry_point,
+                    skip_tests,
+                    ignore_git,
+                    pkg_name,
+                    version,
+                    task,
+                )
+
+                image_map[task] = image
+
+                e.rm("dist")
+                e.cd("..")
 
     if not setup_flow:
         # We need to go back to the env folder before return

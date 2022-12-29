@@ -227,10 +227,8 @@ git_hash: SOMEHASH
 """
     )
 
-    # FIXME: original env.yaml is overwritten (or left there if it doesn't exist)
-    # we need to revert the chance once the process is done (maybe with a context
-    # manager)
     assert not Path("env.yaml").is_file()
+    assert not Path("env.backup.yaml").is_file()
 
 
 @pytest.mark.parametrize(
@@ -252,6 +250,11 @@ git_hash: SOMEHASH
             {"git": "master", "git_hash": "SOMEHASH", "some": {"nested": "value"}},
         ],
     ],
+    ids=[
+        "no-user-env",
+        "user-env-with-var",
+        "user-env",
+    ],
 )
 def test_prepare_env_file(
     tmp_fast_pipeline, monkeypatch, env_var, env_user, env_expected
@@ -270,6 +273,13 @@ def test_prepare_env_file(
     monkeypatch.setattr(repo, "git_hash", git_hash)
     git_init()
 
-    prepare_env_file("pipeline.yaml")
+    # env is modified
+    with prepare_env_file("pipeline.yaml"):
+        assert yaml.safe_load(Path(file_to_use).read_text()) == env_expected
 
-    assert yaml.safe_load(Path(file_to_use).read_text()) == env_expected
+    # but then restored
+    if env_user:
+        assert yaml.safe_load(Path(file_to_use).read_text()) == env_user
+    # or delete if the user did not provide one
+    else:
+        assert not Path(file_to_use).is_file()
