@@ -4,15 +4,15 @@ Clean raw data
 import pandas as pd
 
 # + tags=["parameters"]
-upstream = ['raw']
+upstream = ["raw"]
 product = None
 # -
 
 # +
-df = pd.read_csv(upstream['raw']['data'])
-df['sex'] = df.sex.str.strip()
+df = pd.read_csv(upstream["raw"]["data"])
+df["sex"] = df.sex.str.strip()
 # -
 
 # +
-df.to_csv(str(product['data']), index=False)
+df.to_csv(str(product["data"]), index=False)
 # -

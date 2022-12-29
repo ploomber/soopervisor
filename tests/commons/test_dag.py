@@ -53,15 +53,18 @@ tasks:
 """
 
 
-@pytest.mark.parametrize('spec, expected', [
-    [simple, ['output']],
-    [absolute, ['output']],
-    [multiple_products, ['data', 'output']],
-    [sql_products, ['data', 'output']],
-])
+@pytest.mark.parametrize(
+    "spec, expected",
+    [
+        [simple, ["output"]],
+        [absolute, ["output"]],
+        [multiple_products, ["data", "output"]],
+        [sql_products, ["data", "output"]],
+    ],
+)
 def test_product_prefixes_from_spec(tmp_empty, spec, expected):
-    Path('pipeline.yaml').write_text(spec)
+    Path("pipeline.yaml").write_text(spec)
 
-    spec = DAGSpec('pipeline.yaml')
+    spec = DAGSpec("pipeline.yaml")
 
     assert product_prefixes_from_spec(spec) == expected

@@ -26,15 +26,11 @@ def cli():
 
 
 @cli.command()
-@click.argument('env_name')
-@click.option('--backend',
-              '-b',
-              type=click.Choice(Backend.get_values()),
-              required=True)
-@click.option('--preset',
-              '-p',
-              help='Customizes settings (backend-specific)',
-              default=None)
+@click.argument("env_name")
+@click.option("--backend", "-b", type=click.Choice(Backend.get_values()), required=True)
+@click.option(
+    "--preset", "-p", help="Customizes settings (backend-specific)", default=None
+)
 def add(env_name, backend, preset):
     """
     Add a new target platform. Creates a 'soopervisor.yaml' file if needed
@@ -44,92 +40,87 @@ def add(env_name, backend, preset):
     backend = Backend(backend)
 
     try:
-        if Path('soopervisor.yaml').exists():
-            cfg = yaml.safe_load(Path('soopervisor.yaml').read_text())
+        if Path("soopervisor.yaml").exists():
+            cfg = yaml.safe_load(Path("soopervisor.yaml").read_text())
             if env_name in cfg:
                 raise click.ClickException(
-                    f'A {env_name!r} section in the '
-                    'soopervisor.yaml configuration file '
-                    'already exists. Choose another name.')
+                    f"A {env_name!r} section in the "
+                    "soopervisor.yaml configuration file "
+                    "already exists. Choose another name."
+                )
         if Path(env_name).exists():
             raise click.ClickException(
-                f'{env_name!r} already exists. Select a different name.')
+                f"{env_name!r} already exists. Select a different name."
+            )
     except Exception as e:
-        telemetry.log_api("soopervisor_add_error",
-                          metadata={
-                              'type': backend.value,
-                              'env_name': env_name,
-                              'error': str(e)
-                          })
+        telemetry.log_api(
+            "soopervisor_add_error",
+            metadata={"type": backend.value, "env_name": env_name, "error": str(e)},
+        )
         raise
 
     Exporter = exporter.for_backend(backend)
-    Exporter.new('soopervisor.yaml', env_name=env_name, preset=preset).add()
+    Exporter.new("soopervisor.yaml", env_name=env_name, preset=preset).add()
 
-    telemetry.log_api("soopervisor_add_success",
-                      metadata={
-                          'type': backend.value,
-                          'env_name': env_name
-                      })
+    telemetry.log_api(
+        "soopervisor_add_success",
+        metadata={"type": backend.value, "env_name": env_name},
+    )
 
-    click.echo('Environment added, to export it:\n'
-               f'\t $ soopervisor export {env_name}\n'
-               'To force execution of all tasks:\n'
-               f'\t $ soopervisor export {env_name} '
-               '--mode force\n')
+    click.echo(
+        "Environment added, to export it:\n"
+        f"\t $ soopervisor export {env_name}\n"
+        "To force execution of all tasks:\n"
+        f"\t $ soopervisor export {env_name} "
+        "--mode force\n"
+    )
 
 
 @cli.command()
-@click.argument('env_name')
-@click.option('--until-build',
-              '-u',
-              is_flag=True,
-              help='Only build docker image')
-@click.option('--skip-tests',
-              '-s',
-              is_flag=True,
-              help='Skip docker image tests')
-@click.option('--skip-docker', '-S', is_flag=True, help='Skip docker build')
-@click.option('--mode',
-              '-m',
-              type=click.Choice(Mode.get_values()),
-              default=Mode.incremental.value)
-@click.option('--ignore-git',
-              '-i',
-              is_flag=True,
-              help='Ignore git tracked files (include everything)')
-@click.option('--lazy', '-l', is_flag=True, help='Lazily load pipeline')
-@click.option('--task',
-              '-t',
-              type=str,
-              help='Execute a single task with the given name')
-def export(env_name, until_build, mode, skip_tests, skip_docker, ignore_git,
-           lazy, task):
+@click.argument("env_name")
+@click.option("--until-build", "-u", is_flag=True, help="Only build docker image")
+@click.option("--skip-tests", "-s", is_flag=True, help="Skip docker image tests")
+@click.option("--skip-docker", "-S", is_flag=True, help="Skip docker build")
+@click.option(
+    "--mode", "-m", type=click.Choice(Mode.get_values()), default=Mode.incremental.value
+)
+@click.option(
+    "--ignore-git",
+    "-i",
+    is_flag=True,
+    help="Ignore git tracked files (include everything)",
+)
+@click.option("--lazy", "-l", is_flag=True, help="Lazily load pipeline")
+@click.option(
+    "--task", "-t", type=str, help="Execute a single task with the given name"
+)
+def export(
+    env_name, until_build, mode, skip_tests, skip_docker, ignore_git, lazy, task
+):
     """
     Export a target platform for execution/deployment
     """
     input_args = {
-        'env_name': env_name,
-        'until_build': until_build,
-        'mode': mode,
-        'skip_tests': skip_tests,
-        'skip_docker': skip_docker,
-        'ignore_git': ignore_git,
-        'task': task,
+        "env_name": env_name,
+        "until_build": until_build,
+        "mode": mode,
+        "skip_tests": skip_tests,
+        "skip_docker": skip_docker,
+        "ignore_git": ignore_git,
+        "task": task,
     }
 
     backend = Backend(config.get_backend(env_name))
 
-    telemetry.log_api("soopervisor_export_started",
-                      metadata={
-                          'type': backend.value,
-                          'input_args': input_args
-                      })
+    telemetry.log_api(
+        "soopervisor_export_started",
+        metadata={"type": backend.value, "input_args": input_args},
+    )
 
     until = None
 
     if until_build:
-        until = 'build'
+        until = "build"
 
     # TODO: ignore mode if using aws lambda, raised exception if value
     # is not the default
@@ -139,30 +130,28 @@ def export(env_name, until_build, mode, skip_tests, skip_docker, ignore_git,
     Exporter = exporter.for_backend(backend)
 
     try:
-        Exporter.load('soopervisor.yaml', env_name=env_name,
-                      lazy_import=lazy).export(mode=mode,
-                                               until=until,
-                                               skip_tests=skip_tests,
-                                               skip_docker=skip_docker,
-                                               ignore_git=ignore_git,
-                                               lazy_import=lazy,
-                                               task_name=task)
+        Exporter.load("soopervisor.yaml", env_name=env_name, lazy_import=lazy).export(
+            mode=mode,
+            until=until,
+            skip_tests=skip_tests,
+            skip_docker=skip_docker,
+            ignore_git=ignore_git,
+            lazy_import=lazy,
+            task_name=task,
+        )
 
     except Exception as e:
-        telemetry.log_api("soopervisor_export_error",
-                          metadata={
-                              'type': backend.value,
-                              'input_args': input_args,
-                              'error': str(e)
-                          })
+        telemetry.log_api(
+            "soopervisor_export_error",
+            metadata={"type": backend.value, "input_args": input_args, "error": str(e)},
+        )
         raise
 
-    telemetry.log_api("soopervisor_export_success",
-                      metadata={
-                          'type': backend.value,
-                          'input_args': input_args
-                      })
+    telemetry.log_api(
+        "soopervisor_export_success",
+        metadata={"type": backend.value, "input_args": input_args},
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

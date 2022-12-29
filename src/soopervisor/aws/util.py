@@ -4,8 +4,10 @@ import shutil
 
 def warn_if_not_installed(name):
     if not shutil.which(name):
-        print(f'It appears you don\'t have {name} CLI installed, you need it '
-              'to execute "invoke aws-lambda build"')
+        print(
+            f"It appears you don't have {name} CLI installed, you need it "
+            'to execute "invoke aws-lambda build"'
+        )
 
 
 class TaskResources:
@@ -13,6 +15,7 @@ class TaskResources:
     An object to pattern match task names with the task_resources
     section in cloud.yaml
     """
+
     def __init__(self, mapping):
         self._mapping = mapping
 

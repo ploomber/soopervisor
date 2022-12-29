@@ -4,7 +4,7 @@ from ploomber.clients import LocalStorageClient
 
 
 def get_client():
-    return LocalStorageClient('remote')
+    return LocalStorageClient("remote")
 
 
 def root(product):
@@ -12,5 +12,5 @@ def root(product):
 
 
 def another(product, upstream):
-    root = upstream['root']
+    root = upstream["root"]
     Path(product).touch()

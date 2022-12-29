@@ -51,16 +51,13 @@ def _transform_task_resources(resources):
     resources_out = []
 
     if resources.vcpus:
-        resources_out.append({'value': str(resources.vcpus), 'type': 'VCPU'})
+        resources_out.append({"value": str(resources.vcpus), "type": "VCPU"})
 
     if resources.memory:
-        resources_out.append({
-            'value': str(resources.memory),
-            'type': 'MEMORY'
-        })
+        resources_out.append({"value": str(resources.memory), "type": "MEMORY"})
 
     if resources.gpu:
-        resources_out.append({'value': str(resources.gpu), 'type': 'GPU'})
+        resources_out.append({"value": str(resources.gpu), "type": "GPU"})
 
     return resources_out
 
@@ -78,11 +75,13 @@ def _validate_keys(task_resources, tasks):
             faulty_keys.append(pattern)
 
     if faulty_keys:
-        faulty_keys_out = '\n* '.join(faulty_keys)
-        raise ValueError('The following keys in the task_resources section '
-                         'did not match any pipeline tasks. Delete them '
-                         'or ensure they match at least one task '
-                         f'name:\n{faulty_keys_out}')
+        faulty_keys_out = "\n* ".join(faulty_keys)
+        raise ValueError(
+            "The following keys in the task_resources section "
+            "did not match any pipeline tasks. Delete them "
+            "or ensure they match at least one task "
+            f"name:\n{faulty_keys_out}"
+        )
 
 
 def _process_task_resources(task_resources, tasks):
@@ -91,10 +90,9 @@ def _process_task_resources(task_resources, tasks):
 
     _validate_keys(task_resources, tasks)
 
-    return TaskResources({
-        key: _transform_task_resources(value)
-        for key, value in task_resources.items()
-    })
+    return TaskResources(
+        {key: _transform_task_resources(value) for key, value in task_resources.items()}
+    )
 
 
 def _submit_dag(
@@ -112,47 +110,50 @@ def _submit_dag(
     default_image_key = get_default_image_key()
     remote_name = image_map[default_image_key]
 
-    client = boto3.client('batch', region_name=region_name)
-    container_properties['image'] = remote_name
+    client = boto3.client("batch", region_name=region_name)
+    container_properties["image"] = remote_name
 
     jd_map = {}
 
     task_resources = _process_task_resources(cfg.task_resources, tasks)
 
-    cmdr.info(f'Registering {job_def!r} job definition...')
+    cmdr.info(f"Registering {job_def!r} job definition...")
 
     job_ids = dict()
 
-    cmdr.info('Submitting jobs...')
+    cmdr.info("Submitting jobs...")
 
     if is_cloud:
         # docker.build moves to the env folder
-        params = json.loads(Path('../.ploomber-cloud').read_text())
+        params = json.loads(Path("../.ploomber-cloud").read_text())
 
         # note: this will trigger an error if the user has no quota left
         from ploomber.cloud.api import PloomberCloudAPI
-        out = PloomberCloudAPI().runs_update(params['runid'], tasks)
+
+        out = PloomberCloudAPI().runs_update(params["runid"], tasks)
     else:
         out, params = None, None
 
     jd = client.register_job_definition(
         jobDefinitionName=job_def,
-        type='container',
-        containerProperties=container_properties)
+        type="container",
+        containerProperties=container_properties,
+    )
     jd_map[default_image_key] = jd
 
     # Register job definitions for task specific images
     for pattern, image in image_map.items():
         if pattern != default_image_key:
             container_props = container_properties.copy()
-            container_props['image'] = image
+            container_props["image"] = image
             task_job_def = f"{job_def}-{docker.modify_wildcard(pattern)}"
-            cmdr.info(f'Registering {task_job_def!r} job definition...')
+            cmdr.info(f"Registering {task_job_def!r} job definition...")
 
             jd = client.register_job_definition(
                 jobDefinitionName=task_job_def,
-                type='container',
-                containerProperties=container_props)
+                type="container",
+                containerProperties=container_props,
+            )
             jd_map[pattern] = jd
 
     for name, upstream in tasks.items():
@@ -163,52 +164,51 @@ def _submit_dag(
 
         if is_cloud:
             ploomber_task = [
-                'python',
-                '-m',
-                'ploomber.cli.task',
+                "python",
+                "-m",
+                "ploomber.cli.task",
                 name,
-                '--task-id',
-                out['taskids'][name],
+                "--task-id",
+                out["taskids"][name],
             ]
 
             container_overrides = {
-                "command":
-                ploomber_task + args,
+                "command": ploomber_task + args,
                 "environment": [
                     {
                         "name": "PLOOMBER_CLOUD_KEY",
-                        "value": os.environ["PLOOMBER_CLOUD_KEY"]
+                        "value": os.environ["PLOOMBER_CLOUD_KEY"],
                     },
                     {
                         "name": "PLOOMBER_CLOUD_HOST",
-                        "value": os.environ["PLOOMBER_CLOUD_HOST"]
+                        "value": os.environ["PLOOMBER_CLOUD_HOST"],
                     },
-                ]
+                ],
             }
 
         else:
-            ploomber_task = ['ploomber', 'task', name]
+            ploomber_task = ["ploomber", "task", name]
             container_overrides = {"command": ploomber_task + args}
 
         # add requested resources
-        container_overrides['resourceRequirements'] = task_resources.get(
-            name, [])
+        container_overrides["resourceRequirements"] = task_resources.get(name, [])
 
-        response = client.submit_job(jobName=name,
-                                     jobQueue=job_queue,
-                                     jobDefinition=task_jd['jobDefinitionArn'],
-                                     dependsOn=[{
-                                         "jobId": job_ids[name]
-                                     } for name in upstream],
-                                     containerOverrides=container_overrides)
+        response = client.submit_job(
+            jobName=name,
+            jobQueue=job_queue,
+            jobDefinition=task_jd["jobDefinitionArn"],
+            dependsOn=[{"jobId": job_ids[name]} for name in upstream],
+            containerOverrides=container_overrides,
+        )
 
         job_ids[name] = response["jobId"]
 
-        cmdr.print(f'Submitted task {name!r}...')
+        cmdr.print(f"Submitted task {name!r}...")
 
     if is_cloud:
         from ploomber.cloud.api import PloomberCloudAPI
-        PloomberCloudAPI().runs_register_ids(params['runid'], job_ids)
+
+        PloomberCloudAPI().runs_register_ids(params["runid"], job_ids)
 
 
 class AWSBatchExporter(abc.AbstractExporter):
@@ -228,72 +228,95 @@ class AWSBatchExporter(abc.AbstractExporter):
 
     @staticmethod
     def _add(cfg, env_name):
-        with Commander(workspace=env_name,
-                       templates_path=('soopervisor', 'assets')) as e:
-            e.copy_template('docker/Dockerfile',
-                            conda=Path('environment.lock.yml').exists(),
-                            setup_py=Path('setup.py').exists(),
-                            lib=Path('lib').exists(),
-                            env_name=env_name)
-            e.success('Done')
+        with Commander(
+            workspace=env_name, templates_path=("soopervisor", "assets")
+        ) as e:
+            e.copy_template(
+                "docker/Dockerfile",
+                conda=Path("environment.lock.yml").exists(),
+                setup_py=Path("setup.py").exists(),
+                lib=Path("lib").exists(),
+                env_name=env_name,
+            )
+            e.success("Done")
             e.print(
-                f'Fill in the configuration in the {env_name!r} '
-                'section in soopervisor.yaml then submit to AWS Batch with: '
-                f'soopervisor export {env_name}')
+                f"Fill in the configuration in the {env_name!r} "
+                "section in soopervisor.yaml then submit to AWS Batch with: "
+                f"soopervisor export {env_name}"
+            )
 
         # TODO: run dag checks: client configured, ploomber status
 
     @classmethod
-    @requires(['boto3'], name='AWSBatchExporter')
-    def _export(cls, cfg, env_name, mode, until, skip_tests, skip_docker,
-                ignore_git, lazy_import, task_name):
-        with Commander(workspace=env_name,
-                       templates_path=('soopervisor', 'assets')) as cmdr:
+    @requires(["boto3"], name="AWSBatchExporter")
+    def _export(
+        cls,
+        cfg,
+        env_name,
+        mode,
+        until,
+        skip_tests,
+        skip_docker,
+        ignore_git,
+        lazy_import,
+        task_name,
+    ):
+        with Commander(
+            workspace=env_name, templates_path=("soopervisor", "assets")
+        ) as cmdr:
 
-            tasks, cli_args = commons.load_tasks(cmdr=cmdr,
-                                                 name=env_name,
-                                                 mode=mode,
-                                                 lazy_import=lazy_import,
-                                                 task_name=task_name)
+            tasks, cli_args = commons.load_tasks(
+                cmdr=cmdr,
+                name=env_name,
+                mode=mode,
+                lazy_import=lazy_import,
+                task_name=task_name,
+            )
 
             if not tasks:
                 cls._no_tasks_to_submit()
-                raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
-                                    'tasks to submit. Try "--mode force" to '
-                                    'submit all tasks regardless of status')
+                raise CommanderStop(
+                    f"Loaded DAG in {mode!r} mode has no "
+                    'tasks to submit. Try "--mode force" to '
+                    "submit all tasks regardless of status"
+                )
             if skip_docker:
                 pkg_name, version = source.find_package_name_and_version()
                 default_image_key = get_default_image_key()
                 if default_image_key:
-                    image_local = f'{pkg_name}:{version}-'
-                    f'{docker.modify_wildcard(default_image_key)}'
+                    image_local = f"{pkg_name}:{version}-"
+                    f"{docker.modify_wildcard(default_image_key)}"
                 image_map = {}
                 image_map[default_image_key] = image_local
             else:
-                pkg_name, image_map = docker.build(cmdr,
-                                                   cfg,
-                                                   env_name,
-                                                   until=until,
-                                                   entry_point=cli_args[1],
-                                                   skip_tests=skip_tests,
-                                                   ignore_git=ignore_git)
+                pkg_name, image_map = docker.build(
+                    cmdr,
+                    cfg,
+                    env_name,
+                    until=until,
+                    entry_point=cli_args[1],
+                    skip_tests=skip_tests,
+                    ignore_git=ignore_git,
+                )
 
-            cmdr.info('Submitting jobs to AWS Batch')
+            cmdr.info("Submitting jobs to AWS Batch")
 
             # add a unique suffix to prevent collisions
             suffix = str(uuid4())[:8]
 
-            cls._submit_dag(tasks=tasks,
-                            args=cli_args,
-                            job_def=f'{pkg_name}-{suffix}',
-                            image_map=image_map,
-                            job_queue=cfg.job_queue,
-                            container_properties=cfg.container_properties,
-                            region_name=cfg.region_name,
-                            cmdr=cmdr,
-                            cfg=cfg)
+            cls._submit_dag(
+                tasks=tasks,
+                args=cli_args,
+                job_def=f"{pkg_name}-{suffix}",
+                image_map=image_map,
+                job_queue=cfg.job_queue,
+                container_properties=cfg.container_properties,
+                region_name=cfg.region_name,
+                cmdr=cmdr,
+                cfg=cfg,
+            )
 
-            cmdr.success('Done. Submitted to AWS Batch')
+            cmdr.success("Done. Submitted to AWS Batch")
 
 
 def _find_task_pattern(task_patterns, current_task):
@@ -309,8 +332,9 @@ class CloudExporter(AWSBatchExporter):
     @classmethod
     def _no_tasks_to_submit(cls):
         from ploomber.cloud.api import PloomberCloudAPI
-        params = json.loads(Path('.ploomber-cloud').read_text())
-        PloomberCloudAPI().run_finished(params['runid'])
+
+        params = json.loads(Path(".ploomber-cloud").read_text())
+        PloomberCloudAPI().run_finished(params["runid"])
 
     @classmethod
     def _submit_dag(cls, *args, **kwargs):

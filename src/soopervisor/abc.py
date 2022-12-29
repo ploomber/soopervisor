@@ -12,9 +12,11 @@ import yaml
 from pydantic import BaseModel
 
 from soopervisor import commons
-from soopervisor.exceptions import (BackendWithoutPresetsError,
-                                    InvalidPresetForBackendError,
-                                    ConfigurationError)
+from soopervisor.exceptions import (
+    BackendWithoutPresetsError,
+    InvalidPresetForBackendError,
+    ConfigurationError,
+)
 from soopervisor._io import load_config_file
 from soopervisor.commons.dag import load_dag_and_spec
 
@@ -28,10 +30,11 @@ class AbstractConfig(BaseModel, abc.ABC):
         The preset to use, this determines certain settings and is
         backend-specific
     """
+
     preset: Optional[str] = None
 
     class Config:
-        extra = 'forbid'
+        extra = "forbid"
 
     @classmethod
     def load(cls, path_to_config, env_name):
@@ -44,9 +47,10 @@ class AbstractConfig(BaseModel, abc.ABC):
         # check data[env_name] is a dictionary
         if not isinstance(data[env_name], Mapping):
             raise ConfigurationError(
-                f'Expected key {env_name!r} in {str(path_to_config)!r} '
-                'to contain a dictionary, '
-                f'got {type(data[env_name]).__name__}')
+                f"Expected key {env_name!r} in {str(path_to_config)!r} "
+                "to contain a dictionary, "
+                f"got {type(data[env_name]).__name__}"
+            )
 
         return cls._init(env_name, data[env_name], path_to_config)
 
@@ -68,22 +72,24 @@ class AbstractConfig(BaseModel, abc.ABC):
         # check env_name in data, otherwise the env is corrupted
         data = deepcopy(data)
 
-        if 'backend' not in data:
+        if "backend" not in data:
             raise ConfigurationError(
                 f'Missing {"backend"!r} key for '
-                f'section {env_name!r} in {path_to_config!r}. '
-                'Add it and try again.')
+                f"section {env_name!r} in {path_to_config!r}. "
+                "Add it and try again."
+            )
 
-        actual = data['backend']
+        actual = data["backend"]
         backend = cls.get_backend_value()
 
         if actual != backend:
             raise ConfigurationError(
-                f'Invalid backend key for section {env_name!r} in '
-                f'{path_to_config!s}. Expected {backend!r}, '
-                f'actual {actual!r}')
+                f"Invalid backend key for section {env_name!r} in "
+                f"{path_to_config!s}. Expected {backend!r}, "
+                f"actual {actual!r}"
+            )
 
-        del data['backend']
+        del data["backend"]
 
         cfg = cls(**data)
 
@@ -98,8 +104,7 @@ class AbstractConfig(BaseModel, abc.ABC):
                 cfg.preset = presets[0]
 
             if cfg.preset not in presets:
-                raise InvalidPresetForBackendError(backend, cfg.preset,
-                                                   presets)
+                raise InvalidPresetForBackendError(backend, cfg.preset, presets)
 
         return cfg
 
@@ -123,25 +128,25 @@ class AbstractConfig(BaseModel, abc.ABC):
             Any other values to store
         """
         if Path(env_name).exists():
-            type_ = 'directory' if Path(env_name).is_dir() else 'file'
+            type_ = "directory" if Path(env_name).is_dir() else "file"
             raise ConfigurationError(
-                f'A {type_} named '
-                f'{env_name!r} already exists in the current working '
-                'directory, select another name for the target environment'
-                ' and try again.')
+                f"A {type_} named "
+                f"{env_name!r} already exists in the current working "
+                "directory, select another name for the target environment"
+                " and try again."
+            )
 
         data = {**cls.hints(), **defaults}
 
         if preset:
-            data['preset'] = preset
+            data["preset"] = preset
 
         # initialize config before storing the yaml to halt execution
         # in case there are any validation errors
         cfg = cls._init(env_name, data, path_to_config)
 
         # pass default_flow_style=None to it serializes lists as [a, b, c]
-        default_data = yaml.safe_dump({env_name: data},
-                                      default_flow_style=None)
+        default_data = yaml.safe_dump({env_name: data}, default_flow_style=None)
 
         # if no config file, write one with env_name section and hints
         if not Path(path_to_config).exists():
@@ -157,20 +162,20 @@ class AbstractConfig(BaseModel, abc.ABC):
             if env_name not in env_names:
                 # append to the text file so we don't delete any existing
                 # comments
-                path.write_text(content + f'\n{default_data}\n')
+                path.write_text(content + f"\n{default_data}\n")
             else:
                 raise ConfigurationError(
-                    'A target environment named '
-                    f'{env_name!r} already exists in {str(path_to_config)!r}, '
-                    'select another name and try again.')
+                    "A target environment named "
+                    f"{env_name!r} already exists in {str(path_to_config)!r}, "
+                    "select another name and try again."
+                )
 
         return cfg
 
     @classmethod
     @abc.abstractmethod
     def get_backend_value(cls):
-        """Returns the string identifier for the given backend
-        """
+        """Returns the string identifier for the given backend"""
         pass
 
     @classmethod
@@ -200,7 +205,7 @@ class AbstractConfig(BaseModel, abc.ABC):
         hint values must be returned in the _hints() method
         """
         data = cls._hints()
-        data['backend'] = cls.get_backend_value()
+        data["backend"] = cls.get_backend_value()
         return data
 
 
@@ -215,13 +220,14 @@ class AbstractDockerConfig(AbstractConfig):
     exclude : list of str
         Files/directories to exclude from the Docker image
     """
+
     include: Optional[List[str]] = None
     exclude: Optional[List[str]] = None
     repository: Optional[str] = None
 
     @classmethod
     def _hints(cls):
-        return dict(repository='your-repository/name')
+        return dict(repository="your-repository/name")
 
 
 class AbstractExporter(abc.ABC):
@@ -246,6 +252,7 @@ class AbstractExporter(abc.ABC):
         None and the concrete class does not take a present, it will raise
         an exception
     """
+
     CONFIG_CLASS = None
 
     def __init__(self, cfg, dag, env_name):
@@ -268,15 +275,13 @@ class AbstractExporter(abc.ABC):
 
         dag, _ = load_dag_and_spec(env_name, lazy_import=lazy_import)
 
-        cfg = cls.CONFIG_CLASS.load(path_to_config=path_to_config,
-                                    env_name=env_name)
+        cfg = cls.CONFIG_CLASS.load(path_to_config=path_to_config, env_name=env_name)
 
         return cls(cfg, dag, env_name)
 
     @classmethod
     def new(cls, path_to_config, env_name, preset=None, lazy_import=False):
-        """
-        """
+        """ """
         # run some basic validations
         cls.validate()
 
@@ -308,8 +313,7 @@ class AbstractExporter(abc.ABC):
         commons.dependencies.check_lock_files_exist()
 
     def add(self):
-        """Create a directory with the env_name and add any necessary files
-        """
+        """Create a directory with the env_name and add any necessary files"""
 
         # check that env_name folder does not exist
         path = Path(self._env_name)
@@ -317,23 +321,26 @@ class AbstractExporter(abc.ABC):
         if path.exists():
             Path(self._env_name)
 
-            kind = 'file' if path.is_file() else 'directory'
+            kind = "file" if path.is_file() else "directory"
             raise FileExistsError(
-                f'A {kind} with name {self._env_name!r} '
-                'already exists, delete or rename it and try again')
+                f"A {kind} with name {self._env_name!r} "
+                "already exists, delete or rename it and try again"
+            )
 
         path.mkdir()
 
         return self._add(cfg=self._cfg, env_name=self._env_name)
 
-    def export(self,
-               mode,
-               until=None,
-               skip_tests=False,
-               skip_docker=False,
-               ignore_git=False,
-               lazy_import=False,
-               task_name=None):
+    def export(
+        self,
+        mode,
+        until=None,
+        skip_tests=False,
+        skip_docker=False,
+        ignore_git=False,
+        lazy_import=False,
+        task_name=None,
+    ):
         """
         Exports to the target environment, calls the private ._export()
         method
@@ -341,23 +348,24 @@ class AbstractExporter(abc.ABC):
         # TODO: detect inconsistencies. e.g., environment exists but directory
         # doesnt
         if skip_docker:
-            click.echo('Skipping docker build')
+            click.echo("Skipping docker build")
 
-        return self._export(cfg=self._cfg,
-                            env_name=self._env_name,
-                            mode=mode,
-                            until=until,
-                            skip_tests=skip_tests,
-                            skip_docker=skip_docker,
-                            ignore_git=ignore_git,
-                            lazy_import=lazy_import,
-                            task_name=task_name)
+        return self._export(
+            cfg=self._cfg,
+            env_name=self._env_name,
+            mode=mode,
+            until=until,
+            skip_tests=skip_tests,
+            skip_docker=skip_docker,
+            ignore_git=ignore_git,
+            lazy_import=lazy_import,
+            task_name=task_name,
+        )
 
     @staticmethod
     @abc.abstractmethod
     def _validate(cfg, dag, env_name):
-        """Validate project before generating exported files
-        """
+        """Validate project before generating exported files"""
         pass
 
     @staticmethod

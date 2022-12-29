@@ -13,13 +13,13 @@ class CustomEnum(EnumMeta):
 
 @unique
 class Backend(Enum, metaclass=CustomEnum):
-    aws_batch = 'aws-batch'
-    aws_lambda = 'aws-lambda'
-    argo_workflows = 'argo-workflows'
-    airflow = 'airflow'
-    kubeflow = 'kubeflow'
-    slurm = 'slurm'
-    cloud = 'cloud'
+    aws_batch = "aws-batch"
+    aws_lambda = "aws-lambda"
+    argo_workflows = "argo-workflows"
+    airflow = "airflow"
+    kubeflow = "kubeflow"
+    slurm = "slurm"
+    cloud = "cloud"
 
     @classmethod
     def get_values(cls):
@@ -28,9 +28,9 @@ class Backend(Enum, metaclass=CustomEnum):
 
 @unique
 class Mode(Enum, metaclass=CustomEnum):
-    incremental = 'incremental'
-    regular = 'regular'
-    force = 'force'
+    incremental = "incremental"
+    regular = "regular"
+    force = "force"
 
     @classmethod
     def get_values(cls):

@@ -21,7 +21,7 @@ def _is_relative_path(path):
 
 
 def _extract_product_parent(task_spec):
-    product_spec = task_spec.data['product']
+    product_spec = task_spec.data["product"]
 
     try:
         # single product
@@ -38,7 +38,7 @@ def _extract_product_parent(task_spec):
 
 
 def product_prefixes_from_spec(spec):
-    parents = [_extract_product_parent(t) for t in spec['tasks']]
+    parents = [_extract_product_parent(t) for t in spec["tasks"]]
     parents_flat = [path for sub in parents for path in sub]
     return sorted(set(parents_flat)) or None
 
@@ -48,25 +48,25 @@ def find_spec(cmdr, name, lazy_import=False):
     Find spec to use. It first tries to load a file with pipeline.{name}.yaml,
     if that doesn't exist, it tries to load a pipeline.yaml
     """
-    cmdr.info('Loading DAG')
+    cmdr.info("Loading DAG")
 
     try:
-        spec, relative_path = DAGSpec._find_relative(name=name,
-                                                     lazy_import=lazy_import)
-        cmdr.print(f'Found {spec.path!s}. Loading...')
+        spec, relative_path = DAGSpec._find_relative(name=name, lazy_import=lazy_import)
+        cmdr.print(f"Found {spec.path!s}. Loading...")
     except DAGSpecInvalidError:
-        cmdr.print(f'No pipeline.{name}.yaml found, '
-                   'looking for pipeline.yaml instead')
+        cmdr.print(
+            f"No pipeline.{name}.yaml found, " "looking for pipeline.yaml instead"
+        )
         spec = None
 
     if spec is None:
         spec, relative_path = DAGSpec._find_relative(lazy_import=lazy_import)
-        cmdr.print(f'Found {spec.path!s}. Loading...')
+        cmdr.print(f"Found {spec.path!s}. Loading...")
 
     return spec, relative_path
 
 
-def load_dag(cmdr, name=None, mode='incremental', lazy_import=False):
+def load_dag(cmdr, name=None, mode="incremental", lazy_import=False):
     """Load DAG object
 
     Parameters
@@ -93,15 +93,13 @@ def load_dag(cmdr, name=None, mode='incremental', lazy_import=False):
     relative_path : str
         The relative location of the pipeline.yaml file
     """
-    value_in(name='mode', value=mode, values=Mode.get_values())
+    value_in(name="mode", value=mode, values=Mode.get_values())
 
-    spec, relative_path = find_spec(cmdr=cmdr,
-                                    name=name,
-                                    lazy_import=lazy_import)
+    spec, relative_path = find_spec(cmdr=cmdr, name=name, lazy_import=lazy_import)
     dag = spec.to_dag()
 
-    if mode == 'incremental':
-        with add_to_sys_path('.', chdir=False):
+    if mode == "incremental":
+        with add_to_sys_path(".", chdir=False):
             has_client = dag.clients.get(File) is not None
 
         # what if user has a shared disk but still wants to upload artifacts?
@@ -119,11 +117,7 @@ def load_dag(cmdr, name=None, mode='incremental', lazy_import=False):
     return dag, relative_path
 
 
-def load_tasks(cmdr,
-               name=None,
-               mode='incremental',
-               lazy_import=False,
-               task_name=None):
+def load_tasks(cmdr, name=None, mode="incremental", lazy_import=False, task_name=None):
     """Get tasks to execute and their upstream dependencies
 
     Parameters
@@ -164,7 +158,7 @@ def load_tasks(cmdr,
         if task is None:
             raise NotATaskError(task_name, dag)
 
-        if task.exec_status == TaskStatus.Skipped and mode == 'incremental':
+        if task.exec_status == TaskStatus.Skipped and mode == "incremental":
             # TODO: this will show a "--mode force" message but this only
             # applies when using soopervisor directly, and does not apply
             # when using ploomber cloud
@@ -173,7 +167,7 @@ def load_tasks(cmdr,
         tasks = [task_name]
 
     # if incremental, only get the tasks that are outdated
-    elif mode == 'incremental':
+    elif mode == "incremental":
         tasks = []
 
         for name, task in dag.items():
@@ -191,10 +185,10 @@ def load_tasks(cmdr,
         # add a task as upstream dependency if it's a task that we will execute
         out[t] = [name for name in dag[t].upstream.keys() if name in tasks]
 
-    args = ['--entry-point', relative_path]
+    args = ["--entry-point", relative_path]
 
-    if mode == 'force':
-        args.append('--force')
+    if mode == "force":
+        args.append("--force")
 
     return out, args
 
@@ -204,9 +198,7 @@ def load_dag_and_spec(env_name, lazy_import=False):
     # TODO: _export also has to find_spec, maybe load it here and
     # pass it directly to _export?
     with Commander() as cmdr:
-        spec, _ = commons.find_spec(cmdr=cmdr,
-                                    name=env_name,
-                                    lazy_import=lazy_import)
+        spec, _ = commons.find_spec(cmdr=cmdr, name=env_name, lazy_import=lazy_import)
 
     dag = spec.to_dag().render(force=True, show_progress=False)
 

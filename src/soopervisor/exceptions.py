@@ -6,22 +6,23 @@ from soopervisor._format import comma_separated
 
 
 class BackendWithoutPresetsError(ClickException):
-    """Raises when passing a preset to a backend doesn't have any
-    """
+    """Raises when passing a preset to a backend doesn't have any"""
 
     def __init__(self, backend):
-        super().__init__(f'Backend {str(backend)!r} does not have '
-                         'presets. Remove the argument.')
+        super().__init__(
+            f"Backend {str(backend)!r} does not have " "presets. Remove the argument."
+        )
 
 
 class InvalidPresetForBackendError(ClickException):
-    """Raised if the passed preset is not valid for the passed backend
-    """
+    """Raised if the passed preset is not valid for the passed backend"""
 
     def __init__(self, backend, preset, preset_values):
-        super().__init__(f'Preset {preset!r} is not a valid value for '
-                         f'backend {str(backend)!r}. Valid presets are: '
-                         f'{comma_separated(preset_values)}')
+        super().__init__(
+            f"Preset {preset!r} is not a valid value for "
+            f"backend {str(backend)!r}. Valid presets are: "
+            f"{comma_separated(preset_values)}"
+        )
 
 
 class ConfigurationError(ClickException):
@@ -29,6 +30,7 @@ class ConfigurationError(ClickException):
     Raised when there is a misconfiguration. Captured by the CLI to only
     show the error message and not the whole traceback
     """
+
     pass
 
 
@@ -39,7 +41,7 @@ class MissingDockerfileError(ClickException):
 
     def __init__(self, env_name):
         self.env_name = env_name
-        path = str(Path(env_name, 'Dockerfile'))
+        path = str(Path(env_name, "Dockerfile"))
         message = f"""\
 Expected Dockerfile at {path!r} but it does not exist\
         """
@@ -52,18 +54,21 @@ class MissingConfigurationFileError(ClickException):
     """
 
     def __init__(self):
-        name = 'soopervisor.yaml'
-        super().__init__(f'Expected a {name!r} file in the current '
-                         'working directory, but such files does not exist')
+        name = "soopervisor.yaml"
+        super().__init__(
+            f"Expected a {name!r} file in the current "
+            "working directory, but such files does not exist"
+        )
 
 
 class ConfigurationFileTypeError(ClickException):
-    """Raised if the configuration file does not have the right type
-    """
+    """Raised if the configuration file does not have the right type"""
 
     def __init__(self, path, data):
-        super().__init__(f'Expected {str(path)!r} to contain a dictionary '
-                         f'but got an object of type: {type(data).__name__}')
+        super().__init__(
+            f"Expected {str(path)!r} to contain a dictionary "
+            f"but got an object of type: {type(data).__name__}"
+        )
 
 
 class NotATaskError(ClickException):
@@ -73,15 +78,14 @@ class NotATaskError(ClickException):
 
     def __init__(self, task_name, dag):
         names = comma_separated(dag.keys())
-        super().__init__(
-            f'{task_name!r} is not a valit task name. Tasks are: {names}')
+        super().__init__(f"{task_name!r} is not a valit task name. Tasks are: {names}")
 
 
 class UpToDateTaskError(ClickException):
-    """Raised when a user tries to submit a task that is up-to-date
-    """
+    """Raised when a user tries to submit a task that is up-to-date"""
 
     def __init__(self, task_name):
         super().__init__(
-            f'Task {task_name!r} is up-to-date, to force execution, '
-            'pass: --mode force')
+            f"Task {task_name!r} is up-to-date, to force execution, "
+            "pass: --mode force"
+        )

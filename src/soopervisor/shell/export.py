@@ -16,8 +16,9 @@ from soopervisor import validate
 
 def _warn_on_exit_if_param(cmdr, param, name):
     if param:
-        cmdr.warn_on_exit(f'{name!r} option has no effect when '
-                          'using SLURM, ignoring...')
+        cmdr.warn_on_exit(
+            f"{name!r} option has no effect when " "using SLURM, ignoring..."
+        )
 
 
 def _check_template_variables(env, source):
@@ -26,15 +27,16 @@ def _check_template_variables(env, source):
 
 def _validate_template(env, source):
     vars = _check_template_variables(env, source)
-    validate.keys({'command', 'name'}, vars,
-                  'Error validating template.sh, missing placeholders')
+    validate.keys(
+        {"command", "name"}, vars, "Error validating template.sh, missing placeholders"
+    )
 
 
 def _script_name_for_task_name(name, workspace):
     """
     Returns the path to the script to use based on the task name
     """
-    name_sh = f'{name}.sh'
+    name_sh = f"{name}.sh"
     exact_match = Path(workspace, name_sh)
 
     if exact_match.is_file():
@@ -43,10 +45,10 @@ def _script_name_for_task_name(name, workspace):
     files = sorted(os.listdir(workspace))
 
     for file in files:
-        if fnmatch.fnmatch(name_sh, file.replace('__', '*')):
+        if fnmatch.fnmatch(name_sh, file.replace("__", "*")):
             return Path(workspace, file)
 
-    return Path(workspace, 'template.sh')
+    return Path(workspace, "template.sh")
 
 
 # TODO: check ploomber version
@@ -59,14 +61,16 @@ class SlurmExporter(abc.AbstractExporter):
         """
         Add sample template
         """
-        with Commander(workspace=env_name,
-                       templates_path=('soopervisor', 'assets'),
-                       environment_kwargs=dict(
-                           variable_start_string='[[',
-                           variable_end_string=']]',
-                       )) as e:
-            e.copy_template('slurm/template.sh')
-            e.success('Done')
+        with Commander(
+            workspace=env_name,
+            templates_path=("soopervisor", "assets"),
+            environment_kwargs=dict(
+                variable_start_string="[[",
+                variable_end_string="]]",
+            ),
+        ) as e:
+            e.copy_template("slurm/template.sh")
+            e.success("Done")
 
     @staticmethod
     def _validate(cfg, dag, env_name):
@@ -81,41 +85,56 @@ class SlurmExporter(abc.AbstractExporter):
         pass
 
     @staticmethod
-    def _export(cfg, env_name, mode, until, skip_tests, skip_docker,
-                ignore_git, lazy_import, task_name):
+    def _export(
+        cfg,
+        env_name,
+        mode,
+        until,
+        skip_tests,
+        skip_docker,
+        ignore_git,
+        lazy_import,
+        task_name,
+    ):
         """
         Export and submit jbs
         """
-        with Commander(workspace=env_name,
-                       templates_path=('soopervisor', 'assets')) as cmdr:
+        with Commander(
+            workspace=env_name, templates_path=("soopervisor", "assets")
+        ) as cmdr:
 
             # these do not apply when using SLURM, warn the user
             # TODO: test the warning is shown
-            _warn_on_exit_if_param(cmdr, ignore_git, 'ignore_git')
-            _warn_on_exit_if_param(cmdr, until, 'until')
-            _warn_on_exit_if_param(cmdr, skip_tests, 'skip_tests')
-            _warn_on_exit_if_param(cmdr, skip_docker, 'skip_docker')
+            _warn_on_exit_if_param(cmdr, ignore_git, "ignore_git")
+            _warn_on_exit_if_param(cmdr, until, "until")
+            _warn_on_exit_if_param(cmdr, skip_tests, "skip_tests")
+            _warn_on_exit_if_param(cmdr, skip_docker, "skip_docker")
 
-            template = Path(env_name, 'template.sh').read_text()
+            template = Path(env_name, "template.sh").read_text()
             _validate_template(cmdr._env, template)
 
-            tasks, args = commons.load_tasks(cmdr=cmdr,
-                                             name=env_name,
-                                             mode=mode,
-                                             lazy_import=lazy_import,
-                                             task_name=task_name)
+            tasks, args = commons.load_tasks(
+                cmdr=cmdr,
+                name=env_name,
+                mode=mode,
+                lazy_import=lazy_import,
+                task_name=task_name,
+            )
 
             if not tasks:
-                raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
-                                    'tasks to submit. Try "--mode force" to '
-                                    'submit all tasks regardless of status')
+                raise CommanderStop(
+                    f"Loaded DAG in {mode!r} mode has no "
+                    'tasks to submit. Try "--mode force" to '
+                    "submit all tasks regardless of status"
+                )
 
             # FIXME: add unit test for this
-            if not shutil.which('sbatch'):
+            if not shutil.which("sbatch"):
                 raise CommanderException(
-                    'sbatch is not installed, but it is '
-                    'required to submit the jobs to the cluster, '
-                    'please install it and try again.')
+                    "sbatch is not installed, but it is "
+                    "required to submit the jobs to the cluster, "
+                    "please install it and try again."
+                )
 
             _submit_to_slurm(tasks, args, env_name)
 
@@ -144,32 +163,32 @@ def _submit_to_slurm(tasks, args, workspace):
         # generate script and save
         job_sh = Template(script_sh.read_text())
 
-        ploomber_command = ' '.join(['ploomber', 'task', name] + args)
+        ploomber_command = " ".join(["ploomber", "task", name] + args)
         script = job_sh.render(name=name, command=ploomber_command)
-        Path('_job.sh').write_text(script)
+        Path("_job.sh").write_text(script)
 
         # does the task have dependencies?
         if upstream:
             # if yes, then use --dependency=afterok:
-            ids = ':'.join([name2id[task_name] for task_name in upstream])
+            ids = ":".join([name2id[task_name] for task_name in upstream])
             # docs: https://hpc.nih.gov/docs/job_dependencies.html
             # https://slurm.schedmd.com/sbatch.html
             # sbatch [options] script [args...]
             cmd = [
-                'sbatch',
-                f'--dependency=afterok:{ids}',
-                '--parsable',
+                "sbatch",
+                f"--dependency=afterok:{ids}",
+                "--parsable",
                 # kill job if upstream dependencies fail
-                '--kill-on-invalid-dep=yes',
-                '_job.sh',
+                "--kill-on-invalid-dep=yes",
+                "_job.sh",
             ]
         else:
             # if no, just submit
-            cmd = ['sbatch', '--parsable', '_job.sh']
+            cmd = ["sbatch", "--parsable", "_job.sh"]
 
         # print the submitted command
         click.echo(f'Running command: {" ".join(cmd)}')
-        click.echo(f'_job.sh content:\n{script}')
+        click.echo(f"_job.sh content:\n{script}")
 
         # submit job
         res = run(cmd, capture_output=True, check=True)

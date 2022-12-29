@@ -9,18 +9,17 @@ from sklearn.metrics import classification_report
 from sklearn.ensemble import RandomForestClassifier
 
 # + tags=["parameters"]
-upstream = ['features']
+upstream = ["features"]
 product = None
 # -
 
-df = pd.read_csv(str(upstream['features']))
-X = df.drop('target', axis='columns')
+df = pd.read_csv(str(upstream["features"]))
+X = df.drop("target", axis="columns")
 y = df.target
 
-X_train, X_test, y_train, y_test = train_test_split(X,
-                                                    y,
-                                                    test_size=0.33,
-                                                    random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.33, random_state=42
+)
 
 # + tags=["model-training"]
 clf = RandomForestClassifier(n_estimators=5)
@@ -31,5 +30,5 @@ y_pred = clf.predict(X_test)
 
 print(classification_report(y_test, y_pred))
 
-with open(product['model'], 'wb') as f:
+with open(product["model"], "wb") as f:
     pickle.dump(clf, f)

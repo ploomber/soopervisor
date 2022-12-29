@@ -11,54 +11,41 @@ from soopervisor.aws.config import AWSBatchConfig, AWSLambdaConfig
 from soopervisor.kubeflow.config import KubeflowConfig
 
 
-@pytest.mark.parametrize('class_, hints', [
+@pytest.mark.parametrize(
+    "class_, hints",
     [
-        SlurmConfig,
-        {
-            'backend': 'slurm'
-        },
-    ],
-    [
-        AirflowConfig,
-        {
-            'backend': 'airflow',
-            'repository': 'your-repository/name'
-        },
-    ],
-    [
-        ArgoConfig,
-        {
-            'backend': 'argo-workflows',
-            'repository': 'your-repository/name'
-        },
-    ],
-    [
-        AWSBatchConfig,
-        {
-            'backend': 'aws-batch',
-            'container_properties': {
-                'memory': 16384,
-                'vcpus': 8
+        [
+            SlurmConfig,
+            {"backend": "slurm"},
+        ],
+        [
+            AirflowConfig,
+            {"backend": "airflow", "repository": "your-repository/name"},
+        ],
+        [
+            ArgoConfig,
+            {"backend": "argo-workflows", "repository": "your-repository/name"},
+        ],
+        [
+            AWSBatchConfig,
+            {
+                "backend": "aws-batch",
+                "container_properties": {"memory": 16384, "vcpus": 8},
+                "job_queue": "your-job-queue",
+                "region_name": "your-region-name",
+                "repository": "your-repository/name",
             },
-            'job_queue': 'your-job-queue',
-            'region_name': 'your-region-name',
-            'repository': 'your-repository/name'
-        },
+        ],
+        [
+            AWSLambdaConfig,
+            {"backend": "aws-lambda"},
+        ],
+        [
+            KubeflowConfig,
+            {"backend": "kubeflow", "repository": "your-repository/name"},
+        ],
     ],
-    [
-        AWSLambdaConfig,
-        {
-            'backend': 'aws-lambda'
-        },
-    ],
-    [
-        KubeflowConfig,
-        {
-            'backend': 'kubeflow',
-            'repository': 'your-repository/name'
-        },
-    ],
-])
+)
 def test_hints(class_, hints):
     """
     Test configuration hints. These are the values that the user will see
@@ -69,78 +56,61 @@ def test_hints(class_, hints):
     assert class_.hints() == hints
 
 
-@pytest.mark.parametrize('class_, initial, schema', [
+@pytest.mark.parametrize(
+    "class_, initial, schema",
     [
-        SlurmConfig,
-        {},
-        {
-            'preset': None
-        },
-    ],
-    [
-        AirflowConfig,
-        {},
-        {
-            'include': None,
-            'exclude': None,
-            'preset': None,
-            'repository': None
-        },
-    ],
-    [
-        ArgoConfig,
-        {},
-        {
-            'include': None,
-            'exclude': None,
-            'preset': None,
-            'repository': None,
-            'mounted_volumes': None
-        },
-    ],
-    [
-        AWSBatchConfig,
-        {
-            'repository': 'your-repository/name',
-            'container_properties': {
-                'memory': 16384,
-                'vcpus': 8
+        [
+            SlurmConfig,
+            {},
+            {"preset": None},
+        ],
+        [
+            AirflowConfig,
+            {},
+            {"include": None, "exclude": None, "preset": None, "repository": None},
+        ],
+        [
+            ArgoConfig,
+            {},
+            {
+                "include": None,
+                "exclude": None,
+                "preset": None,
+                "repository": None,
+                "mounted_volumes": None,
             },
-            'job_queue': 'your-job-queue',
-            'region_name': 'your-region-name',
-        },
-        {
-            'include': None,
-            'exclude': None,
-            'preset': None,
-            'repository': 'your-repository/name',
-            'container_properties': {
-                'memory': 16384,
-                'vcpus': 8
+        ],
+        [
+            AWSBatchConfig,
+            {
+                "repository": "your-repository/name",
+                "container_properties": {"memory": 16384, "vcpus": 8},
+                "job_queue": "your-job-queue",
+                "region_name": "your-region-name",
             },
-            'job_queue': 'your-job-queue',
-            'region_name': 'your-region-name',
-            'task_resources': None,
-        },
+            {
+                "include": None,
+                "exclude": None,
+                "preset": None,
+                "repository": "your-repository/name",
+                "container_properties": {"memory": 16384, "vcpus": 8},
+                "job_queue": "your-job-queue",
+                "region_name": "your-region-name",
+                "task_resources": None,
+            },
+        ],
+        [
+            AWSLambdaConfig,
+            {},
+            {"preset": None},
+        ],
+        [
+            KubeflowConfig,
+            {},
+            {"include": None, "exclude": None, "preset": None, "repository": None},
+        ],
     ],
-    [
-        AWSLambdaConfig,
-        {},
-        {
-            'preset': None
-        },
-    ],
-    [
-        KubeflowConfig,
-        {},
-        {
-            'include': None,
-            'exclude': None,
-            'preset': None,
-            'repository': None
-        },
-    ],
-])
+)
 def test_schema(class_, initial, schema):
     """
     Here we test the schema, we must ensure that only relevant fields appears.

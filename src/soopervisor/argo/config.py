@@ -24,18 +24,19 @@ class ArgoMountedVolume(BaseModel):
         e.g: ``{'persistentVolumeClaim': {'claimName': 'someName'}}``
 
     """
+
     name: str
-    sub_path: str = ''
+    sub_path: str = ""
     spec: dict
 
     class Config:
-        extra = 'forbid'
+        extra = "forbid"
 
     def to_volume(self):
         """
         Generate the entry for the spec.volumes
         """
-        return {'name': self.name, **self.spec}
+        return {"name": self.name, **self.spec}
 
     def to_volume_mount(self):
         """
@@ -43,10 +44,10 @@ class ArgoMountedVolume(BaseModel):
         """
         # reference: https://argoproj.github.io/argo/fields/#volumemount
         return {
-            'name': self.name,
+            "name": self.name,
             # by convention, mount to /mnt/ and use the claim name
-            'mountPath': f'/mnt/{self.name}',
-            'subPath': self.sub_path
+            "mountPath": f"/mnt/{self.name}",
+            "subPath": self.sub_path,
         }
 
 
@@ -67,6 +68,7 @@ class ArgoConfig(abc.AbstractDockerConfig):
         List of volumes to mount on each Pod, described with the
         ``ArgoMountedVolumes`` schema.
     """
+
     mounted_volumes: Optional[List[ArgoMountedVolume]] = None
 
     @classmethod

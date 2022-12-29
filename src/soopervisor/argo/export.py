@@ -31,61 +31,82 @@ class ArgoWorkflowsExporter(abc.AbstractExporter):
         """
         Add Dockerfile
         """
-        with Commander(workspace=env_name,
-                       templates_path=('soopervisor', 'assets')) as e:
-            e.copy_template('docker/Dockerfile',
-                            conda=Path('environment.lock.yml').exists(),
-                            setup_py=Path('setup.py').exists(),
-                            lib=Path('lib').exists(),
-                            env_name=env_name)
-            e.success('Done')
+        with Commander(
+            workspace=env_name, templates_path=("soopervisor", "assets")
+        ) as e:
+            e.copy_template(
+                "docker/Dockerfile",
+                conda=Path("environment.lock.yml").exists(),
+                setup_py=Path("setup.py").exists(),
+                lib=Path("lib").exists(),
+                env_name=env_name,
+            )
+            e.success("Done")
 
     @staticmethod
-    def _export(cfg, env_name, mode, until, skip_tests, skip_docker,
-                ignore_git, lazy_import, task_name):
+    def _export(
+        cfg,
+        env_name,
+        mode,
+        until,
+        skip_tests,
+        skip_docker,
+        ignore_git,
+        lazy_import,
+        task_name,
+    ):
         """
         Build and upload Docker image. Export Argo YAML spec.
         """
 
-        with Commander(workspace=env_name,
-                       templates_path=('soopervisor', 'assets')) as cmdr:
+        with Commander(
+            workspace=env_name, templates_path=("soopervisor", "assets")
+        ) as cmdr:
 
-            tasks, args = commons.load_tasks(cmdr=cmdr,
-                                             name=env_name,
-                                             mode=mode,
-                                             lazy_import=lazy_import,
-                                             task_name=task_name)
+            tasks, args = commons.load_tasks(
+                cmdr=cmdr,
+                name=env_name,
+                mode=mode,
+                lazy_import=lazy_import,
+                task_name=task_name,
+            )
 
             if not tasks:
-                raise CommanderStop(f'Loaded DAG in {mode!r} mode has no '
-                                    'tasks to submit. Try "--mode force" to '
-                                    'submit all tasks regardless of status')
+                raise CommanderStop(
+                    f"Loaded DAG in {mode!r} mode has no "
+                    'tasks to submit. Try "--mode force" to '
+                    "submit all tasks regardless of status"
+                )
             if skip_docker:
                 pkg_name, version = source.find_package_name_and_version()
                 default_image_key = get_default_image_key()
                 if default_image_key:
-                    image_local = f'{pkg_name}:{version}-'
-                    f'{docker.modify_wildcard(default_image_key)}'
+                    image_local = f"{pkg_name}:{version}-"
+                    f"{docker.modify_wildcard(default_image_key)}"
                 target_image = image_local
             else:
-                pkg_name, target_image = docker.build(cmdr,
-                                                      cfg,
-                                                      env_name,
-                                                      until=until,
-                                                      entry_point=args[1],
-                                                      skip_tests=skip_tests,
-                                                      ignore_git=ignore_git)
+                pkg_name, target_image = docker.build(
+                    cmdr,
+                    cfg,
+                    env_name,
+                    until=until,
+                    entry_point=args[1],
+                    skip_tests=skip_tests,
+                    ignore_git=ignore_git,
+                )
                 target_image = target_image[get_default_image_key()]
 
-            cmdr.info('Generating Argo Workflows YAML spec')
-            _make_argo_spec(tasks=tasks,
-                            args=args,
-                            env_name=env_name,
-                            cfg=cfg,
-                            pkg_name=pkg_name,
-                            target_image=target_image)
+            cmdr.info("Generating Argo Workflows YAML spec")
+            _make_argo_spec(
+                tasks=tasks,
+                args=args,
+                env_name=env_name,
+                cfg=cfg,
+                pkg_name=pkg_name,
+                target_image=target_image,
+            )
 
-            cmdr.success('Done.')
+            cmdr.success("Done.")
 
 
 # TODO: delete
@@ -93,11 +114,11 @@ class _literal_str(str):
     """Custom str to represent it in YAML literal style
     Source: https://stackoverflow.com/a/20863889/709975
     """
+
     pass
 
 
 def _change_style(style, representer):
-
     def new_representer(dumper, data):
         scalar = representer(dumper, data)
         scalar.style = style
@@ -107,33 +128,34 @@ def _change_style(style, representer):
 
 
 # configure yaml to represent "literal_str" objects in literal style
-represent_literal_str = _change_style('|', SafeRepresenter.represent_str)
+represent_literal_str = _change_style("|", SafeRepresenter.represent_str)
 yaml.add_representer(_literal_str, represent_literal_str)
 
 
 def _make_argo_task(name, dependencies):
-    """Generate an Argo Task spec
-    """
+    """Generate an Argo Task spec"""
     task = {
-        'name': name,
-        'dependencies': dependencies,
-        'template': 'run-task',
-        'arguments': {
-            'parameters': [{
-                'name': 'task_name',
-                'value': name,
-            }]
-        }
+        "name": name,
+        "dependencies": dependencies,
+        "template": "run-task",
+        "arguments": {
+            "parameters": [
+                {
+                    "name": "task_name",
+                    "value": name,
+                }
+            ]
+        },
     }
     return task
 
 
 def _make_argo_spec(tasks, args, env_name, cfg, pkg_name, target_image):
-    """Generate Argo's YAML spec
-    """
+    """Generate Argo's YAML spec"""
     if cfg.mounted_volumes:
-        volumes, volume_mounts = zip(*((mv.to_volume(), mv.to_volume_mount())
-                                       for mv in cfg.mounted_volumes))
+        volumes, volume_mounts = zip(
+            *((mv.to_volume(), mv.to_volume_mount()) for mv in cfg.mounted_volumes)
+        )
         # force them to be lists to prevent "!!python/tuple" to be added
         volumes = list(volumes)
         volume_mounts = list(volume_mounts)
@@ -141,9 +163,8 @@ def _make_argo_spec(tasks, args, env_name, cfg, pkg_name, target_image):
         volumes = []
         volume_mounts = []
 
-    argo_spec = yaml.safe_load(
-        pkg_resources.read_text(assets_argo, 'template.yaml'))
-    argo_spec['spec']['volumes'] = volumes
+    argo_spec = yaml.safe_load(pkg_resources.read_text(assets_argo, "template.yaml"))
+    argo_spec["spec"]["volumes"] = volumes
 
     tasks_specs = []
 
@@ -151,33 +172,35 @@ def _make_argo_spec(tasks, args, env_name, cfg, pkg_name, target_image):
         spec = _make_argo_task(task_name, upstream)
         tasks_specs.append(spec)
 
-    argo_spec['metadata']['generateName'] = f'{pkg_name}-'.replace('_', '-')
-    argo_spec['spec']['templates'][1]['dag']['tasks'] = tasks_specs
+    argo_spec["metadata"]["generateName"] = f"{pkg_name}-".replace("_", "-")
+    argo_spec["spec"]["templates"][1]["dag"]["tasks"] = tasks_specs
 
-    script = argo_spec['spec']['templates'][0]['script']
-    script['volumeMounts'] = volume_mounts
-    script['image'] = target_image
+    script = argo_spec["spec"]["templates"][0]["script"]
+    script["volumeMounts"] = volume_mounts
+    script["image"] = target_image
 
     if cfg.repository is None:
-        click.echo('null repository found in soopervisor.yaml, '
-                   'setting imagePullPolicy to "Never"')
-        script['imagePullPolicy'] = 'Never'
+        click.echo(
+            "null repository found in soopervisor.yaml, "
+            'setting imagePullPolicy to "Never"'
+        )
+        script["imagePullPolicy"] = "Never"
 
-    command = 'ploomber task {{inputs.parameters.task_name}}'
+    command = "ploomber task {{inputs.parameters.task_name}}"
 
     if args:
         command = f'{command} {" ".join(args)}'
 
     # use literal_str to make the script source code be represented in YAML
     # literal style, this makes it readable
-    script['source'] = _literal_str(command)
+    script["source"] = _literal_str(command)
 
     # when we run this the current working directory is env_name/
-    with open('argo.yaml', 'w') as f:
+    with open("argo.yaml", "w") as f:
         yaml.dump(argo_spec, f)
 
-    output_path = f'{env_name}/argo.yaml'
-    click.echo(f'Done. Saved argo spec to {output_path!r}')
-    click.echo(f'Submit your workflow with: argo submit -n argo {output_path}')
+    output_path = f"{env_name}/argo.yaml"
+    click.echo(f"Done. Saved argo spec to {output_path!r}")
+    click.echo(f"Submit your workflow with: argo submit -n argo {output_path}")
 
     return argo_spec

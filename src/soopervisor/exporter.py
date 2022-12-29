@@ -26,6 +26,6 @@ def for_backend(backend):
     }
 
     if backend not in Backend:
-        raise ValueError(f'{backend!r} is not a valid backend')
+        raise ValueError(f"{backend!r} is not a valid backend")
 
     return mapping[backend]

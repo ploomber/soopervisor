@@ -7,11 +7,10 @@ from soopervisor.enum import Backend
 # e.g., if using bash, include, exclude and repository
 # are not allowed
 class AirflowConfig(abc.AbstractDockerConfig):
-
     @classmethod
     def get_backend_value(cls):
         return Backend.airflow.value
 
     @classmethod
     def get_presets(cls):
-        return ('kubernetes', 'bash', 'docker')
+        return ("kubernetes", "bash", "docker")

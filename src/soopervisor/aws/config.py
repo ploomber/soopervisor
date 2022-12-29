@@ -12,7 +12,7 @@ class TaskResource(BaseModel):
     gpu: int = None
 
     class Config:
-        extra = 'forbid'
+        extra = "forbid"
 
 
 class AWSBatchConfig(AbstractDockerConfig):
@@ -31,13 +31,15 @@ class AWSBatchConfig(AbstractDockerConfig):
 
     @classmethod
     def _hints(cls):
-        return dict(repository='your-repository/name',
-                    job_queue='your-job-queue',
-                    region_name='your-region-name',
-                    container_properties=dict(
-                        memory=16384,
-                        vcpus=8,
-                    ))
+        return dict(
+            repository="your-repository/name",
+            job_queue="your-job-queue",
+            region_name="your-region-name",
+            container_properties=dict(
+                memory=16384,
+                vcpus=8,
+            ),
+        )
 
 
 class CloudConfig(AWSBatchConfig):

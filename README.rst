@@ -13,6 +13,8 @@ Soopervisor
    :target: https://github.com/ploomber/soopervisor/workflows/CI%20Windows/badge.svg
    :alt: CI Windows badge
 
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/psf/black
 
 Soopervisor runs `Ploomber <https://github.com/ploomber/ploomber>`_ pipelines
 for batch processing (large-scale training or batch serving) or online
