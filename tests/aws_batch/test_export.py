@@ -9,16 +9,15 @@ import boto3
 
 from soopervisor.aws import batch
 from soopervisor.aws.batch import commons
-from ploomber.util import util
+from ploomber_core import dependencies
 
 
 def test_error_if_missing_boto3(monkeypatch, backup_packaged_project):
-
     exporter = batch.AWSBatchExporter.new("soopervisor.yaml", "train")
     exporter.add()
 
     # simulate boto3 is not installed
-    monkeypatch.setattr(util.importlib.util, "find_spec", lambda _: None)
+    monkeypatch.setattr(dependencies.importlib.util, "find_spec", lambda _: None)
 
     with pytest.raises(ImportError) as excinfo:
         exporter.export(mode="incremental")
