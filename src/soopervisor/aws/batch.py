@@ -9,7 +9,7 @@ from pathlib import Path
 import fnmatch
 
 from ploomber.io._commander import Commander, CommanderStop
-from ploomber.util.util import requires
+from ploomber_core.dependencies import requires
 
 from soopervisor.aws.config import AWSBatchConfig, CloudConfig
 from soopervisor.aws.util import TaskResources
@@ -157,7 +157,6 @@ def _submit_dag(
             jd_map[pattern] = jd
 
     for name, upstream in tasks.items():
-
         task_pattern = _find_task_pattern(list(image_map.keys()), name)
         task_pattern = task_pattern if task_pattern else default_image_key
         task_jd = jd_map[task_pattern]
@@ -264,7 +263,6 @@ class AWSBatchExporter(abc.AbstractExporter):
         with Commander(
             workspace=env_name, templates_path=("soopervisor", "assets")
         ) as cmdr:
-
             tasks, cli_args = commons.load_tasks(
                 cmdr=cmdr,
                 name=env_name,
