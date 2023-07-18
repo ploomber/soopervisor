@@ -3,6 +3,7 @@ CHANGELOG
 
 0.9.2dev
 --------
+* Replaces `@requires` import to use `ploomber_core` instead of `ploomber`
 
 0.9.1 (2022-10-24)
 ------------------
