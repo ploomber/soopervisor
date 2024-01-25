@@ -1,5 +1,5 @@
 Soopervisor
-===========
+-----------
 
 .. image:: https://github.com/ploomber/soopervisor/workflows/CI/badge.svg
    :target: https://github.com/ploomber/soopervisor/workflows/CI/badge.svg
@@ -15,6 +15,10 @@ Soopervisor
 
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
    :target: https://github.com/psf/black
+
+
+*Tip: Deploy AI apps for free on* `Ploomber Cloud! <https://ploomber.io/?utm_medium=github&utm_source=soopervisor>`_
+
 
 Soopervisor runs `Ploomber <https://github.com/ploomber/ploomber>`_ pipelines
 for batch processing (large-scale training or batch serving) or online
