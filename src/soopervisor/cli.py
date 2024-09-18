@@ -87,16 +87,6 @@ def export(
     """
     Export a target platform for execution/deployment
     """
-    input_args = {
-        "env_name": env_name,
-        "until_build": until_build,
-        "mode": mode,
-        "skip_tests": skip_tests,
-        "skip_docker": skip_docker,
-        "ignore_git": ignore_git,
-        "task": task,
-    }
-
     backend = Backend(config.get_backend(env_name))
 
     until = None
