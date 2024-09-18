@@ -4,6 +4,8 @@ CHANGELOG
 0.9.3dev
 --------
 
+* Removes telemetry
+
 0.9.2 (2023-07-18)
 ------------------
 * Replaces `@requires` import to use `ploomber_core` instead of `ploomber`
