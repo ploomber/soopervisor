@@ -1,6 +1,7 @@
 """
 Running pipelines on AWS Batch
 """
+
 import re
 from uuid import uuid4
 import os

@@ -1,6 +1,7 @@
 """
 Export to Argo Workflows
 """
+
 from pathlib import Path
 
 import click

@@ -6,7 +6,6 @@ from soopervisor import __version__
 from soopervisor import config
 from soopervisor import exporter
 from soopervisor.enum import Backend, Mode
-from soopervisor.telemetry import telemetry
 
 
 @click.group()
@@ -39,33 +38,21 @@ def add(env_name, backend, preset):
     """
     backend = Backend(backend)
 
-    try:
-        if Path("soopervisor.yaml").exists():
-            cfg = yaml.safe_load(Path("soopervisor.yaml").read_text())
-            if env_name in cfg:
-                raise click.ClickException(
-                    f"A {env_name!r} section in the "
-                    "soopervisor.yaml configuration file "
-                    "already exists. Choose another name."
-                )
-        if Path(env_name).exists():
+    if Path("soopervisor.yaml").exists():
+        cfg = yaml.safe_load(Path("soopervisor.yaml").read_text())
+        if env_name in cfg:
             raise click.ClickException(
-                f"{env_name!r} already exists. Select a different name."
+                f"A {env_name!r} section in the "
+                "soopervisor.yaml configuration file "
+                "already exists. Choose another name."
             )
-    except Exception as e:
-        telemetry.log_api(
-            "soopervisor_add_error",
-            metadata={"type": backend.value, "env_name": env_name, "error": str(e)},
+    if Path(env_name).exists():
+        raise click.ClickException(
+            f"{env_name!r} already exists. Select a different name."
         )
-        raise
 
     Exporter = exporter.for_backend(backend)
     Exporter.new("soopervisor.yaml", env_name=env_name, preset=preset).add()
-
-    telemetry.log_api(
-        "soopervisor_add_success",
-        metadata={"type": backend.value, "env_name": env_name},
-    )
 
     click.echo(
         "Environment added, to export it:\n"
@@ -100,22 +87,7 @@ def export(
     """
     Export a target platform for execution/deployment
     """
-    input_args = {
-        "env_name": env_name,
-        "until_build": until_build,
-        "mode": mode,
-        "skip_tests": skip_tests,
-        "skip_docker": skip_docker,
-        "ignore_git": ignore_git,
-        "task": task,
-    }
-
     backend = Backend(config.get_backend(env_name))
-
-    telemetry.log_api(
-        "soopervisor_export_started",
-        metadata={"type": backend.value, "input_args": input_args},
-    )
 
     until = None
 
@@ -129,27 +101,14 @@ def export(
 
     Exporter = exporter.for_backend(backend)
 
-    try:
-        Exporter.load("soopervisor.yaml", env_name=env_name, lazy_import=lazy).export(
-            mode=mode,
-            until=until,
-            skip_tests=skip_tests,
-            skip_docker=skip_docker,
-            ignore_git=ignore_git,
-            lazy_import=lazy,
-            task_name=task,
-        )
-
-    except Exception as e:
-        telemetry.log_api(
-            "soopervisor_export_error",
-            metadata={"type": backend.value, "input_args": input_args, "error": str(e)},
-        )
-        raise
-
-    telemetry.log_api(
-        "soopervisor_export_success",
-        metadata={"type": backend.value, "input_args": input_args},
+    Exporter.load("soopervisor.yaml", env_name=env_name, lazy_import=lazy).export(
+        mode=mode,
+        until=until,
+        skip_tests=skip_tests,
+        skip_docker=skip_docker,
+        ignore_git=ignore_git,
+        lazy_import=lazy,
+        task_name=task,
     )
 
 
