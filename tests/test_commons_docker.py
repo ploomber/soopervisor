@@ -2,6 +2,7 @@
 Testing docker-related functions. Unlike test_commons.py, this file does not
 mock docker
 """
+
 import subprocess
 import platform
 from pathlib import Path

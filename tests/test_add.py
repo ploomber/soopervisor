@@ -1,6 +1,7 @@
 """
 Common tests for all implementations
 """
+
 from pathlib import Path
 
 import pytest

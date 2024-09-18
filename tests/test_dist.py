@@ -1,6 +1,7 @@
 """
 Test generated wheel
 """
+
 import tarfile
 from glob import iglob
 from pathlib import Path

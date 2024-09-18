@@ -2,6 +2,7 @@
 Here we check the default values for each config object, this should contain
 the minimum number of keys, and values should contain reasonable hints
 """
+
 import pytest
 
 from soopervisor.shell.config import SlurmConfig
