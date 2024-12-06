@@ -4,6 +4,8 @@ CHANGELOG
 0.9.4dev
 --------
 
+* Feature - `--skip-docker` uses the configured repository in soopervisor.yaml when exporting to AWS Batch. (by @DennisJLi)
+
 0.9.3 (2024-09-18)
 ------------------
 

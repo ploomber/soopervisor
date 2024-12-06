@@ -29,7 +29,7 @@ REQUIRES = [
     "tqdm",
     "pydantic",
     "Jinja2",
-    "pyyaml",
+    "pyyaml>=6.0.2",
     "ploomber>=0.14.6",
     "ploomber-core>=0.0.11",
     # sdist is generated using python -m build, so adding this here.

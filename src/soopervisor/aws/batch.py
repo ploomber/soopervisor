@@ -280,13 +280,11 @@ class AWSBatchExporter(abc.AbstractExporter):
                     "submit all tasks regardless of status"
                 )
             if skip_docker:
-                pkg_name, version = source.find_package_name_and_version()
+                pkg_name, _ = source.find_package_name_and_version()
+                image = f"{cfg.repository}:latest"
                 default_image_key = get_default_image_key()
-                if default_image_key:
-                    image_local = f"{pkg_name}:{version}-"
-                    f"{docker.modify_wildcard(default_image_key)}"
                 image_map = {}
-                image_map[default_image_key] = image_local
+                image_map[default_image_key] = image
             else:
                 pkg_name, image_map = docker.build(
                     cmdr,

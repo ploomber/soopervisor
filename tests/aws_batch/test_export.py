@@ -169,7 +169,7 @@ def test_export(
 
 
 # TODO: check error if wrong task name
-# TODO: check errro when task is up to date
+# TODO: check error when task is up to date
 # TODO: check error if dependencies from submitted task are outdated
 @pytest.mark.parametrize(
     "mode, args",
@@ -662,3 +662,73 @@ def test_lazy_load(mock_aws_batch_lazy_load, monkeypatch):
         path_to_config="soopervisor.yaml", env_name="train", lazy_import=True
     )
     exporter.export(mode="incremental", lazy_import=True)
+
+
+def test_export_with_skip_docker_uses_configured_repository(
+    mock_batch,
+    monkeypatch,
+    tmp_sample_project_multiple_requirement,
+    monkeypatch_docker_client,
+    skip_repo_validation,
+    boto3_mock,
+    monkeypatch_docker_commons,
+    load_tasks_mock,
+):
+    monkeypatch.setattr(batch, "uuid4", lambda: "uuid4")
+    monkeypatch.setattr(batch.boto3, "client", lambda name, region_name: boto3_mock)
+    monkeypatch.setattr(commons, "load_tasks", load_tasks_mock)
+
+    repository = "123456789012.dkr.ecr.us-east-1.amazonaws.com/my-repository/model"
+
+    exporter = batch.AWSBatchExporter.new("soopervisor.yaml", "some-env")
+    exporter._cfg.repository = repository
+    exporter.add()
+
+    # mock commander
+    commander_mock = MagicMock()
+    monkeypatch.setattr(
+        batch, "Commander", lambda workspace, templates_path: commander_mock
+    )
+
+    exporter.export(mode="incremental", skip_docker=True)
+
+    jobs = mock_batch.list_jobs(jobQueue="your-job-queue")["jobSummaryList"]
+
+    # get jobs information
+    jobs_info = mock_batch.describe_jobs(jobs=[job["jobId"] for job in jobs])["jobs"]
+
+    job_defs = mock_batch.describe_job_definitions(
+        jobDefinitions=[job["jobDefinition"] for job in jobs_info]
+    )["jobDefinitions"]
+
+    # check all tasks submitted
+    assert {j["jobName"] for j in jobs_info} == {"raw", "clean-1", "plot", "clean-2"}
+
+    # check submitted to the right queue
+    assert all(["your-job-queue" in j["jobQueue"] for j in jobs_info])
+
+    # check created a job definition with the right name
+    job_definitions = {j["jobName"]: j["jobDefinition"] for j in jobs_info}
+    assert job_definitions == {
+        "raw": "arn:aws:batch:us-east-1:123456789012:job-definition/"
+        "multiple_requirements_project-uuid4:1",
+        "clean-1": "arn:aws:batch:us-east-1:123456789012:job-definition/"
+        "multiple_requirements_project-uuid4:1",
+        "clean-2": "arn:aws:batch:us-east-1:123456789012:job-definition/"
+        "multiple_requirements_project-uuid4:1",
+        "plot": "arn:aws:batch:us-east-1:123456789012:job-definition/"
+        "multiple_requirements_project-uuid4:1",
+    }
+
+    job_images = {
+        j["jobDefinitionArn"]: j["containerProperties"]["image"] for j in job_defs
+    }
+
+    expected_image = f"{repository}:latest"
+
+    expected = {
+        "arn:aws:batch:us-east-1:123456789012:job-definition/"
+        "multiple_requirements_project-uuid4:1": expected_image,
+    }
+
+    assert job_images == expected
