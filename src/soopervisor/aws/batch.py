@@ -283,8 +283,8 @@ class AWSBatchExporter(abc.AbstractExporter):
                 pkg_name, version = source.find_package_name_and_version()
                 default_image_key = get_default_image_key()
                 if default_image_key:
-                    #image_local = f"{pkg_name}:{version}-"
-                    image_local = f"{cfg.repository}:{version}" # use docker image previously created from ECR repository specified in the config file.
+                    # Use image from ECR repository from the config file.
+                    image_local = f"{cfg.repository}:{version}"
                     f"{docker.modify_wildcard(default_image_key)}"
                 image_map = {}
                 image_map[default_image_key] = image_local
