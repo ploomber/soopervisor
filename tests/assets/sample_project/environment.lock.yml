@@ -2,7 +2,7 @@ name: sample-project-env
 
 dependencies:
   # change the version here if you need to
-  - python=3.8
+  - python=3.9
   # add dependencies here
   - numpy
   - pandas
