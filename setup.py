@@ -29,7 +29,7 @@ REQUIRES = [
     "tqdm",
     "pydantic",
     "Jinja2",
-    "pyyaml",
+    "PyYAML==6.0",
     "ploomber>=0.14.6",
     "ploomber-core>=0.0.11",
     # sdist is generated using python -m build, so adding this here.
@@ -60,6 +60,7 @@ DEV = [
     "kfp",
     # to validate argo specs
     "argo-workflows-dsl",
+    "cython",
     # for testing aws (newer versions break)
     # see: https://github.com/spulec/moto/issues/1793
     "moto==1.3.14",

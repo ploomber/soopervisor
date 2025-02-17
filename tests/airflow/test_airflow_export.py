@@ -6,7 +6,7 @@ from pathlib import Path
 import json
 
 from airflow import DAG
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
+from airflow.providers.cncf.kubernetes.operators.pod import (
     KubernetesPodOperator,
 )
 from airflow.operators.bash import BashOperator
